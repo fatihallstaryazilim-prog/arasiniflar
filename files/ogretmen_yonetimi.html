@@ -1,0 +1,645 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ÜçDörtBeş - Öğretmen Yönetimi</title>
+    <style>
+        :root {
+            --bg-main: #f8fafc; --bg-card: #ffffff; --bg-elevated: #f1f5f9; --border: #e2e8f0;
+            --text-1: #1e293b; --text-2: #64748b; --text-3: #94a3b8;
+            --purple: #7c3aed; --blue: #3b82f6; --cyan: #06b6d4; --green: #10b981; --red: #ef4444; --orange: #f97316; --pink: #ec4899;
+        }
+        [data-theme="dark"] {
+            --bg-main: #0f172a; --bg-card: #1e293b; --bg-elevated: #334155; --border: #475569;
+            --text-1: #f1f5f9; --text-2: #94a3b8; --text-3: #64748b;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg-main); color: var(--text-1); min-height: 100vh; }
+        
+        .app { display: flex; min-height: 100vh; }
+        
+        /* Sidebar */
+        .sidebar { width: 260px; background: var(--bg-card); border-right: 1px solid var(--border); padding: 16px; display: flex; flex-direction: column; position: fixed; height: 100vh; overflow-y: auto; }
+        .logo { display: flex; align-items: center; gap: 12px; padding-bottom: 16px; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+        .logo img { width: 50px; height: 50px; border-radius: 10px; }
+        .logo-text { font-size: 15px; font-weight: 700; background: linear-gradient(135deg, var(--purple), var(--cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .logo-sub { font-size: 9px; color: var(--blue); letter-spacing: 1px; font-weight: 600; }
+        
+        .nav a { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; color: var(--text-2); text-decoration: none; font-size: 13px; margin-bottom: 4px; }
+        .nav a:hover { background: var(--bg-elevated); }
+        .nav a.active { background: var(--purple); color: white; }
+        
+        .theme-btn { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 8px; background: var(--bg-elevated); border: none; color: var(--text-2); font-size: 12px; cursor: pointer; width: 100%; margin: 16px 0; }
+        
+        /* Teacher Pool */
+        .pool { flex: 1; background: linear-gradient(180deg, #ede9fe, #ddd6fe); border: 2px dashed var(--purple); border-radius: 12px; padding: 12px; display: flex; flex-direction: column; }
+        [data-theme="dark"] .pool { background: linear-gradient(180deg, #3b2a5c, #2e1f4d); }
+        .pool-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .pool-title { font-size: 13px; font-weight: 600; color: var(--purple); }
+        .pool-add { width: 28px; height: 28px; border-radius: 8px; border: none; background: var(--purple); color: white; font-size: 18px; cursor: pointer; }
+        .pool-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }
+        .pool-item { display: flex; align-items: center; gap: 10px; background: var(--bg-card); padding: 8px 10px; border-radius: 8px; cursor: grab; border: 2px solid transparent; }
+        .pool-item:hover { border-color: var(--purple); }
+        .pool-item.dragging { opacity: 0.4; }
+        .pool-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden; }
+        .pool-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .pool-name { flex: 1; font-size: 12px; font-weight: 600; }
+        .pool-del { width: 20px; height: 20px; border-radius: 50%; background: var(--red); border: none; color: white; font-size: 10px; cursor: pointer; display: none; }
+        .pool-item:hover .pool-del { display: block; }
+        
+        /* Main */
+        .main { flex: 1; margin-left: 260px; padding: 24px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px; }
+        .header h1 { font-size: 22px; }
+        .btn { padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; }
+        .btn-primary { background: linear-gradient(135deg, var(--purple), var(--blue)); color: white; }
+        .btn-secondary { background: var(--bg-card); color: var(--text-1); border: 1px solid var(--border); }
+        
+        .stats { display: flex; gap: 24px; padding: 16px 20px; background: var(--bg-card); border-radius: 12px; border: 1px solid var(--border); margin-bottom: 24px; }
+        .stat { display: flex; align-items: center; gap: 8px; }
+        .stat-label { font-size: 12px; color: var(--text-2); }
+        .stat-value { font-size: 18px; font-weight: 700; font-family: monospace; }
+        .stat-value.purple { color: var(--purple); }
+        .stat-value.green { color: var(--green); }
+        .stat-value.orange { color: var(--orange); }
+        
+        .tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; }
+        .tab { padding: 10px 20px; border-radius: 10px; font-size: 14px; font-weight: 600; cursor: pointer; border: 2px solid var(--border); background: var(--bg-card); color: var(--text-2); }
+        .tab:hover { border-color: var(--purple); }
+        .tab.active { color: white; border-color: transparent; }
+        .tab.active[data-g="5"] { background: var(--green); }
+        .tab.active[data-g="6"] { background: var(--cyan); }
+        .tab.active[data-g="7"] { background: var(--blue); }
+        .tab.active[data-g="9"] { background: #8b5cf6; }
+        .tab.active[data-g="10"] { background: var(--pink); }
+        .tab.active[data-g="11"] { background: var(--orange); }
+        
+        .tree { background: var(--bg-card); border-radius: 16px; border: 1px solid var(--border); padding: 32px; }
+        .grade-badge { display: inline-block; padding: 10px 24px; border-radius: 12px; font-size: 18px; font-weight: 700; color: white; margin-bottom: 8px; }
+        .grade-badge.g5 { background: var(--green); }
+        .grade-badge.g6 { background: var(--cyan); }
+        .grade-badge.g7 { background: var(--blue); }
+        .grade-badge.g9 { background: #8b5cf6; }
+        .grade-badge.g10 { background: var(--pink); }
+        .grade-badge.g11 { background: var(--orange); }
+        
+        .connector-v { width: 3px; height: 25px; background: var(--border); margin: 0 auto; }
+        .connector-h { height: 3px; background: var(--border); margin: 0 auto; }
+        .branches { display: flex; justify-content: center; gap: 16px; flex-wrap: wrap; }
+        
+        .branch { display: flex; flex-direction: column; align-items: center; min-width: 200px; }
+        .branch-line { width: 3px; height: 20px; background: var(--border); }
+        .branch-name { background: var(--bg-elevated); border: 2px solid var(--border); border-radius: 10px; padding: 10px 16px; font-size: 13px; font-weight: 600; white-space: nowrap; }
+        .branch-vline { width: 3px; height: 20px; background: var(--border); }
+        .branch-hline { width: 140px; height: 3px; background: var(--border); position: relative; }
+        .branch-hline::before, .branch-hline::after { content: ''; position: absolute; top: 0; width: 3px; height: 18px; background: var(--border); }
+        .branch-hline::before { left: 0; }
+        .branch-hline::after { right: 0; }
+        
+        .teachers { display: flex; gap: 12px; margin-top: 15px; }
+        .teacher-col { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+        .col-label { font-size: 9px; font-weight: 600; text-transform: uppercase; padding: 3px 8px; border-radius: 4px; }
+        .col-label.konu { background: rgba(59,130,246,0.15); color: var(--blue); }
+        .col-label.soru { background: rgba(249,115,22,0.15); color: var(--orange); }
+        
+        .slots { display: flex; flex-direction: column; gap: 6px; }
+        .slot { width: 76px; background: var(--bg-card); border: 2px solid var(--border); border-radius: 10px; padding: 6px; display: flex; flex-direction: column; align-items: center; gap: 3px; cursor: pointer; position: relative; }
+        .slot:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .slot.drag-over { border-color: var(--purple); background: rgba(124,58,237,0.05); }
+        .slot.konu { border-color: var(--blue); border-top: 3px solid var(--blue); }
+        .slot.soru { border-color: var(--orange); border-top: 3px solid var(--orange); }
+        .slot-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; font-size: 16px; overflow: hidden; }
+        .slot-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .slot-name { font-size: 8px; font-weight: 600; text-align: center; max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .slot-del { position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; border-radius: 50%; background: var(--red); border: 2px solid var(--bg-card); color: white; font-size: 9px; cursor: pointer; display: none; align-items: center; justify-content: center; }
+        .slot:hover .slot-del { display: flex; }
+        
+        .add-btn { width: 76px; padding: 8px 6px; border-radius: 8px; border: 2px dashed var(--border); background: transparent; color: var(--text-3); font-size: 10px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .add-btn:hover { border-color: var(--purple); color: var(--purple); background: rgba(124,58,237,0.05); }
+        .add-btn.drag-over { border-color: var(--purple); color: var(--purple); background: rgba(124,58,237,0.1); }
+        .add-btn.konu:hover, .add-btn.konu.drag-over { border-color: var(--blue); color: var(--blue); }
+        .add-btn.soru:hover, .add-btn.soru.drag-over { border-color: var(--orange); color: var(--orange); }
+        
+        /* Modal */
+        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal.active { display: flex; }
+        .modal-box { background: var(--bg-card); border-radius: 16px; padding: 24px; max-width: 380px; width: 90%; border: 1px solid var(--border); }
+        .modal-title { font-size: 18px; font-weight: 600; margin-bottom: 20px; }
+        .form-group { margin-bottom: 16px; }
+        .form-label { display: block; font-size: 12px; color: var(--text-2); margin-bottom: 6px; }
+        .form-input { width: 100%; padding: 10px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-1); font-size: 14px; }
+        .form-input:focus { outline: none; border-color: var(--purple); }
+        .avatar-row { display: flex; align-items: center; gap: 16px; }
+        .avatar-preview { width: 72px; height: 72px; border-radius: 50%; background: var(--bg-elevated); display: flex; align-items: center; justify-content: center; font-size: 28px; overflow: hidden; border: 3px solid var(--border); }
+        .avatar-preview img { width: 100%; height: 100%; object-fit: cover; }
+        .upload-btn { padding: 10px 16px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 12px; }
+        .modal-btns { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
+        
+        .select-list { max-height: 280px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+        .select-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 10px; background: var(--bg-elevated); cursor: pointer; border: 2px solid transparent; }
+        .select-item:hover { border-color: var(--purple); background: rgba(124,58,237,0.08); }
+        .select-avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); display: flex; align-items: center; justify-content: center; font-size: 18px; overflow: hidden; }
+        .select-avatar img { width: 100%; height: 100%; object-fit: cover; }
+        .select-name { font-size: 14px; font-weight: 500; }
+        
+        .toast { position: fixed; bottom: 24px; right: 24px; background: var(--bg-card); border: 1px solid var(--border); padding: 14px 20px; border-radius: 10px; display: flex; align-items: center; gap: 10px; transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 2000; box-shadow: 0 4px 20px rgba(0,0,0,0.15); }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-icon { width: 22px; height: 22px; border-radius: 50%; background: var(--green); color: white; display: flex; align-items: center; justify-content: center; font-size: 12px; }
+        
+        @media print { .sidebar, .btn { display: none !important; } .main { margin-left: 0 !important; } }
+        @media (max-width: 900px) { .sidebar { display: none; } .main { margin-left: 0; } }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <aside class="sidebar">
+            <div class="logo">
+                <img src="logo.jpg" alt="Logo">
+                <div>
+                    <div class="logo-text">ÜçDörtBeş</div>
+                    <div class="logo-sub">ALL STAR</div>
+                </div>
+            </div>
+            
+            <div class="nav">
+                <a href="is_akisi_workflow.html"><span>📅</span> İş Akışı Takvimi</a>
+                <a href="ogretmen_yonetimi.html" class="active"><span>👨‍🏫</span> Öğretmen Yönetimi</a>
+            </div>
+            
+            <button class="theme-btn" onclick="toggleTheme()">
+                <span id="themeIcon">🌙</span>
+                <span id="themeText">Dark Mode</span>
+            </button>
+            
+            <div class="pool">
+                <div class="pool-head">
+                    <span class="pool-title">👥 Öğretmenler</span>
+                    <button class="pool-add" onclick="openAddModal()">+</button>
+                </div>
+                <div class="pool-list" id="poolList"></div>
+            </div>
+        </aside>
+        
+        <main class="main">
+            <div class="header">
+                <h1>🗂️ Öğretmen Organizasyon Şeması</h1>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-secondary" onclick="window.print()">🖨️ Yazdır</button>
+                    <button class="btn btn-primary" onclick="exportPDF()">📤 Dışa Aktar</button>
+                </div>
+            </div>
+            
+            <div class="stats">
+                <div class="stat">
+                    <span class="stat-label">Toplam Öğretmen:</span>
+                    <span class="stat-value purple" id="statTeachers">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Atama Yapılan:</span>
+                    <span class="stat-value green" id="statAssigned">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Boş Slot:</span>
+                    <span class="stat-value orange" id="statEmpty">0</span>
+                </div>
+            </div>
+            
+            <div class="tabs" id="tabs"></div>
+            <div class="tree" id="tree"></div>
+        </main>
+    </div>
+    
+    <!-- Öğretmen Ekleme Modal -->
+    <div class="modal" id="addModal">
+        <div class="modal-box">
+            <h2 class="modal-title">➕ Yeni Öğretmen</h2>
+            <div class="form-group">
+                <label class="form-label">Ad Soyad</label>
+                <input type="text" class="form-input" id="teacherName" placeholder="Örn: Ahmet Yılmaz">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Fotoğraf</label>
+                <div class="avatar-row">
+                    <div class="avatar-preview" id="avatarPreview">👤</div>
+                    <div>
+                        <label class="upload-btn">
+                            📷 Fotoğraf Seç
+                            <input type="file" id="avatarFile" accept="image/*" style="display:none" onchange="previewAvatar(this)">
+                        </label>
+                        <p style="font-size:10px;color:var(--text-3);margin-top:6px;">PNG, JPG</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-btns">
+                <button class="btn btn-secondary" onclick="closeAddModal()">İptal</button>
+                <button class="btn btn-primary" onclick="saveTeacher()">Kaydet</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Öğretmen Seçme Modal -->
+    <div class="modal" id="selectModal">
+        <div class="modal-box" style="max-width:320px;">
+            <h2 class="modal-title" id="selectTitle">Öğretmen Seç</h2>
+            <div class="select-list" id="selectList"></div>
+            <div class="modal-btns">
+                <button class="btn btn-secondary" onclick="closeSelectModal()">İptal</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toast" id="toast">
+        <div class="toast-icon">✓</div>
+        <span id="toastMsg"></span>
+    </div>
+
+<script>
+const GRADES = [5, 6, 7, 9, 10, 11];
+const BRANCHES = {
+    5: ['FEN BİLİMLERİ', 'MATEMATİK', 'TÜRKÇE', 'SOSYAL BİLGİLER'],
+    6: ['FEN BİLİMLERİ', 'MATEMATİK', 'TÜRKÇE', 'SOSYAL BİLGİLER'],
+    7: ['FEN BİLİMLERİ', 'MATEMATİK', 'TÜRKÇE', 'SOSYAL BİLGİLER'],
+    9: ['FİZİK', 'KİMYA', 'BİYOLOJİ', 'MATEMATİK', 'TARİH', 'COĞRAFYA', 'EDEBİYAT'],
+    10: ['FİZİK', 'KİMYA', 'BİYOLOJİ', 'MATEMATİK', 'TARİH', 'COĞRAFYA', 'EDEBİYAT'],
+    11: ['FİZİK', 'KİMYA', 'BİYOLOJİ', 'MATEMATİK', 'TARİH', 'COĞRAFYA', 'EDEBİYAT']
+};
+const ICONS = { 'FEN BİLİMLERİ': '🔬', 'MATEMATİK': '📐', 'TÜRKÇE': '📖', 'SOSYAL BİLGİLER': '🌍', 'FİZİK': '⚡', 'KİMYA': '🧪', 'BİYOLOJİ': '🧬', 'TARİH': '📜', 'COĞRAFYA': '🗺️', 'EDEBİYAT': '✍️' };
+const GCOLORS = { 5: '#10b981', 6: '#06b6d4', 7: '#3b82f6', 9: '#8b5cf6', 10: '#ec4899', 11: '#f97316' };
+
+let teachers = [];
+let assignments = {};
+let grade = 5;
+let nextId = 1;
+let dragged = null;
+let pendingSlot = null;
+
+// Init
+function init() {
+    if (localStorage.getItem('theme') === 'dark') {
+        document.body.setAttribute('data-theme', 'dark');
+        document.getElementById('themeIcon').textContent = '☀️';
+        document.getElementById('themeText').textContent = 'Light Mode';
+    }
+    
+    try {
+        const t = localStorage.getItem('teachers');
+        if (t) {
+            teachers = JSON.parse(t);
+            if (teachers.length) nextId = Math.max(...teachers.map(x => x.id)) + 1;
+        }
+        
+        const a = localStorage.getItem('assignments');
+        if (a) {
+            const parsed = JSON.parse(a);
+            Object.keys(parsed).forEach(k => {
+                assignments[k] = Array.isArray(parsed[k]) ? parsed[k] : [parsed[k]];
+            });
+        }
+    } catch (e) { console.error(e); }
+    
+    renderTabs();
+    renderPool();
+    renderTree();
+    updateStats();
+    
+    // Modal dışına tıklayınca kapat
+    document.getElementById('addModal').onclick = function(e) { if (e.target === this) closeAddModal(); };
+    document.getElementById('selectModal').onclick = function(e) { if (e.target === this) closeSelectModal(); };
+}
+
+function toggleTheme() {
+    const dark = document.body.getAttribute('data-theme') === 'dark';
+    document.body.setAttribute('data-theme', dark ? 'light' : 'dark');
+    document.getElementById('themeIcon').textContent = dark ? '🌙' : '☀️';
+    document.getElementById('themeText').textContent = dark ? 'Dark Mode' : 'Light Mode';
+    localStorage.setItem('theme', dark ? 'light' : 'dark');
+}
+
+function renderTabs() {
+    document.getElementById('tabs').innerHTML = GRADES.map(g =>
+        `<div class="tab${g === grade ? ' active' : ''}" data-g="${g}" onclick="setGrade(${g})">${g}. Sınıf</div>`
+    ).join('');
+}
+
+function setGrade(g) {
+    grade = g;
+    renderTabs();
+    renderTree();
+}
+
+function renderPool() {
+    const list = document.getElementById('poolList');
+    if (!teachers.length) {
+        list.innerHTML = '<div style="text-align:center;color:var(--text-3);font-size:11px;padding:20px;">Öğretmen eklemek için<br>+ butonuna tıklayın</div>';
+        return;
+    }
+    
+    list.innerHTML = teachers.map(t => `
+        <div class="pool-item" draggable="true" data-id="${t.id}">
+            <div class="pool-avatar">${t.avatar ? `<img src="${t.avatar}">` : '👤'}</div>
+            <div class="pool-name">${t.name}</div>
+            <button class="pool-del" onclick="event.stopPropagation(); deleteTeacher(${t.id})">✕</button>
+        </div>
+    `).join('');
+    
+    list.querySelectorAll('.pool-item').forEach(el => {
+        el.ondragstart = () => {
+            dragged = teachers.find(t => t.id == el.dataset.id);
+            el.classList.add('dragging');
+        };
+        el.ondragend = () => {
+            el.classList.remove('dragging');
+            dragged = null;
+        };
+    });
+}
+
+function renderTree() {
+    const bs = BRANCHES[grade];
+    document.getElementById('tree').innerHTML = `
+        <div style="text-align:center;">
+            <div class="grade-badge g${grade}">${grade}. Sınıf</div>
+        </div>
+        <div class="connector-v"></div>
+        <div class="connector-h" style="width:${Math.min(bs.length * 200, 85)}%;"></div>
+        <div class="branches">${bs.map(b => renderBranch(b)).join('')}</div>
+    `;
+    
+    // Drag & drop
+    document.querySelectorAll('.slot, .add-btn').forEach(el => {
+        el.ondragover = e => { e.preventDefault(); el.classList.add('drag-over'); };
+        el.ondragleave = () => el.classList.remove('drag-over');
+        el.ondrop = e => {
+            e.preventDefault();
+            el.classList.remove('drag-over');
+            if (!dragged) return;
+            assignTeacher(el.dataset.branch, el.dataset.type, dragged.id);
+        };
+    });
+    
+    // Click
+    document.querySelectorAll('.add-btn').forEach(el => {
+        el.onclick = () => openSelectModal(el.dataset.branch, el.dataset.type);
+    });
+}
+
+function renderBranch(branch) {
+    const kList = assignments[`${grade}-${branch}-konu`] || [];
+    const sList = assignments[`${grade}-${branch}-soru`] || [];
+    
+    return `
+        <div class="branch">
+            <div class="branch-line"></div>
+            <div class="branch-name">${ICONS[branch] || '📚'} ${branch}</div>
+            <div class="branch-vline"></div>
+            <div class="branch-hline"></div>
+            <div class="teachers">
+                <div class="teacher-col">
+                    <div class="col-label konu">🎓 Konu</div>
+                    <div class="slots">
+                        ${kList.map((id, i) => renderSlot(branch, 'konu', i, teachers.find(t => t.id === id))).join('')}
+                        ${kList.length < 2 ? `<button class="add-btn konu" data-branch="${branch}" data-type="konu">➕ Ekle</button>` : ''}
+                    </div>
+                </div>
+                <div class="teacher-col">
+                    <div class="col-label soru">✏️ Soru</div>
+                    <div class="slots">
+                        ${sList.map((id, i) => renderSlot(branch, 'soru', i, teachers.find(t => t.id === id))).join('')}
+                        ${sList.length < 2 ? `<button class="add-btn soru" data-branch="${branch}" data-type="soru">➕ Ekle</button>` : ''}
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
+function renderSlot(branch, type, index, teacher) {
+    if (!teacher) return '';
+    return `
+        <div class="slot ${type}" data-branch="${branch}" data-type="${type}">
+            <div class="slot-avatar">${teacher.avatar ? `<img src="${teacher.avatar}">` : '👤'}</div>
+            <div class="slot-name">${teacher.name}</div>
+            <button class="slot-del" onclick="event.stopPropagation(); removeAssign('${branch}', '${type}', ${index})">✕</button>
+        </div>
+    `;
+}
+
+function assignTeacher(branch, type, teacherId) {
+    const key = `${grade}-${branch}-${type}`;
+    if (!assignments[key]) assignments[key] = [];
+    
+    if (assignments[key].includes(teacherId)) {
+        toast('Bu öğretmen zaten atanmış');
+        return;
+    }
+    
+    if (assignments[key].length >= 2) {
+        toast('Bu slot dolu (max 2)');
+        return;
+    }
+    
+    assignments[key].push(teacherId);
+    save();
+    renderTree();
+    updateStats();
+    
+    const t = teachers.find(x => x.id === teacherId);
+    toast(`${t.name} atandı`);
+}
+
+function removeAssign(branch, type, index) {
+    const key = `${grade}-${branch}-${type}`;
+    if (assignments[key]) {
+        assignments[key].splice(index, 1);
+        if (!assignments[key].length) delete assignments[key];
+        save();
+        renderTree();
+        updateStats();
+        toast('Atama kaldırıldı');
+    }
+}
+
+function deleteTeacher(id) {
+    if (!confirm('Bu öğretmeni silmek istiyor musunuz?')) return;
+    teachers = teachers.filter(t => t.id !== id);
+    Object.keys(assignments).forEach(k => {
+        assignments[k] = assignments[k].filter(x => x !== id);
+        if (!assignments[k].length) delete assignments[k];
+    });
+    save();
+    renderPool();
+    renderTree();
+    updateStats();
+    toast('Öğretmen silindi');
+}
+
+function updateStats() {
+    let assigned = 0;
+    Object.values(assignments).forEach(arr => assigned += arr.length);
+    
+    let total = 0;
+    GRADES.forEach(g => total += BRANCHES[g].length * 4);
+    
+    document.getElementById('statTeachers').textContent = teachers.length;
+    document.getElementById('statAssigned').textContent = assigned;
+    document.getElementById('statEmpty').textContent = total - assigned;
+}
+
+function save() {
+    localStorage.setItem('teachers', JSON.stringify(teachers));
+    localStorage.setItem('assignments', JSON.stringify(assignments));
+}
+
+// Add Teacher Modal
+function openAddModal() {
+    document.getElementById('teacherName').value = '';
+    document.getElementById('avatarFile').value = '';
+    document.getElementById('avatarPreview').innerHTML = '👤';
+    document.getElementById('addModal').classList.add('active');
+    document.getElementById('teacherName').focus();
+}
+
+function closeAddModal() {
+    document.getElementById('addModal').classList.remove('active');
+}
+
+function previewAvatar(input) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = e => {
+            document.getElementById('avatarPreview').innerHTML = `<img src="${e.target.result}">`;
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function saveTeacher() {
+    const name = document.getElementById('teacherName').value.trim();
+    if (!name) {
+        toast('İsim giriniz');
+        return;
+    }
+    
+    const file = document.getElementById('avatarFile').files[0];
+    
+    const doSave = (avatar) => {
+        teachers.push({ id: nextId++, name: name, avatar: avatar });
+        save();
+        renderPool();
+        updateStats();
+        closeAddModal();
+        toast(`${name} eklendi`);
+    };
+    
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = e => doSave(e.target.result);
+        reader.readAsDataURL(file);
+    } else {
+        doSave(null);
+    }
+}
+
+// Select Teacher Modal
+function openSelectModal(branch, type) {
+    if (!teachers.length) {
+        toast('Önce öğretmen ekleyin');
+        return;
+    }
+    
+    pendingSlot = { branch, type };
+    const key = `${grade}-${branch}-${type}`;
+    const assigned = assignments[key] || [];
+    const available = teachers.filter(t => !assigned.includes(t.id));
+    
+    if (!available.length) {
+        toast('Tüm öğretmenler zaten atanmış');
+        return;
+    }
+    
+    document.getElementById('selectTitle').textContent = `${branch} - ${type === 'konu' ? '🎓 Konu' : '✏️ Soru'}`;
+    document.getElementById('selectList').innerHTML = available.map(t => `
+        <div class="select-item" onclick="selectTeacher(${t.id})">
+            <div class="select-avatar">${t.avatar ? `<img src="${t.avatar}">` : '👤'}</div>
+            <div class="select-name">${t.name}</div>
+        </div>
+    `).join('');
+    
+    document.getElementById('selectModal').classList.add('active');
+}
+
+function closeSelectModal() {
+    document.getElementById('selectModal').classList.remove('active');
+    pendingSlot = null;
+}
+
+function selectTeacher(id) {
+    if (!pendingSlot) return;
+    assignTeacher(pendingSlot.branch, pendingSlot.type, id);
+    closeSelectModal();
+}
+
+// Export PDF
+function exportPDF() {
+    let rows = '';
+    GRADES.forEach(g => {
+        BRANCHES[g].forEach((b, i) => {
+            const kList = assignments[`${g}-${b}-konu`] || [];
+            const sList = assignments[`${g}-${b}-soru`] || [];
+            
+            const k1 = kList[0] ? teachers.find(t => t.id === kList[0])?.name || '-' : '-';
+            const k2 = kList[1] ? teachers.find(t => t.id === kList[1])?.name || '-' : '-';
+            const s1 = sList[0] ? teachers.find(t => t.id === sList[0])?.name || '-' : '-';
+            const s2 = sList[1] ? teachers.find(t => t.id === sList[1])?.name || '-' : '-';
+            
+            rows += `<tr style="background:${i % 2 ? '#f8fafc' : '#fff'}">
+                <td style="background:${GCOLORS[g]};color:white;font-weight:bold;text-align:center;">${g}</td>
+                <td>${ICONS[b] || ''} ${b}</td>
+                <td style="color:#3b82f6;">${k1}</td>
+                <td style="color:#3b82f6;">${k2}</td>
+                <td style="color:#f97316;">${s1}</td>
+                <td style="color:#f97316;">${s2}</td>
+            </tr>`;
+        });
+    });
+    
+    const html = `<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><title>Öğretmen Şeması</title>
+<style>
+body{font-family:Arial,sans-serif;padding:20px;font-size:12px;}
+h1{text-align:center;color:#7c3aed;margin-bottom:5px;font-size:20px;}
+h2{text-align:center;color:#64748b;font-weight:normal;font-size:12px;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;}
+th,td{border:1px solid #e2e8f0;padding:8px;text-align:left;}
+th{background:#7c3aed;color:white;font-size:11px;}
+.footer{text-align:center;margin-top:20px;font-size:10px;color:#94a3b8;}
+</style></head>
+<body>
+<h1>🗂️ ÜçDörtBeş All Star</h1>
+<h2>Öğretmen Organizasyon Şeması - ${new Date().toLocaleDateString('tr-TR')}</h2>
+<table>
+<thead><tr><th>Sınıf</th><th>Branş</th><th>Konu 1</th><th>Konu 2</th><th>Soru 1</th><th>Soru 2</th></tr></thead>
+<tbody>${rows}</tbody>
+</table>
+<div class="footer">Toplam: ${teachers.length} öğretmen | ${Object.values(assignments).flat().length} atama | ${new Date().toLocaleString('tr-TR')}</div>
+<script>window.onload=()=>window.print();<\/script>
+</body></html>`;
+    
+    const w = window.open('', '_blank');
+    w.document.write(html);
+    w.document.close();
+}
+
+function toast(msg) {
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Start
+init();
+</script>
+</body>
+</html>

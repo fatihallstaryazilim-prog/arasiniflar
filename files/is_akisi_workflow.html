@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ÜçDörtBeş - İçerik İş Akışı</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-main: #f5f7fa;
+            --bg-card: #ffffff;
+            --bg-elevated: #f0f2f5;
+            --border-subtle: #e2e5e9;
+            --text-primary: #1a1d21;
+            --text-secondary: #5f6368;
+            --text-muted: #9aa0a6;
+            --accent-purple: #7c3aed;
+            --accent-blue: #3b82f6;
+            --accent-cyan: #06b6d4;
+            --accent-green: #10b981;
+            --accent-red: #ef4444;
+            --accent-pink: #ec4899;
+            --accent-orange: #f97316;
+            --accent-yellow: #eab308;
+            --grade-5: #10b981;
+            --grade-6: #06b6d4;
+            --grade-7: #3b82f6;
+            --grade-9: #7c3aed;
+            --grade-10: #ec4899;
+            --grade-11: #f97316;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 2px 8px rgba(0,0,0,0.1);
+            --backlog-bg: linear-gradient(135deg, #fef3c7, #fde68a);
+            --backlog-border: #eab308;
+            --backlog-text: #92400e;
+            --backlog-card: #fffbeb;
+            --backlog-card-hover: #fef3c7;
+            --backlog-card-border: #fcd34d;
+        }
+        [data-theme="dark"] {
+            --bg-main: #0f1419;
+            --bg-card: #1a1f26;
+            --bg-elevated: #242b33;
+            --border-subtle: #2f3842;
+            --text-primary: #e7e9ea;
+            --text-secondary: #a0a8b0;
+            --text-muted: #6b7280;
+            --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+            --shadow-md: 0 2px 8px rgba(0,0,0,0.4);
+            --backlog-bg: linear-gradient(135deg, #422006, #713f12);
+            --backlog-border: #a16207;
+            --backlog-text: #fcd34d;
+            --backlog-card: #352a1a;
+            --backlog-card-hover: #44351d;
+            --backlog-card-border: #a16207;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Outfit', sans-serif; background: var(--bg-main); color: var(--text-primary); min-height: 100vh; transition: background 0.3s, color 0.3s; }
+        .app-container { display: flex; min-height: 100vh; }
+        .sidebar { width: 220px; background: var(--bg-card); border-right: 1px solid var(--border-subtle); padding: 12px; display: flex; flex-direction: column; position: fixed; height: 100vh; overflow-y: auto; z-index: 100; transition: transform 0.3s ease, background 0.3s; }
+        .sidebar.collapsed { transform: translateX(-220px); }
+        .sidebar-toggle { position: fixed; left: 220px; top: 12px; width: 28px; height: 28px; background: var(--bg-card); border: 1px solid var(--border-subtle); border-radius: 0 6px 6px 0; cursor: pointer; z-index: 101; display: flex; align-items: center; justify-content: center; font-size: 12px; color: var(--text-muted); transition: left 0.3s ease, background 0.3s; }
+        .sidebar-toggle:hover { background: var(--bg-elevated); color: var(--text-primary); }
+        .sidebar.collapsed + .sidebar-toggle { left: 0; }
+        .logo-container { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+        .logo-img { width: 85px; height: 85px; border-radius: 12px; object-fit: contain; background: transparent; }
+        .logo-text { display: flex; flex-direction: column; }
+        .logo { font-family: 'Space Mono', monospace; font-size: 18px; font-weight: 700; background: linear-gradient(135deg, var(--accent-purple), var(--accent-cyan)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; line-height: 1.2; }
+        .logo-subtitle-brand { font-family: 'Space Mono', monospace; font-size: 11px; font-weight: 700; color: #3b82f6; letter-spacing: 2px; }
+        .logo-subtitle { font-size: 10px; color: var(--text-muted); margin-bottom: 12px; }
+        .theme-toggle-container { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; padding: 8px; background: var(--bg-elevated); border-radius: 8px; }
+        .theme-toggle-label { font-size: 11px; color: var(--text-secondary); }
+        .theme-toggle { position: relative; width: 44px; height: 24px; background: var(--border-subtle); border-radius: 12px; cursor: pointer; transition: background 0.3s; }
+        .theme-toggle.active { background: var(--accent-purple); }
+        .theme-toggle-knob { position: absolute; top: 2px; left: 2px; width: 20px; height: 20px; background: var(--bg-card); border-radius: 50%; transition: transform 0.3s; }
+        .theme-toggle.active .theme-toggle-knob { transform: translateX(20px); }
+        .collapsible-section { margin-bottom: 8px; }
+        .section-header { display: flex; align-items: center; justify-content: space-between; cursor: pointer; padding: 6px 8px; background: var(--bg-elevated); border-radius: 6px; transition: all 0.2s; }
+        .section-header:hover { background: var(--border-subtle); }
+        .section-title { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: 600; }
+        .section-toggle { font-size: 10px; color: var(--text-muted); transition: transform 0.2s; }
+        .section-toggle.collapsed { transform: rotate(-90deg); }
+        .section-content { padding: 8px 0; }
+        .section-content.collapsed { display: none; }
+        .filter-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+        .filter-chip { padding: 4px 8px; border-radius: 12px; font-size: 11px; cursor: pointer; transition: all 0.2s; border: 1px solid var(--border-subtle); background: transparent; color: var(--text-secondary); }
+        .filter-chip:hover { background: var(--bg-elevated); }
+        .filter-chip.active { background: var(--accent-purple); border-color: var(--accent-purple); color: white; }
+        .filter-chip[data-grade="5"].active { background: var(--grade-5); border-color: var(--grade-5); }
+        .filter-chip[data-grade="6"].active { background: var(--grade-6); border-color: var(--grade-6); }
+        .filter-chip[data-grade="7"].active { background: var(--grade-7); border-color: var(--grade-7); }
+        .filter-chip[data-grade="9"].active { background: var(--grade-9); border-color: var(--grade-9); }
+        .filter-chip[data-grade="10"].active { background: var(--grade-10); border-color: var(--grade-10); }
+        .filter-chip[data-grade="11"].active { background: var(--grade-11); border-color: var(--grade-11); }
+        .backlog-box { background: var(--backlog-bg); border: 2px dashed var(--backlog-border); border-radius: 10px; padding: 10px; margin-bottom: 8px; flex: 1; min-height: 150px; max-height: 400px; display: flex; flex-direction: column; overflow: hidden; }
+        .backlog-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+        .backlog-title { font-size: 12px; font-weight: 600; color: var(--backlog-text); display: flex; align-items: center; gap: 6px; }
+        .backlog-title::before { content: '⏳'; }
+        .backlog-count { background: var(--backlog-text); color: white; font-size: 10px; padding: 2px 8px; border-radius: 8px; font-family: 'Space Mono', monospace; }
+        .backlog-zone { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; border-radius: 6px; transition: all 0.2s; min-height: 50px; padding-bottom: 8px; }
+        .backlog-zone.drag-over { background: rgba(234, 179, 8, 0.3); }
+        .backlog-zone .unit-card { background: var(--backlog-card); border-color: var(--backlog-card-border); }
+        .backlog-zone .unit-card:hover { background: var(--backlog-card-hover); }
+        .stat-row { display: flex; justify-content: space-between; font-size: 11px; padding: 3px 0; }
+        .stat-label { color: var(--text-secondary); }
+        .stat-value { font-weight: 600; font-family: 'Space Mono', monospace; font-size: 11px; }
+        .main-content { flex: 1; margin-left: 220px; padding: 16px; transition: margin-left 0.3s ease; }
+        .main-content.expanded { margin-left: 0; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .header-title { font-size: 20px; font-weight: 600; }
+        .header-actions { display: flex; gap: 8px; }
+        .btn { padding: 6px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; cursor: pointer; transition: all 0.2s; border: none; font-family: 'Outfit', sans-serif; }
+        .btn-primary { background: linear-gradient(135deg, var(--accent-purple), var(--accent-blue)); color: white; }
+        .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(124, 58, 237, 0.3); }
+        .btn-secondary { background: var(--bg-card); color: var(--text-primary); border: 1px solid var(--border-subtle); }
+        .btn-secondary:hover { background: var(--bg-elevated); }
+        .workflow-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 8px; margin-bottom: 24px; }
+        .month-column { background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border-subtle); overflow: hidden; min-height: 280px; display: flex; flex-direction: column; transition: background 0.3s, border 0.3s; }
+        .month-header { padding: 8px; background: var(--bg-elevated); border-bottom: 1px solid var(--border-subtle); display: flex; flex-direction: column; gap: 4px; }
+        .month-name { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+        .month-meta { display: flex; justify-content: space-between; align-items: center; }
+        .month-badge { font-size: 9px; padding: 2px 6px; border-radius: 8px; color: white; }
+        .month-badge.donem-1 { background: var(--accent-green); }
+        .month-badge.donem-2 { background: var(--accent-orange); }
+        .unit-count { font-size: 9px; color: var(--text-muted); font-family: 'Space Mono', monospace; }
+        .month-content { padding: 6px; flex: 1; overflow-y: auto; }
+        .drop-zone { min-height: 100%; display: flex; flex-direction: column; gap: 4px; border-radius: 4px; transition: all 0.2s; }
+        .drop-zone.drag-over { background: rgba(124, 58, 237, 0.08); border: 1px dashed var(--accent-purple); }
+        .unit-card { background: var(--bg-elevated); border-radius: 6px; padding: 6px 8px; cursor: grab; transition: all 0.15s; border: 1px solid transparent; position: relative; font-size: 10px; }
+        .unit-card:hover { background: var(--bg-card); border-color: var(--border-subtle); box-shadow: var(--shadow-sm); }
+        .unit-card.dragging { opacity: 0.4; }
+        .unit-card.drag-over-top { border-top: 2px solid var(--accent-purple); }
+        .unit-card.drag-over-bottom { border-bottom: 2px solid var(--accent-purple); }
+        .unit-title { font-size: 10px; font-weight: 500; line-height: 1.3; color: var(--text-primary); margin-bottom: 4px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .unit-footer { display: flex; justify-content: space-between; align-items: center; }
+        .unit-grade { font-size: 9px; font-weight: 600; padding: 1px 4px; border-radius: 3px; }
+        .grade-5 { background: rgba(16, 185, 129, 0.15); color: var(--grade-5); }
+        .grade-6 { background: rgba(6, 182, 212, 0.15); color: var(--grade-6); }
+        .grade-7 { background: rgba(59, 130, 246, 0.15); color: var(--grade-7); }
+        .grade-9 { background: rgba(124, 58, 237, 0.15); color: var(--grade-9); }
+        .grade-10 { background: rgba(236, 72, 153, 0.15); color: var(--grade-10); }
+        .grade-11 { background: rgba(249, 115, 22, 0.15); color: var(--grade-11); }
+        .unit-branch { font-size: 9px; color: var(--text-muted); }
+        .unit-delete { position: absolute; top: 2px; right: 2px; width: 14px; height: 14px; border-radius: 3px; background: var(--accent-red); border: none; color: white; cursor: pointer; font-size: 8px; display: none; align-items: center; justify-content: center; }
+        .unit-card:hover .unit-delete { display: flex; }
+        .period-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--text-muted); margin-bottom: 8px; padding-left: 2px; display: flex; align-items: center; gap: 8px; }
+        .period-title::after { content: ''; flex: 1; height: 1px; background: var(--border-subtle); }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal { background: var(--bg-card); border-radius: 12px; padding: 24px; max-width: 400px; width: 90%; border: 1px solid var(--border-subtle); box-shadow: var(--shadow-md); }
+        .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 16px; color: var(--text-primary); }
+        .form-group { margin-bottom: 12px; }
+        .form-label { display: block; font-size: 11px; color: var(--text-secondary); margin-bottom: 4px; }
+        .form-input, .form-select { width: 100%; padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border-subtle); background: var(--bg-card); color: var(--text-primary); font-size: 12px; font-family: 'Outfit', sans-serif; }
+        .form-input:focus, .form-select:focus { outline: none; border-color: var(--accent-purple); }
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+        .toast { position: fixed; bottom: 16px; right: 16px; background: var(--bg-card); border: 1px solid var(--border-subtle); padding: 10px 16px; border-radius: 8px; display: flex; align-items: center; gap: 8px; transform: translateY(100px); opacity: 0; transition: all 0.3s; z-index: 2000; box-shadow: var(--shadow-md); font-size: 12px; }
+        .toast.show { transform: translateY(0); opacity: 1; }
+        .toast-icon { width: 18px; height: 18px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--accent-green); color: white; font-size: 10px; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
+        @media (max-width: 1400px) { .workflow-grid { grid-template-columns: repeat(5, 1fr); } }
+        @media (max-width: 1100px) { .workflow-grid { grid-template-columns: repeat(4, 1fr); } }
+        @media (max-width: 900px) { .sidebar { transform: translateX(-220px); } .sidebar:not(.collapsed) { transform: translateX(0); } .main-content { margin-left: 0; } .sidebar-toggle { left: 0; } .sidebar:not(.collapsed) + .sidebar-toggle { left: 220px; } .workflow-grid { grid-template-columns: repeat(3, 1fr); } }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <aside class="sidebar" id="sidebar">
+            <div class="logo-container">
+                <img src="logo.jpg" alt="Logo" class="logo-img">
+                <div class="logo-text">
+                    <div class="logo">ÜçDörtBeş</div>
+                    <div class="logo-subtitle-brand">ALL STAR</div>
+                </div>
+            </div>
+            <div class="nav-section" style="margin-bottom:12px;">
+                <div class="nav-title" style="font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-muted);margin-bottom:8px;font-weight:600;">Sayfalar</div>
+                <a href="is_akisi_workflow.html" class="nav-link active" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--accent-purple);color:white;text-decoration:none;font-size:12px;margin-bottom:4px;">
+                    <span>📅</span> İş Akışı Takvimi
+                </a>
+                <a href="ogretmen_yonetimi.html" class="nav-link" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;color:var(--text-secondary);text-decoration:none;font-size:12px;">
+                    <span>👨‍🏫</span> Öğretmen Yönetimi
+                </a>
+            </div>
+            <div class="theme-toggle-container">
+                <span class="theme-toggle-label">🌙 Dark Mode</span>
+                <div class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+                    <div class="theme-toggle-knob"></div>
+                </div>
+            </div>
+            <div class="collapsible-section">
+                <div class="section-header" onclick="toggleSection('gradeSection')">
+                    <span class="section-title">Sınıf</span>
+                    <span class="section-toggle" id="gradeToggle">▼</span>
+                </div>
+                <div class="section-content" id="gradeSection">
+                    <div class="filter-chips" id="gradeFilters">
+                        <button class="filter-chip active" data-grade="all">Tümü</button>
+                        <button class="filter-chip" data-grade="5">5</button>
+                        <button class="filter-chip" data-grade="6">6</button>
+                        <button class="filter-chip" data-grade="7">7</button>
+                        <button class="filter-chip" data-grade="9">9</button>
+                        <button class="filter-chip" data-grade="10">10</button>
+                        <button class="filter-chip" data-grade="11">11</button>
+                    </div>
+                </div>
+            </div>
+            <div class="collapsible-section">
+                <div class="section-header" onclick="toggleSection('branchSection')">
+                    <span class="section-title">Branş</span>
+                    <span class="section-toggle" id="branchToggle">▼</span>
+                </div>
+                <div class="section-content" id="branchSection">
+                    <div class="filter-chips" id="branchFilters">
+                        <button class="filter-chip active" data-branch="all">Tümü</button>
+                        <button class="filter-chip" data-branch="FEN BİLİMLERİ">Fen</button>
+                        <button class="filter-chip" data-branch="MATEMATİK">Mat</button>
+                        <button class="filter-chip" data-branch="TÜRKÇE">Trk</button>
+                        <button class="filter-chip" data-branch="SOSYAL BİLGİLER">Sos</button>
+                        <button class="filter-chip" data-branch="FİZİK">Fiz</button>
+                        <button class="filter-chip" data-branch="KİMYA">Kim</button>
+                        <button class="filter-chip" data-branch="BİYOLOJİ">Bio</button>
+                        <button class="filter-chip" data-branch="TARİH">Tar</button>
+                        <button class="filter-chip" data-branch="COĞRAFYA">Coğ</button>
+                    </div>
+                </div>
+            </div>
+            <div class="backlog-box">
+                <div class="backlog-header">
+                    <span class="backlog-title">Bekleyenler</span>
+                    <span class="backlog-count" id="backlogCount">0</span>
+                </div>
+                <div class="backlog-zone drop-zone" data-month="backlog"></div>
+            </div>
+            <div class="collapsible-section">
+                <div class="section-header" onclick="toggleSection('statsSection')">
+                    <span class="section-title">İstatistikler</span>
+                    <span class="section-toggle" id="statsToggle">▼</span>
+                </div>
+                <div class="section-content" id="statsSection">
+                    <div class="stat-row"><span class="stat-label">Toplam</span><span class="stat-value" id="totalUnits">0</span></div>
+                    <div class="stat-row"><span class="stat-label">1. Dönem</span><span class="stat-value" id="donem1Count">0</span></div>
+                    <div class="stat-row"><span class="stat-label">2. Dönem</span><span class="stat-value" id="donem2Count">0</span></div>
+                    <div class="stat-row"><span class="stat-label">Bekleyen</span><span class="stat-value" id="backlogStat">0</span></div>
+                </div>
+            </div>
+        </aside>
+        <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">◀</button>
+        <main class="main-content" id="mainContent">
+            <div class="header">
+                <h1 class="header-title">İş Akışı Takvimi</h1>
+                <div class="header-actions">
+                    <button class="btn btn-secondary" onclick="exportData()">📤 Aktar</button>
+                    <button class="btn btn-primary" onclick="openAddModal()">+ Ekle</button>
+                </div>
+            </div>
+            <div class="period-title">1. Dönem (Nisan – Ekim 2026)</div>
+            <div class="workflow-grid" id="grid1"></div>
+            <div class="period-title">2. Dönem (Kasım 2026 – Nisan 2027)</div>
+            <div class="workflow-grid" id="grid2"></div>
+        </main>
+    </div>
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal">
+            <h2 class="modal-title">Yeni Ünite Ekle</h2>
+            <form id="unitForm">
+                <div class="form-group"><label class="form-label">Ünite Adı</label><input type="text" class="form-input" id="unitName" required></div>
+                <div class="form-group"><label class="form-label">Sınıf</label><select class="form-select" id="unitGrade" required><option value="5">5. Sınıf</option><option value="6">6. Sınıf</option><option value="7">7. Sınıf</option><option value="9">9. Sınıf</option><option value="10">10. Sınıf</option><option value="11">11. Sınıf</option></select></div>
+                <div class="form-group"><label class="form-label">Branş</label><select class="form-select" id="unitBranch" required><option value="FEN BİLİMLERİ">Fen Bilimleri</option><option value="MATEMATİK">Matematik</option><option value="TÜRKÇE">Türkçe</option><option value="SOSYAL BİLGİLER">Sosyal Bilgiler</option><option value="FİZİK">Fizik</option><option value="KİMYA">Kimya</option><option value="BİYOLOJİ">Biyoloji</option><option value="TARİH">Tarih</option><option value="COĞRAFYA">Coğrafya</option><option value="TÜRK DİLİ VE EDEBİYATI">Edebiyat</option></select></div>
+                <div class="form-group"><label class="form-label">Ay</label><select class="form-select" id="unitMonth" required><option value="backlog">📋 Bekleyenler</option><option value="2026-04">Nisan 2026</option><option value="2026-05">Mayıs 2026</option><option value="2026-06">Haziran 2026</option><option value="2026-07">Temmuz 2026</option><option value="2026-08">Ağustos 2026</option><option value="2026-09">Eylül 2026</option><option value="2026-10">Ekim 2026</option><option value="2026-11">Kasım 2026</option><option value="2026-12">Aralık 2026</option><option value="2027-01">Ocak 2027</option><option value="2027-02">Şubat 2027</option><option value="2027-03">Mart 2027</option><option value="2027-04">Nisan 2027</option></select></div>
+                <div class="modal-actions"><button type="button" class="btn btn-secondary" onclick="closeModal()">İptal</button><button type="submit" class="btn btn-primary">Kaydet</button></div>
+            </form>
+        </div>
+    </div>
+    <div class="toast" id="toast"><div class="toast-icon">✓</div><span id="toastMessage">İşlem başarılı!</span></div>
+    <script>
+        const MONTHS = [
+            { id: '2026-04', name: 'Nisan 2026', short: 'Nis 26', period: 1 },
+            { id: '2026-05', name: 'Mayıs 2026', short: 'May 26', period: 1 },
+            { id: '2026-06', name: 'Haziran 2026', short: 'Haz 26', period: 1 },
+            { id: '2026-07', name: 'Temmuz 2026', short: 'Tem 26', period: 1 },
+            { id: '2026-08', name: 'Ağustos 2026', short: 'Ağu 26', period: 1 },
+            { id: '2026-09', name: 'Eylül 2026', short: 'Eyl 26', period: 1 },
+            { id: '2026-10', name: 'Ekim 2026', short: 'Eki 26', period: 1 },
+            { id: '2026-11', name: 'Kasım 2026', short: 'Kas 26', period: 2 },
+            { id: '2026-12', name: 'Aralık 2026', short: 'Ara 26', period: 2 },
+            { id: '2027-01', name: 'Ocak 2027', short: 'Oca 27', period: 2 },
+            { id: '2027-02', name: 'Şubat 2027', short: 'Şub 27', period: 2 },
+            { id: '2027-03', name: 'Mart 2027', short: 'Mar 27', period: 2 },
+            { id: '2027-04', name: 'Nisan 2027', short: 'Nis 27', period: 2 }
+        ];
+
+        let units = [
+            { id: 1, name: 'GÖKYÜZÜNDEKİ KOMŞULARIMIZ', grade: 5, branch: 'FEN BİLİMLERİ', month: '2026-04', order: 0 },
+            { id: 2, name: 'BİRLİKTE YAŞAMAK', grade: 5, branch: 'SOSYAL BİLGİLER', month: '2026-04', order: 1 },
+            { id: 3, name: 'GÜNEŞ SİSTEMİ VE TUTULMALAR', grade: 6, branch: 'FEN BİLİMLERİ', month: '2026-04', order: 2 },
+            { id: 4, name: 'BİRLİKTE YAŞAMAK', grade: 6, branch: 'SOSYAL BİLGİLER', month: '2026-04', order: 3 },
+            { id: 5, name: 'GÜNEŞ SİSTEMİ VE ÖTESİ', grade: 7, branch: 'FEN BİLİMLERİ', month: '2026-04', order: 4 },
+            { id: 6, name: 'TOPLUMUN ÜYESİYİM', grade: 7, branch: 'SOSYAL BİLGİLER', month: '2026-04', order: 5 },
+            { id: 7, name: 'SÖZCÜKTE ANLAM', grade: 7, branch: 'TÜRKÇE', month: '2026-04', order: 6 },
+            { id: 8, name: 'SAYILAR', grade: 9, branch: 'MATEMATİK', month: '2026-04', order: 7 },
+            { id: 9, name: 'COĞRAFYANIN DOĞASI', grade: 9, branch: 'COĞRAFYA', month: '2026-04', order: 8 },
+            { id: 10, name: 'ENERJİ', grade: 10, branch: 'BİYOLOJİ', month: '2026-04', order: 9 },
+            { id: 11, name: 'COĞRAFYANIN DOĞASI', grade: 10, branch: 'COĞRAFYA', month: '2026-04', order: 10 },
+            { id: 12, name: 'KİMYA VE ENERJİ', grade: 11, branch: 'KİMYA', month: '2026-04', order: 11 },
+            { id: 13, name: 'COĞRAFYANIN DOĞASI', grade: 11, branch: 'COĞRAFYA', month: '2026-04', order: 12 },
+            { id: 14, name: 'KUVVETİ TANIYALIM', grade: 5, branch: 'FEN BİLİMLERİ', month: '2026-05', order: 0 },
+            { id: 15, name: 'EVİMİZ DÜNYA', grade: 5, branch: 'SOSYAL BİLGİLER', month: '2026-05', order: 1 },
+            { id: 16, name: 'KUVVET ETKİSİNDE HAREKET', grade: 6, branch: 'FEN BİLİMLERİ', month: '2026-05', order: 2 },
+            { id: 17, name: 'EVİMİZ DÜNYA', grade: 6, branch: 'SOSYAL BİLGİLER', month: '2026-05', order: 3 },
+            { id: 18, name: 'HÜCRE VE BÖLÜNMELER', grade: 7, branch: 'FEN BİLİMLERİ', month: '2026-05', order: 4 },
+            { id: 19, name: 'OSMANLI KÜLTÜR VE MEDENİYETİ', grade: 7, branch: 'SOSYAL BİLGİLER', month: '2026-05', order: 5 },
+            { id: 20, name: 'FİZİK BİLİMİ VE KARİYER KEŞFİ', grade: 9, branch: 'FİZİK', month: '2026-05', order: 6 },
+            { id: 21, name: 'NİCELİKLER VE DEĞİŞİMLER', grade: 9, branch: 'MATEMATİK', month: '2026-05', order: 7 },
+            { id: 22, name: 'SÖZÜN İNCELİĞİ', grade: 9, branch: 'TÜRK DİLİ VE EDEBİYATI', month: '2026-05', order: 8 },
+            { id: 23, name: 'SAYILAR', grade: 10, branch: 'MATEMATİK', month: '2026-05', order: 9 },
+            { id: 24, name: 'MEKANSAL BİLGİ TEKNOLOJİLERİ', grade: 10, branch: 'COĞRAFYA', month: '2026-05', order: 10 },
+            { id: 25, name: 'TEPKİ', grade: 11, branch: 'BİYOLOJİ', month: '2026-05', order: 11 },
+            { id: 26, name: 'MEKANSAL BİLGİ TEKNOLOJİLERİ', grade: 11, branch: 'COĞRAFYA', month: '2026-05', order: 12 },
+            { id: 27, name: 'CANLILARIN YAPISINA YOLCULUK', grade: 5, branch: 'FEN BİLİMLERİ', month: '2026-06', order: 0 },
+            { id: 28, name: 'SÖZCÜKTE ANLAM', grade: 5, branch: 'TÜRKÇE', month: '2026-06', order: 1 },
+            { id: 29, name: 'CANLILARDA SİSTEMLER', grade: 6, branch: 'FEN BİLİMLERİ', month: '2026-06', order: 2 },
+            { id: 30, name: 'SÖZCÜKTE ANLAM', grade: 6, branch: 'TÜRKÇE', month: '2026-06', order: 3 },
+            { id: 31, name: 'KUVVET VE ENERJİ', grade: 7, branch: 'FEN BİLİMLERİ', month: '2026-06', order: 4 },
+            { id: 32, name: 'İNSAN VE ÇEVRE', grade: 7, branch: 'SOSYAL BİLGİLER', month: '2026-06', order: 5 },
+            { id: 33, name: 'KUVVET VE HAREKET', grade: 9, branch: 'FİZİK', month: '2026-06', order: 6 },
+            { id: 34, name: 'GEOMETRİK ŞEKİLLER', grade: 9, branch: 'MATEMATİK', month: '2026-06', order: 7 },
+            { id: 35, name: 'ANLAM ARAYIŞI', grade: 9, branch: 'TÜRK DİLİ VE EDEBİYATI', month: '2026-06', order: 8 },
+            { id: 36, name: 'NİCELİKLER VE DEĞİŞİMLER', grade: 10, branch: 'MATEMATİK', month: '2026-06', order: 9 },
+            { id: 37, name: 'SÖZÜN EZGİSİ', grade: 10, branch: 'TÜRK DİLİ VE EDEBİYATI', month: '2026-06', order: 10 },
+            { id: 38, name: 'SAYILAR', grade: 11, branch: 'MATEMATİK', month: '2026-06', order: 11 },
+            { id: 39, name: 'DOĞAL SİSTEMLER VE SÜREÇLER', grade: 11, branch: 'COĞRAFYA', month: '2026-06', order: 12 },
+            { id: 40, name: 'GEOMETRİK ŞEKİLLER', grade: 5, branch: 'MATEMATİK', month: '2026-07', order: 0 },
+            { id: 41, name: 'CÜMLEDE ANLAM', grade: 5, branch: 'TÜRKÇE', month: '2026-07', order: 1 },
+            { id: 42, name: 'GEOMETRİK ŞEKİLLER', grade: 6, branch: 'MATEMATİK', month: '2026-07', order: 2 },
+            { id: 43, name: 'CÜMLEDE ANLAM', grade: 6, branch: 'TÜRKÇE', month: '2026-07', order: 3 },
+            { id: 44, name: 'SAF MADDE VE KARIŞIMLAR', grade: 7, branch: 'FEN BİLİMLERİ', month: '2026-07', order: 4 },
+            { id: 45, name: 'CÜMLEDE ANLAM', grade: 7, branch: 'TÜRKÇE', month: '2026-07', order: 5 },
+            { id: 46, name: 'KİMYA HAYATTIR', grade: 9, branch: 'KİMYA', month: '2026-07', order: 6 },
+            { id: 47, name: 'GEÇMİŞİN İNŞA SÜRECİNDE TARİH', grade: 9, branch: 'TARİH', month: '2026-07', order: 7 },
+            { id: 48, name: 'KUVVET VE HAREKET', grade: 10, branch: 'FİZİK', month: '2026-07', order: 8 },
+            { id: 49, name: 'SAYMA ALGORİTMA VE BİLİŞİM', grade: 10, branch: 'MATEMATİK', month: '2026-07', order: 9 },
+            { id: 50, name: 'KELİMELERİN RİTMİ', grade: 10, branch: 'TÜRK DİLİ VE EDEBİYATI', month: '2026-07', order: 10 },
+            { id: 51, name: 'NİCELİKLER VE DEĞİŞİMLER', grade: 11, branch: 'MATEMATİK', month: '2026-07', order: 11 },
+            { id: 52, name: 'TEMA 1', grade: 11, branch: 'TÜRK DİLİ VE EDEBİYATI', month: '2026-07', order: 12 },
+            { id: 53, name: 'DOĞAL SAYILAR', grade: 5, branch: 'MATEMATİK', month: '2026-08', order: 0 },
+            { id: 54, name: 'METİNDE ANLAM', grade: 5, branch: 'TÜRKÇE', month: '2026-08', order: 1 },
+            { id: 55, name: 'DOĞAL SAYILAR', grade: 6, branch: 'MATEMATİK', month: '2026-08', order: 2 },
+            { id: 56, name: 'METİNDE ANLAM', grade: 6, branch: 'TÜRKÇE', month: '2026-08', order: 3 },
+            { id: 57, name: 'DOĞAL SAYILAR', grade: 7, branch: 'MATEMATİK', month: '2026-08', order: 4 },
+            { id: 58, name: 'METİNDE ANLAM', grade: 7, branch: 'TÜRKÇE', month: '2026-08', order: 5 },
+            { id: 59, name: 'ATOMDAN PERİYODİK TABLOYA', grade: 9, branch: 'KİMYA', month: '2026-08', order: 6 },
+            { id: 60, name: 'ESKİ ÇAĞ MEDENİYETLERİ 1', grade: 9, branch: 'TARİH', month: '2026-08', order: 7 },
+            { id: 61, name: 'ENERJİ', grade: 10, branch: 'FİZİK', month: '2026-08', order: 8 },
+            { id: 62, name: 'TÜRKİSTANDAN TÜRKİYEYE', grade: 10, branch: 'TARİH', month: '2026-08', order: 9 },
+            { id: 63, name: 'KUVVET VE HAREKET', grade: 11, branch: 'FİZİK', month: '2026-08', order: 10 },
+            { id: 64, name: 'SAYMA ALGORİTMA VE BİLİŞİM', grade: 11, branch: 'MATEMATİK', month: '2026-08', order: 11 },
+            { id: 65, name: 'TEMA 2', grade: 11, branch: 'TÜRK DİLİ VE EDEBİYATI', month: '2026-08', order: 12 },
+            { id: 66, name: 'GEOMETRİK NİCELİKLER', grade: 5, branch: 'MATEMATİK', month: '2026-09', order: 0 },
+            { id: 67, name: 'YAZIM KURALLARI', grade: 5, branch: 'TÜRKÇE', month: '2026-09', order: 1 },
+            { id: 68, name: 'GEOMETRİK NİCELİKLER', grade: 6, branch: 'MATEMATİK', month: '2026-09', order: 2 },
+            { id: 69, name: 'YAZIM KURALLARI', grade: 6, branch: 'TÜRKÇE', month: '2026-09', order: 3 },
+            { id: 70, name: 'KESİRLER', grade: 7, branch: 'MATEMATİK', month: '2026-09', order: 4 },
+            { id: 71, name: 'YAZIM KURALLARI', grade: 7, branch: 'TÜRKÇE', month: '2026-09', order: 5 },
+            { id: 72, name: 'YAŞAM BİLİMİ BİYOLOJİ', grade: 9, branch: 'BİYOLOJİ', month: '2026-09', order: 6 },
+            { id: 73, name: 'MEKANSAL BİLGİ TEKNOLOJİLERİ', grade: 9, branch: 'COĞRAFYA', month: '2026-09', order: 7 },
+            { id: 74, name: 'KİMYASAL TEPKİMELER', grade: 10, branch: 'KİMYA', month: '2026-09', order: 8 },
+            { id: 75, name: 'BEYLİKTEN DEVLETE OSMANLI 1', grade: 10, branch: 'TARİH', month: '2026-09', order: 9 },
+            { id: 76, name: 'ELEKTRİK VE MANYETİZMA', grade: 11, branch: 'FİZİK', month: '2026-09', order: 10 },
+            { id: 77, name: 'DEĞİŞEN DÜNYADA OSMANLI DEVLETİ', grade: 11, branch: 'TARİH', month: '2026-09', order: 11 },
+            { id: 78, name: 'ORTAK MİRASIMIZ', grade: 5, branch: 'SOSYAL BİLGİLER', month: '2026-10', order: 0 },
+            { id: 79, name: 'NOKTALAMA İŞARETLERİ', grade: 5, branch: 'TÜRKÇE', month: '2026-10', order: 1 },
+            { id: 80, name: 'ORTAK MİRASIMIZ', grade: 6, branch: 'SOSYAL BİLGİLER', month: '2026-10', order: 2 },
+            { id: 81, name: 'NOKTALAMA İŞARETLERİ', grade: 6, branch: 'TÜRKÇE', month: '2026-10', order: 3 },
+            { id: 82, name: 'CEBİRLER', grade: 7, branch: 'MATEMATİK', month: '2026-10', order: 4 },
+            { id: 83, name: 'NOKTALAMA İŞARETLERİ', grade: 7, branch: 'TÜRKÇE', month: '2026-10', order: 5 },
+            { id: 84, name: 'CANLILAR VE SINIFLANDIRILMASI', grade: 9, branch: 'BİYOLOJİ', month: '2026-10', order: 6 },
+            { id: 85, name: 'DOĞAL SİSTEMLER VE SÜREÇLER', grade: 9, branch: 'COĞRAFYA', month: '2026-10', order: 7 },
+            { id: 86, name: 'GAZLAR', grade: 10, branch: 'KİMYA', month: '2026-10', order: 8 },
+            { id: 87, name: 'DOĞAL SİSTEMLER VE SÜREÇLER', grade: 10, branch: 'COĞRAFYA', month: '2026-10', order: 9 },
+            { id: 88, name: 'TEPKİMELERDE HIZ', grade: 11, branch: 'KİMYA', month: '2026-10', order: 10 },
+            { id: 89, name: 'DÖNÜŞÜM SÜRECİNDE OSMANLI 1', grade: 11, branch: 'TARİH', month: '2026-10', order: 11 },
+            { id: 90, name: 'IŞIĞIN MADDE İLE ETKİLEŞİMİ', grade: 5, branch: 'FEN BİLİMLERİ', month: '2026-11', order: 0 },
+            { id: 91, name: 'KESİRLER', grade: 5, branch: 'MATEMATİK', month: '2026-11', order: 1 },
+            { id: 92, name: 'GÖRSEL OKUMA GRAFİK YORUMLAMA', grade: 5, branch: 'TÜRKÇE', month: '2026-11', order: 2 },
+            { id: 93, name: 'KESİRLER', grade: 6, branch: 'MATEMATİK', month: '2026-11', order: 3 },
+            { id: 94, name: 'GÖRSEL OKUMA GRAFİK YORUMLAMA', grade: 6, branch: 'TÜRKÇE', month: '2026-11', order: 4 },
+            { id: 95, name: 'SAYILAR 3', grade: 7, branch: 'MATEMATİK', month: '2026-11', order: 5 },
+            { id: 96, name: 'GÖRSEL OKUMA GRAFİK YORUMLAMA', grade: 7, branch: 'TÜRKÇE', month: '2026-11', order: 6 },
+            { id: 97, name: 'ETKİLEŞİMLER VE MADDE', grade: 9, branch: 'KİMYA', month: '2026-11', order: 7 },
+            { id: 98, name: 'EŞLİK VE BENZERLİK', grade: 9, branch: 'MATEMATİK', month: '2026-11', order: 8 },
+            { id: 99, name: 'BEŞERİ SİSTEMLER', grade: 9, branch: 'COĞRAFYA', month: '2026-11', order: 9 },
+            { id: 100, name: 'ÇÖZELTİLER', grade: 10, branch: 'KİMYA', month: '2026-11', order: 10 },
+            { id: 101, name: 'BEYLİKTEN DEVLETE OSMANLI 2', grade: 10, branch: 'TARİH', month: '2026-11', order: 11 },
+            { id: 102, name: 'DÜNDEN BUGÜNE', grade: 10, branch: 'TÜRK DİLİ VE EDEBİYATI', month: '2026-11', order: 12 },
+            { id: 103, name: 'GEOMETRİK ŞEKİLLER', grade: 11, branch: 'MATEMATİK', month: '2026-11', order: 13 },
+            { id: 104, name: 'BEŞERİ SİSTEMLER', grade: 11, branch: 'COĞRAFYA', month: '2026-11', order: 14 },
+            { id: 105, name: 'MADDENİN DOĞASI', grade: 5, branch: 'FEN BİLİMLERİ', month: '2026-12', order: 0 },
+            { id: 106, name: 'İSTATİSTİKSEL ARAŞTIRMA SÜRECİ', grade: 5, branch: 'MATEMATİK', month: '2026-12', order: 1 },
+            { id: 107, name: 'IŞIĞIN YANSIMASI VE RENKLER', grade: 6, branch: 'FEN BİLİMLERİ', month: '2026-12', order: 2 },
+            { id: 108, name: 'İSTATİSTİKSEL ARAŞTIRMA SÜRECİ', grade: 6, branch: 'MATEMATİK', month: '2026-12', order: 3 },
+            { id: 109, name: 'DİL YAPILARI', grade: 6, branch: 'TÜRKÇE', month: '2026-12', order: 4 },
+            { id: 110, name: 'GEOMETRİK ÖLÇME', grade: 7, branch: 'MATEMATİK', month: '2026-12', order: 5 },
+            { id: 111, name: 'ZARFLAR FİİLLER', grade: 7, branch: 'TÜRKÇE', month: '2026-12', order: 6 },
+            { id: 112, name: 'CANLILARIN TEMEL BİLEŞİKLERİ', grade: 9, branch: 'BİYOLOJİ', month: '2026-12', order: 7 },
+            { id: 113, name: 'ESKİ ÇAĞ MEDENİYETLERİ 2', grade: 9, branch: 'TARİH', month: '2026-12', order: 8 },
+            { id: 114, name: 'ANLAMIN YAPI TAŞLARI', grade: 9, branch: 'TÜRK DİLİ VE EDEBİYATI', month: '2026-12', order: 9 },
+            { id: 115, name: 'EKOLOJİ', grade: 10, branch: 'BİYOLOJİ', month: '2026-12', order: 10 },
+            { id: 116, name: 'CİHAN DEVLETİ OSMANLI', grade: 10, branch: 'TARİH', month: '2026-12', order: 11 },
+            { id: 117, name: 'NESİLLERİN MİRASI', grade: 10, branch: 'TÜRK DİLİ VE EDEBİYATI', month: '2026-12', order: 12 },
+            { id: 118, name: 'ANALİTİK İNCELEME', grade: 11, branch: 'MATEMATİK', month: '2026-12', order: 13 },
+            { id: 119, name: 'EKONOMİK FAALİYETLER VE ETKİLERİ', grade: 11, branch: 'COĞRAFYA', month: '2026-12', order: 14 },
+            { id: 120, name: 'YAŞAMIMIZDAKİ ELEKTRİK', grade: 5, branch: 'FEN BİLİMLERİ', month: '2027-01', order: 0 },
+            { id: 121, name: 'YAŞAYAN DEMOKRASİMİZ', grade: 5, branch: 'SOSYAL BİLGİLER', month: '2027-01', order: 1 },
+            { id: 122, name: 'MADDENİN AYIRT EDİCİ ÖZELLİKLERİ', grade: 6, branch: 'FEN BİLİMLERİ', month: '2027-01', order: 2 },
+            { id: 123, name: 'İŞLEMLERLE CEBİRSEL DÜŞÜNME', grade: 6, branch: 'MATEMATİK', month: '2027-01', order: 3 },
+            { id: 124, name: 'IŞIĞIN MADDE İLE ETKİLEŞİMİ', grade: 7, branch: 'FEN BİLİMLERİ', month: '2027-01', order: 4 },
+            { id: 125, name: 'BİLİM VE TEKNOLOJİNİN YOLCULUĞU', grade: 7, branch: 'SOSYAL BİLGİLER', month: '2027-01', order: 5 },
+            { id: 126, name: 'ANLATIM BOZUKLUKLARI', grade: 7, branch: 'TÜRKÇE', month: '2027-01', order: 6 },
+            { id: 127, name: 'HÜCRE', grade: 9, branch: 'BİYOLOJİ', month: '2027-01', order: 7 },
+            { id: 128, name: 'ORTA ÇAĞ MEDENİYETLERİ', grade: 9, branch: 'TARİH', month: '2027-01', order: 8 },
+            { id: 129, name: 'DİLİN ZENGİNLİĞİ', grade: 9, branch: 'TÜRK DİLİ VE EDEBİYATI', month: '2027-01', order: 9 },
+            { id: 130, name: 'GEOMETRİK ŞEKİLLER', grade: 10, branch: 'MATEMATİK', month: '2027-01', order: 10 },
+            { id: 131, name: 'BEŞERİ SİSTEMLER', grade: 10, branch: 'COĞRAFYA', month: '2027-01', order: 11 },
+            { id: 132, name: 'MADDE VE DOĞASI', grade: 11, branch: 'FİZİK', month: '2027-01', order: 12 },
+            { id: 133, name: 'İSTATİSTİKSEL ARAŞTIRMA SÜRECİ', grade: 11, branch: 'MATEMATİK', month: '2027-01', order: 13 },
+            { id: 134, name: 'AFETLER VE SÜRDÜRÜLEBİLİR ÇEVRE', grade: 11, branch: 'COĞRAFYA', month: '2027-01', order: 14 },
+            { id: 135, name: 'SÜRDÜRÜLEBİLİR YAŞAM VE GERİ DÖNÜŞÜM', grade: 5, branch: 'FEN BİLİMLERİ', month: '2027-02', order: 0 },
+            { id: 136, name: 'HAYATIMIZDAKİ EKONOMİ', grade: 5, branch: 'SOSYAL BİLGİLER', month: '2027-02', order: 1 },
+            { id: 137, name: 'ELEKTRİĞİN İLETİMİ VE DİRENÇ', grade: 6, branch: 'FEN BİLİMLERİ', month: '2027-02', order: 2 },
+            { id: 138, name: 'YAŞAYAN DEMOKRASİMİZ', grade: 6, branch: 'SOSYAL BİLGİLER', month: '2027-02', order: 3 },
+            { id: 139, name: 'CANLILARDA ÜREME BÜYÜME VE GELİŞME', grade: 7, branch: 'FEN BİLİMLERİ', month: '2027-02', order: 4 },
+            { id: 140, name: 'EKONOMİ VE YAŞAM', grade: 7, branch: 'SOSYAL BİLGİLER', month: '2027-02', order: 5 },
+            { id: 141, name: 'AKIŞKANLAR', grade: 9, branch: 'FİZİK', month: '2027-02', order: 6 },
+            { id: 142, name: 'ALGORİTMA VE BİLİŞİM', grade: 9, branch: 'MATEMATİK', month: '2027-02', order: 7 },
+            { id: 143, name: 'EKONOMİK FAALİYETLER VE ETKİLERİ', grade: 9, branch: 'COĞRAFYA', month: '2027-02', order: 8 },
+            { id: 144, name: 'ELEKTRİK', grade: 10, branch: 'FİZİK', month: '2027-02', order: 9 },
+            { id: 145, name: 'ANALİTİK İNCELEME', grade: 10, branch: 'MATEMATİK', month: '2027-02', order: 10 },
+            { id: 146, name: 'EKONOMİK FAALİYETLER VE ETKİLERİ', grade: 10, branch: 'COĞRAFYA', month: '2027-02', order: 11 },
+            { id: 147, name: 'OPTİK', grade: 11, branch: 'FİZİK', month: '2027-02', order: 12 },
+            { id: 148, name: 'VERİDEN OLASILIĞA', grade: 11, branch: 'MATEMATİK', month: '2027-02', order: 13 },
+            { id: 149, name: 'BÖLGELER ÜLKELER VE KÜRESEL BAĞLANTILAR', grade: 11, branch: 'COĞRAFYA', month: '2027-02', order: 14 },
+            { id: 150, name: 'İŞLEMLERLE CEBİRSEL DÜŞÜNME', grade: 5, branch: 'MATEMATİK', month: '2027-03', order: 0 },
+            { id: 151, name: 'TEKNOLOJİ VE SOSYAL BİLİMLER', grade: 5, branch: 'SOSYAL BİLGİLER', month: '2027-03', order: 1 },
+            { id: 152, name: 'SÜRDÜRÜLEBİLİR YAŞAM VE GERİ DÖNÜŞÜM', grade: 6, branch: 'FEN BİLİMLERİ', month: '2027-03', order: 2 },
+            { id: 153, name: 'HAYATIMIZDAKİ EKONOMİ', grade: 6, branch: 'SOSYAL BİLGİLER', month: '2027-03', order: 3 },
+            { id: 154, name: 'ELEKTRİK DEVRELERİ', grade: 7, branch: 'FEN BİLİMLERİ', month: '2027-03', order: 4 },
+            { id: 155, name: 'DEMOKRASİ VE VATANDAŞLIK', grade: 7, branch: 'SOSYAL BİLGİLER', month: '2027-03', order: 5 },
+            { id: 156, name: 'ENERJİ', grade: 9, branch: 'FİZİK', month: '2027-03', order: 6 },
+            { id: 157, name: 'İSTATİSTİKSEL ARAŞTIRMA SÜRECİ', grade: 9, branch: 'MATEMATİK', month: '2027-03', order: 7 },
+            { id: 158, name: 'AFETLER VE SÜRDÜRÜLEBİLİR ÇEVRE', grade: 9, branch: 'COĞRAFYA', month: '2027-03', order: 8 },
+            { id: 159, name: 'DALGALAR', grade: 10, branch: 'FİZİK', month: '2027-03', order: 9 },
+            { id: 160, name: 'İSTATİSTİKSEL ARAŞTIRMA SÜRECİ', grade: 10, branch: 'MATEMATİK', month: '2027-03', order: 10 },
+            { id: 161, name: 'AFETLER VE SÜRDÜRÜLEBİLİR ÇEVRE', grade: 10, branch: 'COĞRAFYA', month: '2027-03', order: 11 },
+            { id: 162, name: 'TEPKİMELERDE DENGE', grade: 11, branch: 'KİMYA', month: '2027-03', order: 12 },
+            { id: 163, name: 'DÖNÜŞÜM SÜRECİNDE OSMANLI 2', grade: 11, branch: 'TARİH', month: '2027-03', order: 13 },
+            { id: 164, name: 'TEMA 3', grade: 11, branch: 'TÜRK DİLİ VE EDEBİYATI', month: '2027-03', order: 14 },
+            { id: 165, name: 'VERİDEN OLASILIĞA', grade: 5, branch: 'MATEMATİK', month: '2027-04', order: 0 },
+            { id: 166, name: 'DİL YAPILARI', grade: 5, branch: 'TÜRKÇE', month: '2027-04', order: 1 },
+            { id: 167, name: 'VERİDEN OLASILIĞA', grade: 6, branch: 'MATEMATİK', month: '2027-04', order: 2 },
+            { id: 168, name: 'TEKNOLOJİ VE SOSYAL BİLİMLER', grade: 6, branch: 'SOSYAL BİLGİLER', month: '2027-04', order: 3 },
+            { id: 169, name: 'VERİ İŞLEME VE YAPI GÖRÜNÜMLERİ', grade: 7, branch: 'MATEMATİK', month: '2027-04', order: 4 },
+            { id: 170, name: 'DÜNYADAKİ YERİMİZ', grade: 7, branch: 'SOSYAL BİLGİLER', month: '2027-04', order: 5 },
+            { id: 171, name: 'NANOPARÇACIKLAR VE EKOLOJİK SÜRDÜRÜLEBİLİRLİK', grade: 9, branch: 'KİMYA', month: '2027-04', order: 6 },
+            { id: 172, name: 'VERİDEN OLASILIĞA', grade: 9, branch: 'MATEMATİK', month: '2027-04', order: 7 },
+            { id: 173, name: 'BÖLGELER ÜLKELER VE KÜRESEL BAĞLANTILAR', grade: 9, branch: 'COĞRAFYA', month: '2027-04', order: 8 },
+            { id: 174, name: 'YEŞİL KİMYA ÇEVRESEL VE EKOLOJİK SÜRDÜRÜLEBİLİRLİK', grade: 10, branch: 'KİMYA', month: '2027-04', order: 9 },
+            { id: 175, name: 'VERİDEN OLASILIĞA', grade: 10, branch: 'MATEMATİK', month: '2027-04', order: 10 },
+            { id: 176, name: 'BÖLGELER ÜLKELER VE KÜRESEL BAĞLANTILAR', grade: 10, branch: 'COĞRAFYA', month: '2027-04', order: 11 },
+            { id: 177, name: 'HOMEOSTAZİ', grade: 11, branch: 'BİYOLOJİ', month: '2027-04', order: 12 },
+            { id: 178, name: 'SAVAŞLAR SARMALINDA OSMANLI', grade: 11, branch: 'TARİH', month: '2027-04', order: 13 },
+            { id: 179, name: 'TEMA 4', grade: 11, branch: 'TÜRK DİLİ VE EDEBİYATI', month: '2027-04', order: 14 }
+        ];
+
+        let nextId = 180, activeGradeFilter = 'all', activeBranchFilter = 'all', draggedElement = null;
+        let isDarkMode = false, isSidebarCollapsed = false;
+        const shorts = {'FEN BİLİMLERİ':'Fen','MATEMATİK':'Mat','TÜRKÇE':'Trk','SOSYAL BİLGİLER':'Sos','FİZİK':'Fiz','KİMYA':'Kim','BİYOLOJİ':'Bio','TARİH':'Tar','COĞRAFYA':'Coğ','TÜRK DİLİ VE EDEBİYATI':'Edb'};
+        const sectionStates = { gradeSection: true, branchSection: true, statsSection: true };
+
+        function toggleTheme() {
+            isDarkMode = !isDarkMode;
+            document.body.setAttribute('data-theme', isDarkMode ? 'dark' : 'light');
+            document.getElementById('themeToggle').classList.toggle('active', isDarkMode);
+            localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+        }
+
+        function toggleSidebar() {
+            isSidebarCollapsed = !isSidebarCollapsed;
+            document.getElementById('sidebar').classList.toggle('collapsed', isSidebarCollapsed);
+            document.getElementById('mainContent').classList.toggle('expanded', isSidebarCollapsed);
+            document.getElementById('sidebarToggle').textContent = isSidebarCollapsed ? '▶' : '◀';
+        }
+
+        function toggleSection(sectionId) {
+            const content = document.getElementById(sectionId);
+            const toggle = document.getElementById(sectionId.replace('Section', 'Toggle'));
+            sectionStates[sectionId] = !sectionStates[sectionId];
+            content.classList.toggle('collapsed', !sectionStates[sectionId]);
+            toggle.classList.toggle('collapsed', !sectionStates[sectionId]);
+        }
+
+        function init() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                isDarkMode = true;
+                document.body.setAttribute('data-theme', 'dark');
+                document.getElementById('themeToggle').classList.add('active');
+            }
+            renderMonthColumns(); renderUnits(); updateStats(); setupEventListeners();
+        }
+
+        function renderMonthColumns() {
+            document.getElementById('grid1').innerHTML = '';
+            document.getElementById('grid2').innerHTML = '';
+            MONTHS.forEach(m => {
+                const col = document.createElement('div');
+                col.className = 'month-column';
+                col.innerHTML = '<div class="month-header"><span class="month-name">'+m.short+'</span><div class="month-meta"><span class="month-badge donem-'+m.period+'">'+m.period+'.D</span><span class="unit-count" id="count-'+m.id+'">0</span></div></div><div class="month-content"><div class="drop-zone" data-month="'+m.id+'"></div></div>';
+                document.getElementById(m.period === 1 ? 'grid1' : 'grid2').appendChild(col);
+            });
+        }
+
+        function renderUnits() {
+            document.querySelectorAll('.drop-zone').forEach(z => z.innerHTML = '');
+            const filtered = units.filter(u => (activeGradeFilter === 'all' || u.grade == activeGradeFilter) && (activeBranchFilter === 'all' || u.branch === activeBranchFilter));
+            const backlogUnits = filtered.filter(u => u.month === 'backlog').sort((a,b) => a.order - b.order);
+            const backlogZone = document.querySelector('.drop-zone[data-month="backlog"]');
+            backlogUnits.forEach(u => backlogZone && backlogZone.appendChild(createUnitCard(u)));
+            document.getElementById('backlogCount').textContent = backlogUnits.length;
+            MONTHS.forEach(m => {
+                const monthUnits = filtered.filter(u => u.month === m.id).sort((a,b) => a.order - b.order);
+                const zone = document.querySelector('.drop-zone[data-month="'+m.id+'"]');
+                monthUnits.forEach(u => zone && zone.appendChild(createUnitCard(u)));
+                document.getElementById('count-'+m.id).textContent = monthUnits.length;
+            });
+        }
+
+        function createUnitCard(unit) {
+            const card = document.createElement('div');
+            card.className = 'unit-card';
+            card.draggable = true;
+            card.dataset.id = unit.id;
+            card.innerHTML = '<button class="unit-delete" onclick="event.stopPropagation();deleteUnit('+unit.id+')">✕</button><div class="unit-title">'+unit.name+'</div><div class="unit-footer"><span class="unit-grade grade-'+unit.grade+'">'+unit.grade+'</span><span class="unit-branch">'+(shorts[unit.branch] || unit.branch)+'</span></div>';
+            card.addEventListener('dragstart', function(e) { draggedElement = card; card.classList.add('dragging'); e.dataTransfer.setData('text/plain', unit.id); });
+            card.addEventListener('dragend', function() { card.classList.remove('dragging'); document.querySelectorAll('.unit-card').forEach(function(c) { c.classList.remove('drag-over-top','drag-over-bottom'); }); document.querySelectorAll('.drop-zone').forEach(function(z) { z.classList.remove('drag-over'); }); draggedElement = null; });
+            card.addEventListener('dragover', function(e) { e.preventDefault(); e.stopPropagation(); if (card === draggedElement) return; document.querySelectorAll('.unit-card').forEach(function(c) { c.classList.remove('drag-over-top','drag-over-bottom'); }); var rect = card.getBoundingClientRect(); card.classList.add(e.clientY < rect.top + rect.height/2 ? 'drag-over-top' : 'drag-over-bottom'); });
+            card.addEventListener('dragleave', function() { card.classList.remove('drag-over-top','drag-over-bottom'); });
+            card.addEventListener('drop', function(e) { e.preventDefault(); e.stopPropagation(); if (card === draggedElement) return; var draggedId = parseInt(e.dataTransfer.getData('text/plain')); var targetId = parseInt(card.dataset.id); var draggedUnit = units.find(function(u) { return u.id === draggedId; }); var targetUnit = units.find(function(u) { return u.id === targetId; }); if (!draggedUnit || !targetUnit) return; var rect = card.getBoundingClientRect(); var insertBefore = e.clientY < rect.top + rect.height/2; draggedUnit.month = targetUnit.month; var monthUnits = units.filter(function(u) { return u.month === targetUnit.month; }).sort(function(a,b) { return a.order - b.order; }); var dragIdx = monthUnits.findIndex(function(u) { return u.id === draggedId; }); if (dragIdx > -1) monthUnits.splice(dragIdx, 1); var targetIdx = monthUnits.findIndex(function(u) { return u.id === targetId; }); if (!insertBefore) targetIdx++; monthUnits.splice(targetIdx, 0, draggedUnit); monthUnits.forEach(function(u,i) { u.order = i; }); card.classList.remove('drag-over-top','drag-over-bottom'); renderUnits(); updateStats(); showToast('Güncellendi'); });
+            return card;
+        }
+
+        function setupEventListeners() {
+            document.querySelectorAll('.drop-zone').forEach(function(zone) {
+                zone.addEventListener('dragover', function(e) { e.preventDefault(); if (e.target === zone) zone.classList.add('drag-over'); });
+                zone.addEventListener('dragleave', function(e) { if (e.target === zone) zone.classList.remove('drag-over'); });
+                zone.addEventListener('drop', function(e) { if (e.target !== zone) return; e.preventDefault(); zone.classList.remove('drag-over'); var unitId = parseInt(e.dataTransfer.getData('text/plain')); var newMonth = zone.dataset.month; var unit = units.find(function(u) { return u.id === unitId; }); if (unit) { var oldMonth = unit.month; unit.month = newMonth; unit.order = Math.max.apply(null, units.filter(function(u) { return u.month === newMonth; }).map(function(u) { return u.order; }).concat([-1])) + 1; renderUnits(); updateStats(); if (oldMonth !== newMonth) { var dest = newMonth === 'backlog' ? 'Bekleyenlere' : (MONTHS.find(function(m) { return m.id === newMonth; }) || {}).short + "'a"; showToast(dest + ' taşındı'); }}});
+            });
+            document.querySelectorAll('#gradeFilters .filter-chip').forEach(function(c) { c.addEventListener('click', function() { document.querySelectorAll('#gradeFilters .filter-chip').forEach(function(x) { x.classList.remove('active'); }); c.classList.add('active'); activeGradeFilter = c.dataset.grade; renderUnits(); }); });
+            document.querySelectorAll('#branchFilters .filter-chip').forEach(function(c) { c.addEventListener('click', function() { document.querySelectorAll('#branchFilters .filter-chip').forEach(function(x) { x.classList.remove('active'); }); c.classList.add('active'); activeBranchFilter = c.dataset.branch; renderUnits(); }); });
+            document.getElementById('unitForm').addEventListener('submit', handleFormSubmit);
+            document.getElementById('modalOverlay').addEventListener('click', function(e) { if (e.target === e.currentTarget) closeModal(); });
+        }
+
+        function updateStats() {
+            document.getElementById('totalUnits').textContent = units.length;
+            document.getElementById('donem1Count').textContent = units.filter(function(u) { var m = MONTHS.find(function(x) { return x.id === u.month; }); return m && m.period === 1; }).length;
+            document.getElementById('donem2Count').textContent = units.filter(function(u) { var m = MONTHS.find(function(x) { return x.id === u.month; }); return m && m.period === 2; }).length;
+            document.getElementById('backlogStat').textContent = units.filter(function(u) { return u.month === 'backlog'; }).length;
+        }
+
+        function openAddModal() { document.getElementById('unitForm').reset(); document.getElementById('modalOverlay').classList.add('active'); }
+        function closeModal() { document.getElementById('modalOverlay').classList.remove('active'); }
+        function handleFormSubmit(e) { e.preventDefault(); var name = document.getElementById('unitName').value.toUpperCase(); var grade = parseInt(document.getElementById('unitGrade').value); var branch = document.getElementById('unitBranch').value; var month = document.getElementById('unitMonth').value; var maxOrder = Math.max.apply(null, units.filter(function(u) { return u.month === month; }).map(function(u) { return u.order; }).concat([-1])); units.push({ id: nextId++, name: name, grade: grade, branch: branch, month: month, order: maxOrder + 1 }); renderUnits(); updateStats(); closeModal(); showToast('Ünite eklendi'); }
+        function deleteUnit(id) { if (confirm('Silmek istiyor musunuz?')) { units = units.filter(function(u) { return u.id !== id; }); renderUnits(); updateStats(); showToast('Silindi'); }}
+        function exportData() { var blob = new Blob([JSON.stringify({ exportDate: new Date().toISOString(), units: units }, null, 2)], { type: 'application/json' }); var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'is_akisi.json'; a.click(); showToast('Dışa aktarıldı'); }
+        function showToast(msg) { var t = document.getElementById('toast'); document.getElementById('toastMessage').textContent = msg; t.classList.add('show'); setTimeout(function() { t.classList.remove('show'); }, 2000); }
+        init();
+    </script>
+</body>
+</html>
