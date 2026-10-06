@@ -84,7 +84,7 @@
 .scen span{display:block;font-size:11.5px;color:var(--muted);line-height:1.3;margin-top:2px}
 .scen em{position:absolute;right:10px;top:8px;font-style:normal;font-size:9.5px;font-weight:800;letter-spacing:1.2px;color:var(--cyan);opacity:.8}
 
-.bb-c{padding:12px 16px 12px;display:flex;flex-direction:column;gap:8px;min-height:0;overflow:auto}
+.bb-c{padding:10px 16px 10px;display:flex;flex-direction:column;gap:6px;min-height:0;overflow:auto}
 .c-sec{display:flex;align-items:center;gap:8px}
 .c-sec .ttl-s{flex:none}
 .c-sec hr{flex:1;border:0;height:1px;background:linear-gradient(90deg,rgba(53,238,252,.35),transparent)}
@@ -95,14 +95,14 @@
 .sl-head svg{width:22px;height:22px;flex:none}
 .sl-head b{font-size:14.5px;font-weight:700}
 .sl-val{margin-left:auto;font-size:12.5px;font-weight:800;padding:3px 10px;border-radius:99px;background:rgba(0,0,0,.35);border:1px solid var(--line-2);color:var(--sc);white-space:nowrap;transition:color .3s}
-.sl-track{position:relative;height:26px;margin:0 14px;cursor:pointer;touch-action:none}
+.sl-track{position:relative;height:24px;margin:0 14px;cursor:pointer;touch-action:none}
 .sl-rail{position:absolute;left:0;right:0;top:50%;height:10px;margin-top:-5px;border-radius:99px;background:rgba(0,0,0,.45);box-shadow:inset 0 1px 3px rgba(0,0,0,.6),0 1px 0 rgba(255,255,255,.05)}
 .sl-fill{position:absolute;left:0;top:50%;height:10px;margin-top:-5px;border-radius:99px;background:var(--sg);box-shadow:0 0 14px var(--sglow)}
 .sl-tick{position:absolute;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.25)}
 .sl-tick.on{background:#fff;box-shadow:0 0 6px #fff}
-.sl-thumb{position:absolute;top:50%;width:30px;height:30px;margin:-15px 0 0 -15px;border-radius:50%;
+.sl-thumb{position:absolute;top:50%;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;
   background:radial-gradient(circle at 35% 30%,#fff,#dfe9f5 60%,#b9c9dc);box-shadow:0 0 0 3px var(--sc),0 0 16px var(--sglow),0 6px 12px rgba(0,0,0,.45);transition:transform .2s var(--spring)}
-.sl-thumb::after{content:"";position:absolute;inset:9px;border-radius:50%;background:var(--sc);box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
+.sl-thumb::after{content:"";position:absolute;inset:8px;border-radius:50%;background:var(--sc);box-shadow:inset 0 1px 2px rgba(0,0,0,.35)}
 .sl.drag .sl-thumb{transform:scale(1.15)}
 .sl-labels{display:flex;justify-content:space-between;font-size:11px;color:var(--dim);font-weight:600;margin:0 2px}
 .sl-labels span{flex:1;text-align:center;transition:color .2s}
@@ -110,7 +110,7 @@
 .sl-labels span.on{color:#e8f3ff}
 /* göstergeler */
 .tiles{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.tile{display:flex;flex-direction:column;gap:6px;padding:8px 10px;border-radius:14px;background:rgba(0,0,0,.26);border:1px solid var(--line);min-width:0}
+.tile{display:flex;flex-direction:column;gap:5px;padding:7px 10px;border-radius:14px;background:rgba(0,0,0,.26);border:1px solid var(--line);min-width:0}
 .t-row{display:flex;align-items:center;gap:6px}
 .t-l{font-size:10.5px;font-weight:700;letter-spacing:.6px;white-space:nowrap;color:var(--muted);text-transform:uppercase;line-height:1.15}
 .t-l small{display:block;font-size:9.5px;letter-spacing:.6px;text-transform:none;color:var(--dim)}
@@ -124,11 +124,15 @@
 .ustrip{position:relative;flex:1;height:14px;border-radius:99px;background:linear-gradient(90deg,#fff6be,#ffe06a 35%,#f2a900 70%,#be7008);box-shadow:inset 0 1px 2px rgba(0,0,0,.35),0 0 0 1px rgba(255,255,255,.12)}
 .ustrip .mk{position:absolute;top:50%;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px rgba(0,0,0,.4),0 0 14px rgba(255,220,120,.7);transition:left .5s var(--ease)}
 .tile.dial{flex-direction:row;align-items:center;gap:8px}
-.tile.dial svg{width:64px;height:auto;flex:none}
-.tile.dial .t-l{white-space:normal}
+.tile.dial svg{width:56px;height:auto;flex:none}
+.tile.dial .t-l{font-size:10px;letter-spacing:.3px}
+.tile.dial{padding:6px 10px}
 .tile.dial b{display:block;font-size:17px;font-weight:800;margin-top:2px}
 .anl{position:relative;padding:10px 12px;border-radius:16px;background:linear-gradient(180deg,rgba(53,238,252,.08),rgba(53,238,252,.03));border:1px solid rgba(53,238,252,.3);font-size:13.5px;line-height:1.45;color:#d9e8f6}
 .anl b{color:#fff}
+.anl.risk-on{background:linear-gradient(180deg,rgba(255,84,104,.2),rgba(255,84,104,.08));border:1.5px solid rgba(255,84,104,.75);box-shadow:0 0 20px rgba(255,84,104,.3);animation:zd-fi .5s var(--ease) both}
+.anl .rk{display:inline-flex;align-items:center;gap:6px;font-weight:900;color:#ff8a98;letter-spacing:1px;font-size:12px;margin-right:4px}
+.anl .rk i{width:20px;height:20px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-style:normal;font-weight:900;font-size:13px;animation:rpd 1.4s infinite}
 .risk{display:none;align-items:flex-start;gap:8px;padding:8px 10px;border-radius:14px;background:linear-gradient(180deg,rgba(255,84,104,.22),rgba(255,84,104,.1));border:1.5px solid rgba(255,84,104,.7);color:#ffd0d6;font-size:13px;line-height:1.35;font-weight:600;box-shadow:0 0 20px rgba(255,84,104,.3)}
 .risk.on{display:flex;animation:zd-fi .5s var(--ease) both}
 .risk i{flex:none;width:22px;height:22px;border-radius:50%;background:var(--red);color:#fff;display:grid;place-items:center;font-style:normal;font-weight:900;font-size:14px;box-shadow:0 0 0 0 rgba(255,84,104,.7);animation:rpd 1.4s infinite}
@@ -666,7 +670,6 @@ ui.body.innerHTML=GDEFS+`
         <g class="needle" transform="rotate(-72 60 64)"><path d="M60 64L57 30L60 20L63 30Z" fill="#fff"/><circle cx="60" cy="64" r="7" fill="#0b1a2d" stroke="#fff" stroke-width="3"/></g></svg>
         <div><span class="t-l">Ter (deri)</span><b id="dSweatT">Az</b></div></div>
     </div>
-    <div class="risk" id="risk"><i>!</i><span><b>Risk arttı:</b> Uzun süre az su içmek böbrek taşı ve idrar yolu enfeksiyonu riskini artırır.</span></div>
     <div class="anl" id="anl" aria-live="polite"></div>
   </section>
 </div>
@@ -829,7 +832,7 @@ function skinStep(dt){
 
 /* ---- göstergeler ---- */
 const E={leds:$$('#gAmt i'),amtT:$('#gAmtT'),colT:$('#gColT'),colM:$('#gColM'),tube:$('#tubeFill'),wArc:$('#dWork .arc'),wN:$('#dWork .needle'),wT:$('#dWorkT'),sArc:$('#dSweat .arc'),sN:$('#dSweat .needle'),sT:$('#dSweatT'),
-  blArc:$('#blArc'),blPct:$('#blPct'),blState:$('#blState'),need:$('#needPill'),wc:$('#btnWC'),risk:$('#risk'),anl:$('#anl'),cRet:$('#cRet'),cUri:$('#cUri')};
+  blArc:$('#blArc'),blPct:$('#blPct'),blState:$('#blState'),need:$('#needPill'),wc:$('#btnWC'),anl:$('#anl'),cRet:$('#cRet'),cUri:$('#cUri')};
 let lastAnl='';
 function updateGauges(){
   const a=clamp(cur.U/1.9,0,1),n=Math.round(a*16);E.leds.forEach((l,i)=>l.classList.toggle('on',i<n));
@@ -843,7 +846,7 @@ function updateGauges(){
   const bp=Math.round(sim.bl*100);E.blArc.setAttribute('stroke-dasharray',`${bp} 100`);E.blArc.setAttribute('stroke',rgba(urineRGB(Math.max(.3,cur.c))));E.blPct.textContent=bp+'%';
   E.blState.textContent=sim.draining?'Boşaltılıyor…':sim.bl>=1?'Dolu!':sim.bl>=.8?'İhtiyaç var':sim.bl>=.5?'Doluyor':'Rahat';E.blState.style.color=sim.bl>=.8&&!sim.draining?'#ffbb3d':'';
   const need=sim.bl>=.8&&!sim.draining;E.need.classList.toggle('on',need);E.wc.classList.toggle('pulse',need);
-  E.risk.classList.toggle('on',sim.risk);
+  E.anl.classList.toggle('risk-on',sim.risk);
   E.cRet.textContent=sim.ret;E.cUri.textContent=sim.uri;
   const t=analysis();if(t!==lastAnl){lastAnl=t;E.anl.innerHTML=t;}
   updateSimStats();
@@ -863,7 +866,8 @@ function analysis(){
   if(sim.w<.5&&sim.a<.5)o.push('Hareketsizlik ve az sıvı alımı böbreklerin verimli çalışmasını engelleyebilir.');
   if(!o.length)o.push('<b>Dengeli:</b> Yararlı maddeler ve ihtiyaç kadar su kana geri dönüyor; fazla su, tuz ve üre idrarla atılıyor.');
   if(o.length<2&&cur.c>=.18&&cur.c<=.5&&cur.L<42&&sim.a>.6&&sim.a<1.5)o.push('Düzenli egzersiz kan dolaşımını hızlandırır; böbrekler daha sağlıklı çalışır.');
-  return o.slice(0,sim.risk?1:2).join(' ');
+  if(sim.risk)return '<span class="rk"><i>!</i>RİSK ARTTI</span> Uzun süre az su içmek <b>böbrek taşı</b> ve <b>idrar yolu enfeksiyonu</b> riskini artırır. İdrar az ve koyu renkli.';
+  return o.slice(0,2).join(' ');
 }
 let gaugeAcc=0;
 function simStep(dt,t){

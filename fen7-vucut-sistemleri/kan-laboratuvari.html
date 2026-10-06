@@ -899,7 +899,7 @@ function yaraUpdate(dt) {
     if (c.state === 'go') {
       const s = c.slot, dx = s.x - c.x, dy = s.y - c.y, d = Math.hypot(dx, dy);
       if (d < .5) { c.state = 'stuck'; c.x = s.x; c.y = s.y; Y.stuckN++; Y.closure = Y.stuckN / Y.slots.length; if (Y.stuckN % 3 === 1) sfx('bubble'); if (Y.step < 3) { Y.step = 3; renderPane(); } }
-      else { const sp = 13 * dt; c.x += dx / d * Math.min(sp, d) + (Math.random() - .5) * .05; c.y += dy / d * Math.min(sp, d); }
+      else { const sp = 10 * dt; c.x += dx / d * Math.min(sp, d) + (Math.random() - .5) * .05; c.y += dy / d * Math.min(sp, d); }
       c.ax += dt * 2.4; continue;
     }
     ou(c, c.k === 'plt' ? 26 : 10, dt);
@@ -907,7 +907,7 @@ function yaraUpdate(dt) {
     let vx = v + c.bx, vy = c.by;
     if (pull > 0 && c.k === 'rbc' && c.z === 0) {
       const dx = -c.x, dy = YW(0) + YT + 6 - c.y, d = Math.hypot(dx, dy), dn = Math.hypot(dx / 1.7, dy);
-      if (dn < 28) { const s = pull * (22 * (1 - dn / 28) + 4); vx += dx / d * s; vy += dy / d * s; }
+      if (dn < 38) { const s = pull * (34 * (1 - dn / 38) + 8); if (Math.abs(c.x) < gx - c.r * .45) { vy += s; vx += -c.x * 1.2; } else { vx += -Math.sign(c.x) * s * .95; vy += s * .3; } }
     }
     c.x += vx * dt; c.y += vy * dt;
     if (c.k === 'rbc') { c.ax += c.vax * dt; if (c.vt) { c.tilt += c.vt * dt; c.fl = .2 + .8 * Math.abs(Math.cos(c.tilt)); } } else if (c.k === 'plt') c.ax += c.vax * dt;
@@ -924,7 +924,7 @@ function yaraUpdate(dt) {
     if (Y.closure > .35 && c.k === 'rbc' && c.z === 0 && Y.trapped < 5 && Math.abs(c.x) < gx + 3 && c.y > YW(c.x) - 6.5 && Math.random() < dt * 3) { c.state = 'trap'; Y.trapped++; c.x = clamp(c.x, -gx - 2, gx + 2); c.y = Math.min(c.y, YW(c.x) + 1); }
   }
   // kan pulcuklarını yaraya yönlendir
-  if (Y.torn && Y.tT > .6 && !Y.done) {
+  if (Y.torn && Y.tT > 1.6 && !Y.done) {
     const free = Y.slots.filter(s => !s.taken);
     if (free.length) {
       const pl = Y.cells.filter(c => c.k === 'plt' && c.state === 'flow' && c.z === 0);

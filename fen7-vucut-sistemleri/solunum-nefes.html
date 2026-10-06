@@ -475,6 +475,9 @@ svg.innerHTML=`
   <linearGradient id="gCart" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c6d6ea"/><stop offset=".4" stop-color="#f5faff"/><stop offset="1" stop-color="#9fb3cc"/></linearGradient>
   <linearGradient id="gEso" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9aa8"/><stop offset="1" stop-color="#e2566e" stop-opacity="0"/></linearGradient>
   <radialGradient id="gHeart" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#ff8a9a"/><stop offset=".5" stop-color="#ff4d64"/><stop offset="1" stop-color="#a3122e"/></radialGradient>
+  <linearGradient id="gGut" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb0a0"/><stop offset="1" stop-color="#e46d68"/></linearGradient>
+  <radialGradient id="gLiver" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#d0675e"/><stop offset=".6" stop-color="#b5473f"/><stop offset="1" stop-color="#7d2420"/></radialGradient>
+  <radialGradient id="gStom" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#ffb0bc"/><stop offset=".55" stop-color="#ff8a9a"/><stop offset="1" stop-color="#d94a66"/></radialGradient>
   <linearGradient id="gAbd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffbb3d" stop-opacity=".2"/><stop offset=".6" stop-color="#ff9a3d" stop-opacity=".08"/><stop offset="1" stop-color="#ffbb3d" stop-opacity="0"/></linearGradient>
   <linearGradient id="gBlood" gradientUnits="userSpaceOnUse" x1="-80" y1="0" x2="80" y2="0"><stop offset="0" stop-color="#5b6cff"/><stop offset=".5" stop-color="#a64fc4"/><stop offset="1" stop-color="#ff3b55"/></linearGradient>
   <radialGradient id="gAlv" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#fff3f7"/><stop offset=".35" stop-color="#ffc3d3"/><stop offset=".8" stop-color="#e46f94"/><stop offset="1" stop-color="#b03d68"/></radialGradient>
@@ -532,7 +535,15 @@ svg.innerHTML=`
 
 <!-- boşluklar -->
 <path id="chestFill" fill="#35eefc" opacity=".05" pointer-events="none"/>
-<path id="abdFill" fill="url(#gAbd)" stroke="#ffbb3d" stroke-opacity=".35" stroke-width="1.4" stroke-dasharray="5 5" pointer-events="none"/>
+<path id="abdFill" fill="url(#gAbd)" pointer-events="none"/>
+<g id="organs" pointer-events="none" opacity=".42">
+  <g id="gutG"><path d="M${P(CX-120,600)}C${P(CX-90,572)} ${P(CX-60,628)} ${P(CX-30,596)}S${P(CX+30,628)} ${P(CX+60,596)}S${P(CX+110,624)} ${P(CX+128,598)}M${P(CX-128,640)}C${P(CX-96,612)} ${P(CX-66,664)} ${P(CX-36,634)}S${P(CX+24,664)} ${P(CX+54,634)}S${P(CX+104,662)} ${P(CX+124,636)}" stroke="#7a2a3a" stroke-width="22" fill="none" stroke-linecap="round" opacity=".7"/>
+    <path d="M${P(CX-120,600)}C${P(CX-90,572)} ${P(CX-60,628)} ${P(CX-30,596)}S${P(CX+30,628)} ${P(CX+60,596)}S${P(CX+110,624)} ${P(CX+128,598)}M${P(CX-128,640)}C${P(CX-96,612)} ${P(CX-66,664)} ${P(CX-36,634)}S${P(CX+24,664)} ${P(CX+54,634)}S${P(CX+104,662)} ${P(CX+124,636)}" stroke="url(#gGut)" stroke-width="17" fill="none" stroke-linecap="round"/>
+    <path d="M${P(CX-120,596)}C${P(CX-90,568)} ${P(CX-60,624)} ${P(CX-30,592)}S${P(CX+30,624)} ${P(CX+60,592)}" stroke="#fff" stroke-opacity=".3" stroke-width="2.5" fill="none"/></g>
+  <path id="liver" fill="url(#gLiver)" stroke="#e08a80" stroke-opacity=".5"/>
+  <g id="stomG"><path d="M${P(CX+62,474)}C${P(CX+116,462)} ${P(CX+160,494)} ${P(CX+150,540)}C${P(CX+140,580)} ${P(CX+92,592)} ${P(CX+52,574)}C${P(CX+28,562)} ${P(CX+36,540)} ${P(CX+66,542)}C${P(CX+98,544)} ${P(CX+108,522)} ${P(CX+94,506)}C${P(CX+80,494)} ${P(CX+58,494)} ${P(CX+62,474)}Z" fill="url(#gStom)" stroke="#ffc0ca" stroke-opacity=".5"/>
+    <ellipse cx="${CX+122}" cy="504" rx="12" ry="7" fill="#fff" opacity=".3" transform="rotate(30 ${CX+122} 504)"/></g>
+</g>
 
 <!-- kalp (arkada, soluk) -->
 <g id="heartG" pointer-events="none" opacity=".62"><g transform="translate(${CX+26} 452) rotate(-24) scale(.92)">
@@ -671,10 +682,10 @@ svg.innerHTML=`
     ${CAPL.map(c=>`<path d="${crPath(c,false)}" stroke="url(#gBlood)" stroke-width="3.6" fill="none" stroke-linecap="round"/>`).join('')}
     ${CAPS.map(c=>`<path d="${crPath(c,false)}" stroke="#fff" stroke-opacity=".3" stroke-width="1.2" fill="none" transform="translate(-.8 -1.4)"/>`).join('')}
     <g font-size="11" font-weight="800" paint-order="stroke" stroke="#12081a" stroke-width="3" stroke-linejoin="round">
-      <text x="58" y="-12" fill="#ffd6e2" id="magAlvT" font-size="12.5">Alveol</text>
-      <text x="0" y="90" fill="#c3c9ff" text-anchor="middle">Kılcal damar</text>
-      <text x="-90" y="26" fill="#9aa5ff" font-size="10">O₂ az</text>
-      <text x="88" y="-2" fill="#ff8c9c" font-size="10" text-anchor="end">O₂ çok</text>
+      <text x="34" y="-64" fill="#ffd6e2" id="magAlvT" font-size="12.5" text-anchor="middle">Alveol</text>
+      <text x="4" y="80" fill="#c3c9ff" text-anchor="middle">Kılcal damar</text>
+      <text x="-92" y="28" fill="#9aa5ff" font-size="10">O₂ az</text>
+      <text x="78" y="50" fill="#ff8c9c" font-size="10" text-anchor="end">O₂ çok</text>
     </g>
   </g>
   <circle r="${MG.r}" fill="none" stroke="#071423" stroke-width="13"/>
@@ -688,7 +699,7 @@ svg.innerHTML=`
 
 /* --- dinamik eleman referansları --- */
 const E={};
-['sil','silGlow','silGrid','silIn','silRim','chestFill','abdFill','heartG','lRb','lRt','lRa','lRs','lRf','lRf2','lRr','lRh','lLb','lLt','lLa','lLs','lLf','lLf2','lLr','lLh',
+['sil','silGlow','silGrid','silIn','silRim','chestFill','abdFill','liver','stomG','gutG','heartG','lRb','lRt','lRa','lRs','lRf','lRf2','lRr','lRh','lLb','lLt','lLa','lLs','lLf','lLf2','lLr','lLh',
  'brO','brC','brD','brS','brH','bcG','tipsG','dia','diaHot','diaFib','diaTen','diaRim','icL','icR','icF','ribS','ribO','ribC','ribH','stern','chestLine',
  'arrows','aD1','aD2','aRL','aRR','abdArr','abdHd','abdR','abdT','lensLn','lensMk','alvG','mouthOpen','env','envClean','envDirty','vocal','magChip','magChipR','magAlvT'].forEach(id=>E[id]=svg.querySelector('#'+id));
 const NS='http://www.w3.org/2000/svg';
@@ -818,6 +829,12 @@ function drawAnatomy(b){
   E.abdHd.setAttribute('d',`M${P(CX,ay)}l-6 9h12zM${P(CX,ab)}l-6 -9h12z`);
   E.abdT.setAttribute('x',CX);E.abdT.setAttribute('y',f1(am+1));
   E.abdR.setAttribute('x',CX-62);E.abdR.setAttribute('width',124);E.abdR.setAttribute('y',f1(am-17));
+  /* karın organları: diyafram inince aşağı itilir ve sıkışır */
+  const lt0=[];for(let x=CX-172;x<=CX+40;x+=12)lt0.push([x,yAt(DB,x)+1]);
+  const lb=[[CX+40,494],[CX-14,522],[CX-80,552],[CX-140,584],[CX-172,580]].map(([x,y])=>[x,y+disp(x)*.6]);
+  E.liver.setAttribute('d',crPath(lt0,false)+crPath(lb,false).replace('M','L')+'Z');
+  const ds=disp(CX+95);E.stomG.setAttribute('transform',`translate(0 ${f1(ds*.85)}) translate(0 ${f1(530)}) scale(1 ${(1-.1*b).toFixed(3)}) translate(0 -530)`);
+  const kg=1-.2*b;E.gutG.setAttribute('transform',`matrix(1 0 0 ${kg.toFixed(3)} 0 ${f1(676*(1-kg))})`);
   /* gövde */
   const td=torsoD(b);['sil','silGlow','silGrid','silIn','silRim'].forEach(id=>E[id].setAttribute('d',td));
   E.heartG.setAttribute('transform',`translate(0 ${f1(disp(CX+26)*.35)})`);
