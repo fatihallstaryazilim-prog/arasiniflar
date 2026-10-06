@@ -85,7 +85,8 @@
     .hero{grid-template-columns:1fr;justify-items:center;text-align:center}
     .hero .kick,.hero .meta,.hero .acts,.prog{justify-content:center;margin-left:auto;margin-right:auto}
     .hero-cover{width:min(280px,80vw)}
-    .layout{grid-template-columns:1fr}
+    .layout{grid-template-columns:minmax(0,1fr)}
+    .toc,main{min-width:0}
     .toc{position:static}
     .toc nav{flex-direction:row;overflow:auto;gap:6px}
     .toc nav a{white-space:nowrap;background:var(--glass)}
@@ -107,7 +108,7 @@
       <div class="meta" id="meta"></div>
       <p class="lead">Sindirim, dolaşım, solunum ve boşaltım sistemlerini etkileşimli <b>simülasyonlar</b> ve <b>oyunlarla</b> keşfet. Her materyal ders kitabındaki konu sırasını izler, Türkiye Yüzyılı Maarif Modeli öğretim programındaki kazanımlara bağlıdır. Akıllı tahta, tablet, bilgisayar ve telefonda çalışır.</p>
       <div class="acts">
-        <a class="zd-btn lg" href="dolasim-kalp.html" id="startBtn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.8v14.4c0 .8.9 1.3 1.6.8l11-7.2c.6-.4.6-1.2 0-1.6l-11-7.2C7.9 3.5 7 4 7 4.8Z"/></svg>Hemen Başla</a>
+        <a class="zd-btn lg" href="sindirim-yolculuk.html" id="startBtn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.8v14.4c0 .8.9 1.3 1.6.8l11-7.2c.6-.4.6-1.2 0-1.6l-11-7.2C7.9 3.5 7 4 7 4.8Z"/></svg>Hemen Başla</a>
         <a class="zd-btn ghost lg" href="#konu-1">İçindekiler</a>
       </div>
       <div class="prog"><div class="zd-meter"><i id="progBar"></i></div><span id="progTxt"></span></div>

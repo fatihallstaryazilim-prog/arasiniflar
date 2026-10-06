@@ -21,6 +21,7 @@
 @keyframes tagIn{from{opacity:0;transform:translateX(-16px) scale(.9)}to{opacity:1;transform:none}}
 .vinfo{position:absolute;left:14px;bottom:14px;z-index:5;display:flex;gap:14px;align-items:center;padding:9px 14px;border-radius:16px;background:rgba(6,16,30,.78);border:1px solid var(--line);backdrop-filter:blur(6px);transition:opacity .4s}
 .vinfo.hide{opacity:0}
+@media (max-width:860px){.view.lensOn .vinfo,.view.lensOn .vcap,.view.lensOn .vtags{opacity:0;pointer-events:none}}
 .vinfo small{display:block;font-size:10px;letter-spacing:1.5px;color:var(--muted);font-weight:700;text-transform:uppercase}
 .vinfo b{display:block;font-size:20px;font-weight:800;color:var(--cyan);line-height:1.1;font-variant-numeric:tabular-nums}
 .vinfo .sz{width:86px}
@@ -1295,11 +1296,11 @@ function lensOpen() {
   const f = FOODS[S.fk], q = [];
   [['k', 'bK'], ['p', 'bP'], ['y', 'bY']].forEach(([k, s]) => { const n = Math.max(1, Math.round(f.amt[k] * 22)); for (let i = 0; i < n; i++) q.push(s); });
   LV.queue = ZD.shuffle(q); LV.total = q.length; LV.absorbed = 0; LV.t = 0; LV.next = .4; LV.blocks.forEach(b => b.el.remove()); LV.blocks = [];
-  updLensCnt(); $('#lens').classList.add('show'); $('#lens').setAttribute('aria-hidden', 'false'); $('#lensX').classList.remove('show');
+  updLensCnt(); view.classList.add('lensOn'); $('#lens').classList.add('show'); $('#lens').setAttribute('aria-hidden', 'false'); $('#lensX').classList.remove('show');
   LV.on = true; ZD.sfx('whoosh');
 }
 function lensRun() { return new Promise(res => { LV.res = res; }); }
-function lensClose() { $('#lens').classList.remove('show'); $('#lens').setAttribute('aria-hidden', 'true'); LV.on = false; LV.blocks.forEach(b => b.el.remove()); LV.blocks = []; $('#lensLine').setAttribute('opacity', 0); $('#lensDot').setAttribute('opacity', 0); if (LV.res) { const r = LV.res; LV.res = null; r(); } }
+function lensClose() { view.classList.remove('lensOn'); $('#lens').classList.remove('show'); $('#lens').setAttribute('aria-hidden', 'true'); LV.on = false; LV.blocks.forEach(b => b.el.remove()); LV.blocks = []; $('#lensLine').setAttribute('opacity', 0); $('#lensDot').setAttribute('opacity', 0); if (LV.res) { const r = LV.res; LV.res = null; r(); } }
 function updLensCnt() { $('#lvCnt').innerHTML = `Kana geçen yapı taşı <b>${LV.absorbed}</b> / ${LV.total}`; }
 let lvSnd = 0;
 function lensTick(dt, t) {
