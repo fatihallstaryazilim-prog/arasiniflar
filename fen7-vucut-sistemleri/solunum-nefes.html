@@ -113,7 +113,7 @@
   .ringwrap .rc .go{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#3ff0a8,#16b979);color:#022a1a;box-shadow:0 0 18px rgba(47,227,155,.5),0 4px 0 rgba(0,0,0,.3)}
   .ringwrap .rc .go svg{width:22px;height:22px;margin-left:3px}
   .ringwrap .rc b{font-size:36px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
-  .ringwrap .rc span{font-size:11.5px;font-weight:800;letter-spacing:.8px;margin-top:3px;max-width:96px;line-height:1.15}
+  .ringwrap .rc span{font-size:10.5px;font-weight:800;letter-spacing:.4px;margin-top:3px;max-width:78px;line-height:1.15}
   .trsub{text-align:center;font-size:13px;color:#cfe0f2;min-height:36px;margin-top:4px;line-height:1.3}
   .trsub .st{display:inline-block;margin-top:4px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800}
   .trsub .st.ok{background:rgba(47,227,155,.15);color:var(--green)}
@@ -213,7 +213,7 @@
   .rate em{font-style:normal;margin-left:auto;font-size:11.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--amber)}
   .rdot{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#e9ffff,#35eefc 60%,#0a8fa3);box-shadow:0 0 10px #35eefc;flex:none}
 
-  .m-kesif [data-stat="s1"]{min-width:150px}
+  @media (min-width:861px){.m-kesif [data-stat="s1"]{min-width:150px}}
   /* duyarlı */
   @media (max-width:1100px){ .sim{grid-template-columns:250px minmax(0,1fr) 270px} }
   @media (max-width:600px){ .scene{aspect-ratio:1/1} }
@@ -628,8 +628,8 @@ svg.innerHTML=`
 
 <!-- göğüs kafesi -->
 <g id="cage" pointer-events="none">
-  <path id="icL" fill="url(#gIc)"/><path id="icR" fill="url(#gIc)"/>
-  <path id="icF" stroke="#ffc9ae" stroke-width="1.1" fill="none" stroke-opacity=".55"/>
+  <g class="part" data-part="kaburga"><path id="icL" fill="url(#gIc)"/><path id="icR" fill="url(#gIc)"/>
+  <path id="icF" stroke="#ffc9ae" stroke-width="1.1" fill="none" stroke-opacity=".55"/></g>
   <path id="ribS" stroke="#2c3e57" stroke-opacity=".22" stroke-width="9" fill="none" stroke-linecap="round" transform="translate(0 2.5)"/>
   <path id="ribO" stroke="#9fb1c8" stroke-opacity=".42" stroke-width="8" fill="none" stroke-linecap="round"/>
   <path id="ribC" stroke="url(#gBone)" stroke-opacity=".5" stroke-width="5.6" fill="none" stroke-linecap="round"/>
@@ -639,6 +639,7 @@ svg.innerHTML=`
   <path d="M${P(CX-14,294)}C${P(CX-60,300)} ${P(CX-100,272)} ${P(CX-150,284)}M${P(CX+14,294)}C${P(CX+60,300)} ${P(CX+100,272)} ${P(CX+150,284)}" stroke="url(#gBone)" stroke-opacity=".85" stroke-width="7" fill="none" stroke-linecap="round"/>
 </g>
 <path id="chestLine" fill="none" stroke="#35eefc" stroke-opacity=".55" stroke-width="1.6" stroke-dasharray="5 5" pointer-events="none"/>
+<g class="part" data-part="kaburga"><path id="icHit" stroke="transparent" stroke-width="16" fill="none" pointer-events="stroke"/></g>
 
 <!-- baş içi yapılar -->
 <g transform="translate(${CX} 0)">
@@ -722,7 +723,7 @@ svg.innerHTML=`
 /* --- dinamik eleman referansları --- */
 const E={};
 ['sil','silGlow','silGrid','silIn','silRim','chestFill','abdFill','liver','stomG','gutG','heartG','lRb','lRt','lRa','lRs','lRf','lRf2','lRr','lRh','lLb','lLt','lLa','lLs','lLf','lLf2','lLr','lLh',
- 'brO','brC','brD','brS','brH','bcG','tipsG','dia','diaHot','diaFib','diaTen','diaRim','icL','icR','icF','ribS','ribO','ribC','ribH','stern','chestLine',
+ 'brO','brC','brD','brS','brH','bcG','icHit','tipsG','dia','diaHot','diaFib','diaTen','diaRim','icL','icR','icF','ribS','ribO','ribC','ribH','stern','chestLine',
  'arrows','aD1','aD2','aRL','aRR','abdArr','abdHd','abdR','abdT','lensLn','lensMk','alvG','mouthOpen','env','envClean','envDirty','vocal','magChip','magChipR','magAlvT'].forEach(id=>E[id]=svg.querySelector('#'+id));
 const NS='http://www.w3.org/2000/svg';
 const mk=(tag,attrs,parent)=>{const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);parent&&parent.appendChild(e);return e;};
@@ -840,7 +841,7 @@ function drawAnatomy(b){
   /* göğüs boşluğu sınırı */
   const cp=[[CX-176,yAt(DT,CX-176)]];for(let i=6;i>=0;i--){const p=RB[-1][i][3];cp.push([p[0]-5,p[1]]);}
   cp.push([CX-70,284],[CX+70,284]);for(let i=0;i<7;i++){const p=RB[1][i][3];cp.push([p[0]+5,p[1]]);}cp.push([CX+176,yAt(DT,CX+176)]);
-  E.chestLine.setAttribute('d',crPath(cp,false));
+  E.chestLine.setAttribute('d',crPath(cp,false));E.icHit.setAttribute('d',crPath(cp.slice(0,5).map(q=>[q[0]-8,q[1]]),false)+crPath(cp.slice(12).map(q=>[q[0]+8,q[1]]),false));
   E.chestFill.setAttribute('d',crPath(cp,false)+'L'+DT.slice().reverse().map(p=>P(p[0],p[1])).join('L')+'Z');
   E.chestFill.setAttribute('opacity',f1((.04+.07*b)*100)/100);
   chestPt=[cp[4][0],cp[4][1]];
@@ -896,7 +897,7 @@ const SPR={air:sprite('#7ff6ff','rgba(53,238,252,.55)'),o2:sprite('#a9d8ff','rgb
 const parts=[];let accIn=0,accOut=0,magBoost=0;
 function pRoute(){return S.mode==='ortam'?S.route:'nose';}
 function spawnAir(kind,fromEnd){const list=PATHS[pRoute()];const pa=list[(Math.random()*list.length)|0];
-  parts.push({pa,s:fromEnd?pa.len*(.84+Math.random()*.16):Math.random()*10,kind,r:Math.random(),life:1,free:false,lab:Math.random()<.13});}
+  parts.push({pa,s:fromEnd?pa.len*(.84+Math.random()*.16):Math.random()*10,kind,r:Math.random(),life:1,free:false,lab:Math.random()<.09});}
 /* toz */
 const dust=[],stuck=[],dep=[];
 function spawnDust(){dust.push({x:150+Math.random()*92,y:86+Math.random()*120,vx:(Math.random()-.5)*10,vy:(Math.random()-.5)*10,st:'air',r:2.4+Math.random()*1.8,soot:Math.random()<.45});}
@@ -1276,7 +1277,7 @@ function help(){const h=HELP[S.mode];ZD.modal({html:`<span class="zd-chip">NASIL
 /* =====================  ANA DÖNGÜ  ===================== */
 let lastT=performance.now(),prevB=0;
 function loop(now){
-  const dt=Math.min(.05,(now-lastT)/1000);lastT=now;
+  const rdt=Math.min(.5,Math.max(0,(now-lastT)/1000)),dt=Math.min(.1,rdt);lastT=now;
   /* hedef */
   let target=0,tau;const tr=S.mode==='antrenor';
   if(S.holding)target=1;
@@ -1286,13 +1287,12 @@ function loop(now){
   const fl=(S.b-prevB)/Math.max(dt,1e-4);S.flow=lerp(S.flow,fl,.35);
   /* aşama */
   let ph;if(target===1)ph=S.b>.965?'hold':'in';else ph=S.b>.03?'out':'rest';
-  if(ph!==S.phase){const prev=S.phase;S.phase=ph;if(ph==='in'||ph==='out')S.phaseB0=prevB;if(!(prev==='in'&&ph==='hold'))phaseChanged();else phaseChanged();}
+  if(ph!==S.phase){S.phase=ph;if(ph==='in'||ph==='out')S.phaseB0=prevB;phaseChanged();}
   if(Math.abs(S.b-lastDrawB)>.0006){drawAnatomy(S.b);lastDrawB=S.b;}
   drawArrows();
-  /* vokal kordlar: nefeste açık */
   stepParticles(dt);drawParticles();drawSpiro(dt);stUpdate(now);
-  trTick(dt);taskTick();
-  if(S.mode==='ortam'){tipT+=dt;if(tipT>6)showTip(tipI+1);}
+  trTick(rdt);taskTick();
+  if(S.mode==='ortam'){tipT+=rdt;if(tipT>6)showTip(tipI+1);}
   /* gösterge */
   $('#holdFill').style.width=(S.b*100).toFixed(1)+'%';
   const vol=Math.round(S.b*100);$('#volV').textContent='%'+vol;if(S.mode==='kesif')ui.stat('s2','%'+vol);

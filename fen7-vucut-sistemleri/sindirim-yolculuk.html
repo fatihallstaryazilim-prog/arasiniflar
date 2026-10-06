@@ -1,7 +1,8 @@
 <!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Besinin Yolculuğu</title><link rel="stylesheet" href="assets/zd.css"><style>
 /* ================= Yerleşim ================= */
-.sim{display:grid;grid-template-columns:minmax(0,1fr) 540px;gap:14px;padding:2px 16px 16px;height:calc(100vh - 186px);min-height:540px;max-height:880px}
+.zd-wrap{padding-bottom:14px}
+.sim{display:grid;grid-template-columns:minmax(0,1fr) 540px;gap:14px;padding:2px 16px 16px;height:calc(100vh - 172px);min-height:540px;max-height:880px}
 .view{position:relative;min-height:0;border-radius:20px;overflow:hidden;border:1px solid var(--line);
   background:radial-gradient(55% 50% at 45% 42%,rgba(53,238,252,.09),transparent 70%),radial-gradient(120% 80% at 50% 110%,rgba(20,70,130,.45),transparent 60%),linear-gradient(180deg,rgba(6,16,30,.55),rgba(3,9,18,.85));
   box-shadow:inset 0 0 50px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04)}
@@ -90,10 +91,10 @@
 .q{font-size:17px;font-weight:800;display:flex;align-items:center;gap:8px}
 .q em{font-style:normal;color:var(--cyan)}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.opt{display:flex;align-items:center;gap:10px;text-align:left;padding:8px 12px;min-height:56px;border-radius:16px;background:linear-gradient(180deg,#1d3657,#13263f);border:1.5px solid rgba(140,200,255,.22);box-shadow:0 4px 0 rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06);font-weight:700;font-size:14.5px;line-height:1.2;transition:transform .15s var(--ease),border-color .2s,background .3s}
+.opt{display:flex;align-items:center;gap:10px;text-align:left;padding:8px 12px;min-height:54px;border-radius:16px;background:linear-gradient(180deg,#1d3657,#13263f);border:1.5px solid rgba(140,200,255,.22);box-shadow:0 4px 0 rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06);font-weight:700;font-size:14px;line-height:1.2;transition:transform .15s var(--ease),border-color .2s,background .3s}
 .opt:hover{border-color:rgba(53,238,252,.7);transform:translateY(-1px)}
 .opt:active{transform:translateY(2px)}
-.opt .oi{flex:none;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(0,0,0,.28)}
+.opt .oi{flex:none;width:32px;height:32px;border-radius:11px;display:grid;place-items:center;background:rgba(0,0,0,.28)}
 .opt .oi svg{width:24px;height:24px}
 .opt small{display:block;font-size:11.5px;font-weight:500;color:var(--muted);margin-top:2px}
 .opt.bad{border-color:var(--red);background:linear-gradient(180deg,#46192a,#2d1020);opacity:.75}
@@ -101,7 +102,7 @@
 .opts.lock .opt{pointer-events:none}
 .why{font-size:13.5px;line-height:1.5;padding:10px 14px;border-radius:14px;background:rgba(255,84,104,.1);border:1px solid rgba(255,84,104,.4);color:#ffd5db}
 .why b{color:#ff9aa8}
-.def{position:relative;font-size:13.5px;line-height:1.5;color:#d6e6f5;padding:10px 14px 10px 14px;border-radius:14px;background:rgba(0,0,0,.24);border:1px solid var(--line);border-left:3px solid var(--cyan)}
+.def{position:relative;font-size:13px;line-height:1.48;color:#d6e6f5;padding:10px 14px 10px 14px;border-radius:14px;background:rgba(0,0,0,.24);border:1px solid var(--line);border-left:3px solid var(--cyan)}
 .def .bk{display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:800;letter-spacing:1.6px;color:var(--cyan);margin-bottom:5px}
 .def .bk svg{width:24px;height:24px}
 .actbox{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border-radius:16px;background:linear-gradient(180deg,rgba(53,238,252,.06),rgba(53,238,252,.02));border:1px dashed rgba(53,238,252,.3)}
@@ -148,14 +149,14 @@
 .nut{padding:9px 14px 8px}
 .nut h5{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase;margin-bottom:2px}
 .nut h5 span{letter-spacing:.4px;text-transform:none;font-weight:600;color:var(--dim)}
-.nrow{display:grid;grid-template-columns:112px 1fr 196px;gap:10px;align-items:center;padding:4px 0}
+.nrow{display:grid;grid-template-columns:112px 1fr 196px;gap:10px;align-items:center;padding:3px 0}
 .nrow+.nrow{border-top:1px solid rgba(140,200,255,.08)}
-.nname{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700}
+.nname{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:700;white-space:nowrap}
 .nname svg{width:16px;height:16px;flex:none}
 .nbar{display:flex;align-items:center;gap:8px}
 .nbar .zd-meter{height:8px;flex:1}
 .nbar small{font-size:10.5px;color:var(--muted);font-weight:600;white-space:nowrap;min-width:42px}
-.badge{justify-self:end;display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;border:1px solid;transition:.4s var(--ease)}
+.badge{justify-self:end;display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap;border:1px solid;transition:.4s var(--ease)}
 .badge i{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
 .b0{color:#8fa8c4;border-color:rgba(143,168,196,.3);background:rgba(143,168,196,.08)}
 .b1{color:#ffd27a;border-color:rgba(255,187,61,.5);background:rgba(255,187,61,.12)}
@@ -163,7 +164,7 @@
 .b3{color:#9ff8ff;border-color:rgba(53,238,252,.6);background:rgba(53,238,252,.14);box-shadow:0 0 14px rgba(53,238,252,.25)}
 .badge.pop{animation:bpop .6s var(--spring)}
 @keyframes bpop{40%{transform:scale(1.18)}}
-.emul{font-size:10.5px;font-weight:700;color:#bff59f;margin-left:4px}
+.emul{font-size:10px;font-weight:700;color:#bff59f;padding:1px 6px;border-radius:6px;background:rgba(126,217,87,.14);border:1px solid rgba(126,217,87,.4)}
 .nempty{font-size:13px;color:var(--dim);padding:8px 0}
 /* sonuç şeridi */
 .sumstrip{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:4px;margin-top:14px}
@@ -372,7 +373,7 @@ const DEFS = `
 <radialGradient id="gFat" cx=".38" cy=".32" r=".8"><stop offset="0" stop-color="#fffff2"/><stop offset=".45" stop-color="#ffe56e"/><stop offset="1" stop-color="#e0ad00"/></radialGradient>
 <linearGradient id="gCap" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff3b55"/><stop offset=".5" stop-color="#b04ad0"/><stop offset="1" stop-color="#5b6cff"/></linearGradient>
 <filter id="fSh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity=".5"/></filter>
-<filter id="fGoo" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="1.8" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter>
+<filter id="fGoo" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter>
 <filter id="fGlow" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="1.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 <filter id="fBlur2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2"/></filter>
 <filter id="fBlur5" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
@@ -391,8 +392,8 @@ const DEFS = `
 <g id="pc0E"><ellipse rx="10" ry="9" fill="url(#gEggW)" stroke="#c1ccd8" stroke-width=".8"/><circle cx="1" cy="1" r="5.2" fill="url(#gYolk)"/><ellipse cx="-4" cy="-5" rx="3" ry="1.3" fill="#fff" opacity=".8"/></g>
 <g id="pcW"><path d="M-9,-5 C-6,-10 5,-10 9,-5 C11,0 9,7 3,9 C-3,10 -9,7 -10,1 C-10,-2 -10,-3 -9,-5Z" fill="url(#gEggW)" stroke="#c1ccd8" stroke-width=".9"/></g>
 <g id="pcY"><circle r="9" fill="url(#gYolk)" stroke="#d98200" stroke-width=".8"/><ellipse cx="-3" cy="-4" rx="2.6" ry="1.3" fill="#fff" opacity=".6"/></g>
-<g id="pcCh"><circle r="10" fill="url(#gChyme)"/></g>
-<g id="pcPo"><circle r="10" fill="url(#gPosa)"/></g>
+<g id="pcCh"><circle r="10" fill="#dcbb7a"/></g>
+<g id="pcPo"><circle id="poC" r="10" fill="#93633a"/></g>
 <g id="bK"><path d="M10,0 L5,8.66 L-5,8.66 L-10,0 L-5,-8.66 L5,-8.66Z" fill="#ffb03a" stroke="#fff3d2" stroke-width="1.6"/></g>
 <g id="bP"><circle r="8.6" fill="#b58cff" stroke="#f1e8ff" stroke-width="1.6"/></g>
 <g id="bY"><path d="M0,-10 C5,-3 8,1 8,4 C8,8.5 4.4,11 0,11 C-4.4,11 -8,8.5 -8,4 C-8,1 -5,-3 0,-10Z" fill="#ffe066" stroke="#fffbe0" stroke-width="1.5"/></g>
@@ -528,7 +529,7 @@ const MAIN = `
   <path id="trail" d="${ROUTE}" fill="none" stroke="#7ff8ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0 99999"/>
 </g>
 <!-- lokma -->
-<g id="bolus" opacity="0"><g id="halo"><circle r="16" fill="#35eefc" opacity=".12" filter="url(#fBlur2)"/></g><g id="pcs"></g><g id="fats"></g></g>
+<g id="bolus" opacity="0"><g id="halo"><circle r="16" fill="#35eefc" opacity=".12" filter="url(#fBlur2)"/></g><g id="pcs"></g><ellipse id="bhi" rx="4" ry="2" fill="#fff" opacity="0"/><g id="fats"></g></g>
 <g id="fxTop"></g>
 <!-- cam kenar parlaması -->
 <g pointer-events="none">
@@ -675,7 +676,7 @@ function applyCam() {
     L.pill.setAttribute('transform', `translate(${L.px},${L.py}) scale(${k.toFixed(4)}) translate(${al === 'l' ? -L.w : 0},0)`);
     L.dot.setAttribute('r', (3 / ppu).toFixed(2));
   }
-  $('#vzoom').innerHTML = `YAKINLAŞTIRMA <b>×${S.cam.z.toFixed(1)}</b>`;
+  $('#vzoom').innerHTML = `YAKINLAŞTIRMA <b>×${(S.cam.z / OVERVIEW[2]).toFixed(1)}</b>`;
 }
 function camTo(c, ms = 1100) {
   const f = { ...S.cam }, id = ++S.camTw;
@@ -749,6 +750,9 @@ function renderPieces(t) {
   };
   sync(pcsG, S.pieces, p => p.s); sync(fatsG, S.fat, () => 'fatD');
   pcsG.setAttribute('filter', S.goo ? 'url(#fGoo)' : '');
+  const hi = $('#bhi');
+  if (S.goo && S.pieces.length) { const n = S.pieces.length, rr = Math.sqrt(n) * S.pieces[0].r * 1.5 * S.spread * 1.05; hi.setAttribute('cx', (-rr * .35).toFixed(2)); hi.setAttribute('cy', (-rr * .45).toFixed(2)); hi.setAttribute('rx', (rr * .38).toFixed(2)); hi.setAttribute('ry', (rr * .18).toFixed(2)); hi.setAttribute('transform', `rotate(-25 ${(-rr * .35).toFixed(2)} ${(-rr * .45).toFixed(2)})`); hi.setAttribute('opacity', .38); }
+  else hi.setAttribute('opacity', 0);
 }
 function bolusPos(s = S.bolusS) { const p = routeP.getPointAtLength(clamp(s, 0, ROUTE_L)); return { x: p.x, y: p.y }; }
 function bolusWorld(p) { const c = bolusPos(); return { x: c.x + p.x, y: c.y + p.y }; }
@@ -855,7 +859,7 @@ function renderNut(pop) {
   const f = FOODS[S.fk];
   box.innerHTML = `<h5>${f.name} · besin içeriği <span>kimyasal sindirim durumu</span></h5>` + NUT.map(n => {
     const s = S.st[n.k];
-    return `<div class="nrow"><div class="nname">${NIC[n.k]}${n.name}${n.k === 'y' && S.emul ? '<span class="emul" title="Safra ile fiziksel sindirim">· damlacık</span>' : ''}</div>
+    return `<div class="nrow"><div class="nname">${NIC[n.k]}${n.name}${n.k === 'y' && S.emul ? '<span class="emul" title="Safra ile fiziksel sindirim: küçük damlacıklar">safra</span>' : ''}</div>
     <div class="nbar"><div class="zd-meter"><i style="width:${Math.round(f.amt[n.k] * 100)}%;background:linear-gradient(90deg,${n.col}99,${n.col});box-shadow:0 0 10px ${n.col}88"></i></div><small>Miktar: ${f.lvl[n.k]}</small></div>
     <span class="badge b${s} ${pop && pop.includes(n.k) ? 'pop' : ''}" role="status"><i></i>${STAT[s]}</span></div>`;
   }).join('');
@@ -871,7 +875,7 @@ function renderCard() {
     pYol.innerHTML = `<div class="sh"><div class="ic">${ICON.mouth}</div><div><small>Başlangıç</small><h3>Bir besin seç</h3></div></div>
       <p class="lead">Burçak bahçeden topladığı elmayı <b>ısırdı, çiğnedi ve yuttu.</b> Sen hangi besinin yolculuğunu yönetmek istersin? Her durakta önce soruyu yanıtla, sonra organı çalıştır.</p>
       <div class="foods">${Object.keys(FOODS).map(k => { const f = FOODS[k]; return `<button class="food" data-food="${k}" aria-label="${f.name} seç">${ART[k]()}<b>${f.name}</b><small>${f.sub}</small><div class="mini">${NUT.map(n => `<i style="--w:${Math.round(f.amt[n.k] * 100)}%;--c:${n.col}" title="${n.name}"></i>`).join('')}</div></button>`; }).join('')}</div>
-      <div class="tipbox">${ZD.I.bulb}<span>Yol: <b style="color:#fff">ağız → yutak → yemek borusu → mide → ince bağırsak → kalın bağırsak → anüs</b></span></div>`;
+`;
     $$('.food', pYol).forEach(b => b.onclick = () => chooseFood(b.dataset.food));
     return;
   }
@@ -1048,7 +1052,7 @@ const ACT = {
   /* 5 · İNCE BAĞIRSAK */
   5(box) {
     const a = S.a;
-    box.innerHTML = `<div class="hint">Yardımcı organlar salgılarını kanallarla ince bağırsağa gönderir. İkisini de çalıştır, sonra emilimi yakından izle.</div>
+    box.innerHTML = `<div class="hint">Yardımcı organların salgılarını gönder, sonra emilimi yakından izle.</div>
       <div class="arow"><button class="zd-btn green" id="bileB" aria-label="Safrayı gönder">${ZD.I.arrowR}Safrayı gönder</button><button class="zd-btn amber" id="pancB" aria-label="Pankreas öz suyunu gönder">${ZD.I.arrowR}Pankreas öz suyu</button></div>
       <div class="arow"><button class="zd-btn" id="vilB" aria-label="Villusları yakınlaştır" disabled>${ZD.I.info}Villusları yakınlaştır</button></div>`;
     const bb = $('#bileB'), pb = $('#pancB'), vb = $('#vilB');
@@ -1156,9 +1160,9 @@ async function churn(n) {
   if (n === 2) { splitTo(38, 2.2); setInfo(38, 2.2 / 12, 'Parçalanıyor'); }
   if (n === 3) {
     S.goo = true; S.pieces = S.pieces.slice(0, 22); S.pieces.forEach(p => { p.s = 'pcCh'; p.r = 5 * p.rv; });
-    tween(600, t => { S.spread = lerp(1.15, .78, t); }); setInfo(1, .12, 'Bulamaç oluşuyor');
+    tween(600, t => { S.spread = lerp(1.15, .66, t); }); setInfo(1, .12, 'Bulamaç oluşuyor');
   }
-  if (n === 4) { tween(600, t => { S.spread = lerp(.78, .66, t); }); setInfo(1, .1, 'Bulamaç'); }
+  if (n === 4) { tween(600, t => { S.spread = lerp(.66, .56, t); }); setInfo(1, .1, 'Bulamaç'); }
   await sq; if (g !== S.gen) return; st.removeAttribute('transform');
 }
 function bubble(delay) {
@@ -1246,7 +1250,7 @@ async function colonStep(n) {
 }
 function posaColor(d) {
   const mix = (a, b) => { const p = x => [1, 3, 5].map(i => parseInt(x.substr(i, 2), 16)); const A = p(a), Bc = p(b); return '#' + A.map((v, i) => Math.round(lerp(v, Bc[i], d)).toString(16).padStart(2, '0')).join(''); };
-  $('#po1').setAttribute('stop-color', mix('#c99a66', '#8a5d36')); $('#po2').setAttribute('stop-color', mix('#93633a', '#5c3a1e')); $('#po3').setAttribute('stop-color', mix('#5e3a1c', '#2e1a0a'));
+  $('#poC').setAttribute('fill', mix('#a7774a', '#4e3018'));
 }
 
 /* ---------------- Villus büyüteci ---------------- */
