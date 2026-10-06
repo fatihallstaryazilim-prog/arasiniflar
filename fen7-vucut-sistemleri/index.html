@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vücudumuzdaki Sistemler · 7. Sınıf Fen Bilimleri Materyal Seti</title>
+<meta name="description" content="7. sınıf Fen Bilimleri 3. Ünite: Vücudumuzdaki Sistemler — etkileşimli simülasyonlar ve oyunlar (Türkiye Yüzyılı Maarif Modeli).">
+<link rel="stylesheet" href="assets/zd.css">
+<style>
+  body{padding-bottom:40px}
+  .hub{max-width:1280px;margin:0 auto;padding:18px 24px}
+  .crumbs{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--dim)}
+  .crumbs b{color:var(--muted);font-weight:600}
+  .crumbs .home{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:var(--glass);border:1px solid var(--line);color:var(--muted)}
+  .crumbs .home svg{width:16px;height:16px}
+
+  /* HERO */
+  .hero{display:grid;grid-template-columns:300px 1fr;gap:36px;align-items:center;padding:26px 0 30px;border-bottom:1px solid var(--line)}
+  .hero-cover{width:300px;aspect-ratio:1;border-radius:24px;overflow:hidden;box-shadow:0 0 0 2px rgba(73,243,255,.6),0 0 30px rgba(73,243,255,.35),0 30px 70px rgba(0,0,0,.55);transform:rotate(-1.5deg);transition:transform .5s var(--spring)}
+  .hero-cover:hover{transform:rotate(0) scale(1.02)}
+  .hero-cover svg{width:100%;height:100%}
+  .kick{display:flex;align-items:center;gap:12px;font-size:12px;font-weight:700;letter-spacing:2.4px;color:var(--cyan);text-transform:uppercase}
+  .kick::before{content:"";width:36px;height:2px;background:var(--cyan);border-radius:2px}
+  .hero h1{font-size:clamp(28px,4vw,46px);font-weight:800;line-height:1.08;margin:12px 0 10px;letter-spacing:-.3px}
+  .hero h1 span{background:linear-gradient(90deg,#fff,#9ff6ff 60%,#35eefc);-webkit-background-clip:text;background-clip:text;color:transparent}
+  .meta{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:14px}
+  .meta .m{display:inline-flex;align-items:center;gap:8px;padding:7px 12px;border-radius:999px;background:var(--glass);border:1px solid var(--line);font-size:13px;color:#cbdcee;font-weight:500}
+  .meta .m b{color:#fff}
+  .hero p.lead{font-size:15.5px;line-height:1.65;color:#bcd0e6;max-width:720px}
+  .hero .acts{display:flex;gap:12px;margin-top:20px;flex-wrap:wrap}
+  .prog{display:flex;align-items:center;gap:14px;margin-top:18px;max-width:520px}
+  .prog .zd-meter{flex:1;height:8px}
+  .prog span{font-size:13px;color:var(--muted);white-space:nowrap}
+
+  /* GÖVDE */
+  .layout{display:grid;grid-template-columns:260px 1fr;gap:34px;padding-top:26px}
+  .toc{position:sticky;top:16px;align-self:start;display:flex;flex-direction:column;gap:14px}
+  .toc h5{font-size:13px;font-weight:700;color:#dce9f6}
+  .search{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:14px;background:rgba(0,0,0,.28);border:1px solid var(--line);transition:.2s}
+  .search:focus-within{border-color:rgba(53,238,252,.55);box-shadow:0 0 0 4px rgba(53,238,252,.1)}
+  .search svg{width:18px;height:18px;color:var(--muted);flex:none}
+  .search input{flex:1;background:none;border:0;outline:0;color:var(--text);font:inherit;font-size:14px;min-width:0}
+  .search input::placeholder{color:var(--dim)}
+  .toc nav{display:flex;flex-direction:column;gap:2px}
+  .toc nav a{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;color:#b8cbe0;text-decoration:none;font-size:14px;font-weight:500;transition:.2s}
+  .toc nav a:hover{background:var(--glass);color:#fff}
+  .toc nav a.on{background:rgba(53,238,252,.08);color:#fff;box-shadow:inset 3px 0 0 var(--cyan)}
+  .toc nav a i{width:10px;height:10px;border-radius:50%;flex:none}
+  .toc nav a em{margin-left:auto;font-style:normal;font-size:12px;color:var(--dim);font-weight:600}
+  .filters{display:flex;gap:6px;flex-wrap:wrap}
+  .filters button{padding:7px 12px;border-radius:999px;font-size:12.5px;font-weight:600;color:var(--muted);background:var(--glass);border:1px solid var(--line);transition:.2s}
+  .filters button.on{color:#06303a;background:linear-gradient(180deg,#e9fbff,#bff4ff);border-color:transparent}
+  .kz{padding:14px;border-radius:16px;background:var(--glass);border:1px solid var(--line);font-size:12.5px;line-height:1.55;color:#9fb5cc}
+  .kz b{color:#dce9f6}
+
+  .unit-h{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:8px}
+  .unit-h small{font-size:12px;color:var(--dim);font-weight:600}
+  .unit-h h2{font-size:26px;font-weight:800;letter-spacing:-.2px}
+  .unit-h .c{font-size:13px;color:var(--muted)}
+  .topic{padding:22px 0 8px;scroll-margin-top:20px}
+  .topic-h{display:flex;align-items:center;gap:12px;margin-bottom:6px;flex-wrap:wrap}
+  .topic-h .num{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;font-weight:800;font-size:15px;color:#05141c}
+  .topic-h h3{font-size:20px;font-weight:700}
+  .topic-h .c{margin-left:auto;font-size:13px;color:var(--muted)}
+  .topic .desc{font-size:13.5px;color:#93a9c1;margin:0 0 14px 48px;line-height:1.5}
+  .topic .desc code{font-family:inherit;font-weight:700;color:#c8dcf0;background:rgba(255,255,255,.06);padding:1px 6px;border-radius:6px;font-size:12px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(196px,1fr));gap:20px}
+  .card{display:flex;flex-direction:column;gap:10px;text-decoration:none;color:inherit;outline:none}
+  .card .cov{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:1;box-shadow:0 0 0 1.5px rgba(73,243,255,.35),0 16px 34px rgba(0,0,0,.45);transition:transform .35s var(--spring),box-shadow .35s}
+  .card .cov svg{width:100%;height:100%;display:block}
+  .card:hover .cov,.card:focus-visible .cov{transform:translateY(-6px) scale(1.02);box-shadow:0 0 0 2px rgba(73,243,255,.85),0 0 26px rgba(73,243,255,.4),0 26px 44px rgba(0,0,0,.5)}
+  .card .play{position:absolute;inset:auto 12px 12px auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#0b1626;opacity:0;transform:scale(.6);transition:.3s var(--spring);box-shadow:0 8px 20px rgba(0,0,0,.4)}
+  .card .play svg{width:20px;height:20px;margin-left:3px}
+  .card:hover .play,.card:focus-visible .play{opacity:1;transform:none}
+  .card .stars{position:absolute;left:10px;top:10px;display:flex;gap:2px;padding:4px 7px;border-radius:999px;background:rgba(3,10,20,.75);border:1px solid rgba(255,201,60,.4)}
+  .card .stars svg{width:14px;height:14px}
+  .card .t{font-size:13.5px;line-height:1.4;color:#d7e5f3;font-weight:500;display:flex;gap:8px}
+  .card .t b{color:var(--muted);font-weight:600;white-space:nowrap}
+  .card .t svg{width:14px;height:14px;flex:none;margin-top:2px;color:var(--dim);margin-left:auto}
+  .empty{padding:40px;text-align:center;color:var(--muted);border:1px dashed var(--line-2);border-radius:18px;display:none}
+  footer{max-width:1280px;margin:30px auto 0;padding:20px 24px;border-top:1px solid var(--line);font-size:12.5px;color:var(--dim);line-height:1.6}
+  footer b{color:var(--muted)}
+
+  @media (max-width:980px){
+    .hero{grid-template-columns:1fr;justify-items:center;text-align:center}
+    .hero .kick,.hero .meta,.hero .acts,.prog{justify-content:center;margin-left:auto;margin-right:auto}
+    .hero-cover{width:min(280px,80vw)}
+    .layout{grid-template-columns:1fr}
+    .toc{position:static}
+    .toc nav{flex-direction:row;overflow:auto;gap:6px}
+    .toc nav a{white-space:nowrap;background:var(--glass)}
+    .kz{display:none}
+    .topic .desc{margin-left:0}
+    .grid{grid-template-columns:repeat(2,1fr);gap:14px}
+  }
+</style>
+</head>
+<body>
+<div class="hub">
+  <div class="crumbs"><span class="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1Z"/></svg></span>›<span>7. Sınıf Fen Bilimleri</span>›<b>3. Ünite Materyal Seti</b></div>
+
+  <section class="hero">
+    <div class="hero-cover" id="heroCover"></div>
+    <div>
+      <div class="kick">Materyal Seti · Maarif Modeli</div>
+      <h1>7. Sınıf Fen Bilimleri<br><span>Vücudumuzdaki Sistemler</span></h1>
+      <div class="meta" id="meta"></div>
+      <p class="lead">Sindirim, dolaşım, solunum ve boşaltım sistemlerini etkileşimli <b>simülasyonlar</b> ve <b>oyunlarla</b> keşfet. Her materyal ders kitabındaki konu sırasını izler, Türkiye Yüzyılı Maarif Modeli öğretim programındaki kazanımlara bağlıdır. Akıllı tahta, tablet, bilgisayar ve telefonda çalışır.</p>
+      <div class="acts">
+        <a class="zd-btn lg" href="dolasim-kalp.html" id="startBtn"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.8v14.4c0 .8.9 1.3 1.6.8l11-7.2c.6-.4.6-1.2 0-1.6l-11-7.2C7.9 3.5 7 4 7 4.8Z"/></svg>Hemen Başla</a>
+        <a class="zd-btn ghost lg" href="#konu-1">İçindekiler</a>
+      </div>
+      <div class="prog"><div class="zd-meter"><i id="progBar"></i></div><span id="progTxt"></span></div>
+    </div>
+  </section>
+
+  <div class="layout">
+    <aside class="toc">
+      <h5>İçindekiler</h5>
+      <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" type="search" placeholder="İçindekilerde ara..." aria-label="Materyallerde ara"></label>
+      <div class="filters" id="filters"><button class="on" data-f="all">Tümü</button><button data-f="sim">Simülasyonlar</button><button data-f="game">Oyunlar</button></div>
+      <nav id="tocNav"></nav>
+      <div class="kz"><b>Kazanımlar</b><br>FB.7.3.1–3.2 Sindirim sistemi · FB.7.3.3–3.5 Dolaşım sistemi ve kan bağışı · FB.7.3.6–3.7 Solunum sistemi ve bağımlılık · FB.7.3.8–3.9 Boşaltım sistemi</div>
+    </aside>
+    <main>
+      <div class="unit-h"><div><small>Ünite</small><h2>3. ÜNİTE: VÜCUDUMUZDAKİ SİSTEMLER</h2></div><span class="c" id="unitCount"></span></div>
+      <div id="topics"></div>
+      <div class="empty" id="empty">Aramanla eşleşen materyal bulunamadı.</div>
+    </main>
+  </div>
+</div>
+<footer>Kaynak: <b>Fen Bilimleri 7 Ders Kitabı (MEB, 2026-2027), 3. Ünite</b> ve Türkiye Yüzyılı Maarif Modeli Fen Bilimleri Dersi Öğretim Programı (FB.7.3). Tüm görseller vektörel olarak bu set için çizilmiştir. Sonuçlar yalnızca bu cihazda saklanır.</footer>
+
+<script src="assets/zd.js"></script>
+<script>
+(function(){
+'use strict';
+/* ==================================================================
+   KAPAK SANATI — tamamen vektörel
+   ================================================================== */
+let uid=0;
+const ACC = { sin:['#ffb547','#ff7a3d'], dol:['#ff4d64','#c3123a'], sol:['#35eefc','#2a8dff'], bos:['#ffd36b','#f0a020'], gen:['#b993ff','#7c4dff'] };
+const RIB = { 'SİMÜLASYON':['#35eefc','#1287c9','sim'], 'ETİKETLEME':['#3ff0a8','#12a86b','tag'], 'İKİLİ SEÇİM':['#ff7a6b','#e0334a','swap'], 'SIRALAMA':['#ffbe4d','#f08a12','grid'], 'DOĞRU-YANLIŞ':['#ff6fb0','#d13a85','dy'], 'ÇENGEL BULMACA':['#b993ff','#7c4dff','cross'] };
+const RIBICON = {
+  sim:'<path d="M-9 -6h18v12h-18z" fill="none" stroke="#fff" stroke-width="2.4" rx="2"/><path d="M-4 9h8" stroke="#fff" stroke-width="2.4" stroke-linecap="round"/><path d="M-3 -2l5 2-5 2z" fill="#fff"/>',
+  tag:'<path d="M-9 -8h9l9 9-8 8-10-10z" fill="none" stroke="#fff" stroke-width="2.4" stroke-linejoin="round"/><circle cx="-4" cy="-3" r="2" fill="#fff"/>',
+  swap:'<path d="M-9 -3h16l-4 -4M9 4h-16l4 4" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>',
+  grid:'<rect x="-9" y="-9" width="8" height="8" rx="2" fill="#fff"/><rect x="1" y="-9" width="8" height="8" rx="2" fill="#fff" opacity=".6"/><rect x="-9" y="1" width="8" height="8" rx="2" fill="#fff" opacity=".6"/><rect x="1" y="1" width="8" height="8" rx="2" fill="#fff"/>',
+  dy:'<path d="M-9 0l3 3 5-6" fill="none" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M3 -4l6 8M9 -4l-6 8" stroke="#fff" stroke-width="2.6" stroke-linecap="round"/>',
+  cross:'<rect x="-9" y="-3" width="6" height="6" rx="1.3" fill="#fff"/><rect x="-3" y="-3" width="6" height="6" rx="1.3" fill="#fff" opacity=".7"/><rect x="3" y="-3" width="6" height="6" rx="1.3" fill="#fff"/><rect x="-3" y="-9" width="6" height="6" rx="1.3" fill="#fff" opacity=".7"/><rect x="-3" y="3" width="6" height="6" rx="1.3" fill="#fff" opacity=".7"/>'
+};
+
+// ---- organ çizimleri (yerel koordinat, merkez 0,0) ----
+const ART = {
+  heart(id){ return `<defs><radialGradient id="h${id}" cx=".35" cy=".28" r=".85"><stop offset="0" stop-color="#ff95a4"/><stop offset=".35" stop-color="#e5304f"/><stop offset=".8" stop-color="#9c1030"/><stop offset="1" stop-color="#5e0619"/></radialGradient></defs>
+    <g transform="scale(.62) translate(-322 -305)">
+      <path d="M300,222 C300,170 286,150 262,140" stroke="#5b6cff" stroke-width="22" fill="none" stroke-linecap="round"/>
+      <path d="M340,222 C340,160 380,140 414,150" stroke="#ff3b55" stroke-width="24" fill="none" stroke-linecap="round"/>
+      <path d="M300,222 C300,170 286,150 262,140" stroke="rgba(255,255,255,.3)" stroke-width="5" fill="none" transform="translate(-3,-3)"/>
+      <path d="M340,222 C340,160 380,140 414,150" stroke="rgba(255,255,255,.3)" stroke-width="5" fill="none" transform="translate(-3,-3)"/>
+      <path d="M258,250 C250,226 272,212 292,220 C304,206 336,206 348,220 C368,210 392,224 386,252 C400,290 392,330 362,362 C345,380 330,392 318,404 C300,388 278,368 262,342 C244,312 244,276 258,250 Z" fill="url(#h${id})"/>
+      <path d="M300,232 C290,270 296,320 312,370 M340,232 C352,270 352,300 346,340" stroke="rgba(255,190,120,.55)" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M270,236 C286,214 314,212 326,218" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".35" fill="none"/>
+      <ellipse cx="276" cy="272" rx="8" ry="18" fill="#fff" opacity=".22"/>
+    </g>`; },
+  lungs(id){ return `<defs><radialGradient id="l${id}" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="#ffd6e1"/><stop offset=".45" stop-color="#f58fab"/><stop offset="1" stop-color="#b03d64"/></radialGradient><pattern id="lt${id}" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="4.5" cy="4.5" r="2.8" fill="none" stroke="rgba(255,255,255,.2)"/></pattern><linearGradient id="tr${id}" x1="0" x2="1"><stop offset="0" stop-color="#9fb5cf"/><stop offset=".5" stop-color="#f2f8ff"/><stop offset="1" stop-color="#8ea6c2"/></linearGradient></defs>
+    <g transform="scale(.5) translate(-320 -96)">
+      <path d="M310,-40 L330,-40 L330,34 C348,42 364,52 380,66 L372,76 C358,62 340,54 320,48 C300,54 282,62 268,76 L260,66 C276,52 292,42 310,34 Z" fill="url(#tr${id})"/>
+      ${[-30,-18,-6,6,18].map(y=>`<rect x="308" y="${y}" width="24" height="4" rx="2" fill="#fff" opacity=".6"/>`).join('')}
+      <path d="M232,32 C200,34 168,70 160,112 C152,150 158,180 176,186 C200,192 236,184 262,176 C276,170 280,150 278,120 C276,80 262,40 232,32 Z" fill="url(#l${id})"/>
+      <path d="M232,32 C200,34 168,70 160,112 C152,150 158,180 176,186 C200,192 236,184 262,176 C276,170 280,150 278,120 C276,80 262,40 232,32 Z" fill="url(#lt${id})"/>
+      <path d="M408,36 C436,40 466,74 474,114 C480,148 474,176 458,182 C436,188 410,182 392,176 C380,170 380,156 386,146 C376,140 366,128 366,112 C364,78 380,40 408,36 Z" fill="url(#l${id})"/>
+      <path d="M408,36 C436,40 466,74 474,114 C480,148 474,176 458,182 C436,188 410,182 392,176 C380,170 380,156 386,146 C376,140 366,128 366,112 C364,78 380,40 408,36 Z" fill="url(#lt${id})"/>
+      <path d="M268,76 C250,92 236,110 222,130 M246,104 C232,112 214,116 200,114 M372,76 C390,92 404,110 418,130 M394,104 C408,112 426,116 440,114" stroke="#f3f8ff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".75"/>
+      <ellipse cx="206" cy="68" rx="24" ry="12" fill="#fff" opacity=".28" transform="rotate(-30 206 68)"/><ellipse cx="432" cy="68" rx="18" ry="10" fill="#fff" opacity=".24" transform="rotate(30 432 68)"/>
+    </g>`; },
+  digest(id){ return `<defs><linearGradient id="st${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb3be"/><stop offset=".5" stop-color="#ef6a82"/><stop offset="1" stop-color="#b8344f"/></linearGradient><linearGradient id="in${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc2b3"/><stop offset="1" stop-color="#e46d68"/></linearGradient><linearGradient id="lv${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d0615a"/><stop offset="1" stop-color="#7d2420"/></linearGradient></defs>
+    <path d="M-62,-30 C-40,-48 -6,-46 4,-30 C10,-18 -8,-6 -30,-2 C-52,2 -70,-8 -62,-30 Z" fill="url(#lv${id})"/>
+    <ellipse cx="-44" cy="-30" rx="12" ry="5" fill="#fff" opacity=".22" transform="rotate(-15 -44 -30)"/>
+    <path d="M6,-70 C6,-56 8,-46 12,-38" stroke="url(#st${id})" stroke-width="11" fill="none" stroke-linecap="round"/>
+    <path d="M10,-42 C26,-54 56,-46 62,-22 C68,4 52,26 26,30 C4,33 -10,24 -8,12 C-6,2 8,4 16,-2 C24,-8 20,-20 12,-26 Z" fill="url(#st${id})"/>
+    <path d="M22,-40 C40,-46 54,-34 56,-20" stroke="#fff" stroke-width="5" opacity=".35" fill="none" stroke-linecap="round"/>
+    <path d="M-48,40 C-48,30 48,30 48,40 C48,50 -48,50 -48,60 C-48,70 48,70 48,80 C48,90 -40,90 -40,96" stroke="url(#in${id})" stroke-width="13" fill="none" stroke-linecap="round"/>
+    <path d="M-48,40 C-48,30 48,30 48,40 C48,50 -48,50 -48,60 C-48,70 48,70 48,80" stroke="rgba(255,255,255,.3)" stroke-width="3" fill="none" transform="translate(-1,-3)"/>
+    <path d="M-64,96 L-64,30 C-64,18 -58,14 -48,14 L52,14 C62,14 66,20 66,30 L66,96" stroke="#d2665f" stroke-width="13" fill="none" stroke-linecap="round" stroke-dasharray="14 4" opacity=".9"/>`; },
+  kidneys(id){ const k=(x,f)=>`<g transform="translate(${x},-18) scale(${f},1)"><path d="M0,-38 C24,-38 38,-18 36,4 C34,26 20,40 2,38 C-10,37 -14,26 -10,14 C-6,6 -14,0 -16,-10 C-20,-28 -12,-38 0,-38 Z" fill="url(#kd${id})"/><path d="M6,-28 C20,-26 28,-12 28,2" stroke="#fff" stroke-width="5" opacity=".3" fill="none" stroke-linecap="round"/><path d="M-8,8 C-4,2 4,0 12,4" stroke="#5a1220" stroke-width="2" fill="none" opacity=".5"/></g>`;
+    return `<defs><radialGradient id="kd${id}" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ff8f99"/><stop offset=".5" stop-color="#c8505a"/><stop offset="1" stop-color="#6e1a28"/></radialGradient><radialGradient id="bl${id}" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ffe7a8"/><stop offset=".6" stop-color="#ffcf6b"/><stop offset="1" stop-color="#d48812"/></radialGradient></defs>
+    <path d="M-42,-8 C-30,30 -14,48 -6,62 M42,-8 C30,30 14,48 6,62" stroke="#ffd27a" stroke-width="6" fill="none" stroke-linecap="round"/>
+    ${k(-52,-1)}${k(52,1)}
+    <path d="M-26,60 C-26,44 26,44 26,60 C30,80 14,92 0,92 C-14,92 -30,80 -26,60 Z" fill="url(#bl${id})"/>
+    <ellipse cx="-10" cy="58" rx="9" ry="4" fill="#fff" opacity=".4"/>
+    <path d="M0,92 L0,108" stroke="#ffd27a" stroke-width="6" stroke-linecap="round"/>`; },
+  cells(id){ const rbc=(x,y,r,rot,sy=1)=>`<g transform="translate(${x},${y}) rotate(${rot}) scale(1,${sy})"><circle r="${r}" fill="url(#rb${id})"/><circle r="${r*.48}" fill="#8f0d25" opacity=".45"/><ellipse cx="${-r*.35}" cy="${-r*.45}" rx="${r*.35}" ry="${r*.18}" fill="#fff" opacity=".35"/></g>`;
+    return `<defs><radialGradient id="rb${id}" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#ff8a9b"/><stop offset=".6" stop-color="#e52346"/><stop offset="1" stop-color="#8f0d25"/></radialGradient><radialGradient id="wb${id}" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#e3d9ff"/><stop offset="1" stop-color="#a98ee6"/></radialGradient></defs>
+    <circle r="78" fill="rgba(255,214,140,.07)" stroke="rgba(255,214,140,.25)" stroke-width="2"/>
+    ${rbc(-40,-30,20,10,.85)}${rbc(28,-42,18,-20,.7)}${rbc(46,10,22,30,.9)}${rbc(-18,34,19,0,.6)}${rbc(-56,18,15,40,.8)}${rbc(20,46,14,0,.95)}
+    <g transform="translate(4,-4)"><circle r="24" fill="url(#wb${id})"/><path d="M-10,-4 C-14,-14 -2,-16 0,-8 C4,-16 16,-12 10,-2 C18,4 6,14 0,6 C-6,14 -18,6 -10,-4 Z" fill="#7c4dff" opacity=".75"/><ellipse cx="-9" cy="-12" rx="7" ry="3.5" fill="#fff" opacity=".6"/></g>
+    ${[[-62,-52],[66,-30],[-30,62],[60,52],[-70,50]].map(([x,y])=>`<path transform="translate(${x},${y})" d="M-5,-2 C-3,-6 4,-5 5,-1 C6,4 0,6 -3,4 C-6,3 -6,0 -5,-2 Z" fill="#ffcf6b"/>`).join('')}`; },
+  drop(id){ return `<defs><radialGradient id="dp${id}" cx=".38" cy=".55" r=".7"><stop offset="0" stop-color="#ff8a9b"/><stop offset=".55" stop-color="#e5203f"/><stop offset="1" stop-color="#7e0a20"/></radialGradient></defs>
+    <path d="M0,-70 C18,-40 46,-12 46,22 C46,50 25,70 0,70 C-25,70 -46,50 -46,22 C-46,-12 -18,-40 0,-70 Z" fill="url(#dp${id})"/>
+    <path d="M-26,8 C-26,-10 -14,-28 -4,-42" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".35" fill="none"/>
+    <path d="M0,4 V40 M-18,22 H18" stroke="#fff" stroke-width="9" stroke-linecap="round"/>`; },
+  micro(id){ return `${ART.cells(id)}<circle r="80" fill="none" stroke="#dfe8f5" stroke-width="8"/><circle r="80" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="2"/><path d="M56,56 L96,96" stroke="#dfe8f5" stroke-width="16" stroke-linecap="round"/><path d="M56,56 L96,96" stroke="rgba(255,255,255,.5)" stroke-width="4" stroke-linecap="round" transform="translate(-3,-3)"/>`; },
+  label(id, organ){ return `<g transform="translate(-10,6) scale(.88)">${ART[organ](id)}</g>
+    ${[[-52,-62,-96,-74],[48,-30,92,-46],[-40,48,-92,62]].map(([x1,y1,x2,y2],i)=>`<path d="M${x1},${y1} L${x2},${y2}" stroke="#35eefc" stroke-width="2.4"/><circle cx="${x1}" cy="${y1}" r="4" fill="#35eefc"/><rect x="${x2-(x2<0?40:0)}" y="${y2-12}" width="40" height="24" rx="7" fill="${i===1?'#fff':'rgba(10,26,44,.92)'}" stroke="${i===1?'#fff':'#4a6a8c'}"/>${i===1?`<rect x="${x2+8}" y="${y2-3}" width="24" height="6" rx="3" fill="#0b1626"/>`:`<text x="${x2-(x2<0?20:-20)}" y="${y2+5}" text-anchor="middle" font-size="13" font-weight="800" fill="#cfe3f7">${i+1}.</text>`}`).join('')}`; },
+  cards(id, a, b){ return `<g transform="rotate(-8)"><rect x="-64" y="-62" width="128" height="92" rx="14" fill="#122a44" stroke="#2b4d72"/></g>
+    <g transform="rotate(4)"><rect x="-66" y="-66" width="132" height="96" rx="14" fill="#16314f" stroke="#35eefc" stroke-opacity=".5"/><rect x="-36" y="-52" width="72" height="18" rx="5" fill="none" stroke="#35eefc" stroke-width="2"/><rect x="-26" y="-46" width="52" height="6" rx="3" fill="#35eefc"/><rect x="-46" y="-20" width="92" height="7" rx="3.5" fill="#e9f3ff"/><rect x="-38" y="-6" width="76" height="7" rx="3.5" fill="#e9f3ff" opacity=".8"/><rect x="-28" y="8" width="56" height="7" rx="3.5" fill="#e9f3ff" opacity=".6"/></g>
+    <g transform="translate(-46,62)"><circle r="22" fill="rgba(255,90,100,.12)" stroke="#ff6b78" stroke-width="3"/><path d="M8,0H-8M-1,-7l-7,7 7,7" stroke="#ff8a8a" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+    <g transform="translate(46,62)"><circle r="22" fill="rgba(53,238,252,.12)" stroke="#35eefc" stroke-width="3"/><path d="M-8,0H8M1,-7l7,7-7,7" stroke="#6ff4ff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>`; },
+  sort(id){ const cols=['#ffbe4d','#2fe39b','#a879ff','#35eefc']; return cols.map((c,i)=>`<g transform="translate(${-78+i*52},-60)"><rect width="44" height="78" rx="8" fill="#10253e" stroke="#2a4b6e"/><rect width="44" height="5" rx="2.5" fill="${c}"/>${i%2?`<rect x="6" y="14" width="32" height="26" rx="6" fill="#fff"/><circle cx="22" cy="27" r="7" fill="${c}"/>`:''}${i===2?`<rect x="6" y="46" width="32" height="26" rx="6" fill="#fff"/><circle cx="22" cy="59" r="7" fill="#ff6b78"/>`:''}</g>`).join('')+
+    [0,1,2,3].map(i=>`<g transform="translate(${-78+i*40},30)"><rect width="34" height="38" rx="8" fill="#fff"/><circle cx="17" cy="16" r="9" fill="${['#ff8a5c','#5b6cff','#ff3b55','#ffd36b'][i]}"/><rect x="7" y="29" width="20" height="4" rx="2" fill="#9fb0c4"/></g>`).join('')+
+    `<g transform="translate(52,18) rotate(-10)"><rect width="38" height="42" rx="8" fill="#fff" stroke="#35eefc" stroke-width="3"/><circle cx="19" cy="18" r="10" fill="#2fe39b"/><rect x="8" y="32" width="22" height="4" rx="2" fill="#9fb0c4"/></g>`; },
+  maze(id){ const N=[[0,-66],[-50,-24],[50,-24],[-76,22],[-26,22],[26,22],[76,22]]; const E=[[0,1],[0,2],[1,3],[1,4],[2,5],[2,6]]; const lit=new Set(['0-2','2-5']);
+    return E.map(([a,b])=>`<path d="M${N[a][0]},${N[a][1]} L${N[b][0]},${N[b][1]}" stroke="${lit.has(a+'-'+b)?'#35eefc':'#2a4b6e'}" stroke-width="${lit.has(a+'-'+b)?5:3}" ${lit.has(a+'-'+b)?'filter="url(#cg'+id+')"':''}/>`).join('')+
+      [-87,-62,-37,-12,12,37,62,87].map((x,i)=>`<path d="M${x},74 L${x},48" stroke="${i===4?'#35eefc':'#2a4b6e'}" stroke-width="2"/><rect x="${x-10}" y="64" width="20" height="26" rx="6" fill="${i===4?'#2fe39b':'#10253e'}" stroke="${i===4?'#bfffe3':'#2a4b6e'}"/><text x="${x}" y="82" text-anchor="middle" font-size="11" font-weight="800" fill="${i===4?'#03281a':'#7f9bb8'}">${i+1}</text>`).join('')+
+      [[3,-76],[4,-26],[5,26],[6,76]].map(([k,x])=>`<path d="M${x},22 L${x+(x<0?-11:11)},48 M${x},22 L${x+(x<0?14:-14)},48" stroke="${k===5?'#35eefc':'#2a4b6e'}" stroke-width="2"/>`).join('')+
+      N.map(([x,y],i)=>`<g transform="translate(${x},${y})"><rect x="-22" y="-13" width="44" height="26" rx="8" fill="${[0,2,5].includes(i)?'#103a4a':'#10253e'}" stroke="${[0,2,5].includes(i)?'#35eefc':'#2a4b6e'}" stroke-width="2"/><text y="5" text-anchor="middle" font-size="12" font-weight="800" fill="${[0,2,5].includes(i)?'#bff6ff':'#6b88a6'}">${['D','Y','D','Y','D','Y','D'][i]}?</text></g>`).join('')+
+      `<defs><filter id="cg${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`; },
+  cross(id){ const L=[[0,0,'A'],[1,0,'L'],[2,0,'V'],[3,0,'E'],[4,0,'O'],[5,0,'L'],[2,1,''],[2,2,'L'],[2,3,'U'],[2,4,'S'],[0,3,''],[1,3,''],[3,3,''],[5,1,''],[5,2,'']];
+    return `<g transform="translate(-90,-78)">`+L.map(([c,r,ch])=>`<rect x="${c*31}" y="${r*31}" width="28" height="28" rx="6" fill="${ch?'#1d3c5e':'#132a45'}" stroke="${ch?'#5fa8d6':'#2a4b6e'}"/>${ch?`<text x="${c*31+14}" y="${r*31+20}" text-anchor="middle" font-size="16" font-weight="800" fill="#fff">${ch}</text>`:''}`).join('')+`<rect x="${2*31-2}" y="${1*31-2}" width="32" height="32" rx="7" fill="none" stroke="#35eefc" stroke-width="3"/></g>`+
+      ['K','A','Ğ'].map((ch,i)=>`<g transform="translate(${-56+i*44},88)"><rect x="-18" y="-20" width="36" height="40" rx="9" fill="#33557d"/><rect x="-18" y="-20" width="36" height="34" rx="9" fill="#4b72a0"/><text y="7" text-anchor="middle" font-size="20" font-weight="800" fill="#fff">${ch}</text></g>`).join(''); },
+  body(id){ return `<defs><linearGradient id="gb${id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="rgba(53,238,252,.35)"/><stop offset=".25" stop-color="rgba(53,238,252,.06)"/><stop offset=".75" stop-color="rgba(53,238,252,.06)"/><stop offset="1" stop-color="rgba(53,238,252,.35)"/></linearGradient></defs>
+    <ellipse cx="0" cy="-104" rx="27" ry="31" fill="url(#gb${id})" stroke="#49f3ff" stroke-opacity=".7" stroke-width="2"/>
+    <path d="M-12,-76 L-12,-64 C-30,-62 -52,-56 -62,-44 C-72,-32 -74,-14 -74,4 L-70,104 C-70,118 -58,128 -44,130 L44,130 C58,128 70,118 70,104 L74,4 C74,-14 72,-32 62,-44 C52,-56 30,-62 12,-64 L12,-76 Z" fill="url(#gb${id})" stroke="#49f3ff" stroke-opacity=".7" stroke-width="2"/>
+    <g transform="translate(0,-28) scale(.55)">${ART.lungs(id+'a')}</g>
+    <g transform="translate(6,-6) scale(.42)">${ART.heart(id+'b')}</g>
+    <g transform="translate(6,48) scale(.5)">${ART.digest(id+'c')}</g>
+    <g transform="translate(0,82) scale(.42)">${ART.kidneys(id+'d')}</g>`; }
+};
+
+function cover(o){
+  const id='c'+(uid++); const [a1,a2]=ACC[o.k]; const [r1,r2,ric]=RIB[o.type];
+  const lines=o.cap; const fs = Math.max(...lines.map(l=>l.length))>14? 25 : 29;
+  const art = typeof o.art==='function'? o.art(id) : ART[o.art](id, o.organ);
+  const hero = o.hero;
+  return `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${lines.join(' ')}">
+  <defs>
+    <radialGradient id="bg${id}" cx=".5" cy=".55" r=".75"><stop offset="0" stop-color="#14465a"/><stop offset=".55" stop-color="#0a2333"/><stop offset="1" stop-color="#050f1a"/></radialGradient>
+    <radialGradient id="gl${id}" cx=".5" cy=".55" r=".5"><stop offset="0" stop-color="${a1}" stop-opacity=".35"/><stop offset="1" stop-color="${a1}" stop-opacity="0"/></radialGradient>
+    <linearGradient id="rb${id}x" x1="0" x2="1"><stop offset="0" stop-color="${r1}"/><stop offset="1" stop-color="${r2}"/></linearGradient>
+    <filter id="ds${id}" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#000" flood-opacity=".55"/></filter>
+    <filter id="tg${id}" x="-20%" y="-40%" width="140%" height="180%"><feDropShadow dx="0" dy="3" stdDeviation="0" flood-color="#04121c" flood-opacity="1"/><feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="${a1}" flood-opacity=".55"/></filter>
+    <pattern id="hx${id}" width="24" height="41.6" patternUnits="userSpaceOnUse" patternTransform="scale(.9)"><path d="M12,0 L24,6.9 L24,20.8 L12,27.7 L0,20.8 L0,6.9 Z M12,27.7 L12,41.6" fill="none" stroke="rgba(120,220,255,.07)" stroke-width="1"/></pattern>
+  </defs>
+  <rect width="300" height="300" fill="url(#bg${id})"/>
+  <rect width="300" height="300" fill="url(#hx${id})"/>
+  <circle cx="150" cy="${hero?160:168}" r="120" fill="url(#gl${id})"/>
+  ${Array.from({length:14},(_,i)=>{const x=(i*73+29)%290+5,y=(i*131+47)%280+10,r=(i%3)+1.2;return `<circle cx="${x}" cy="${y}" r="${r}" fill="${i%2?a1:'#bff6ff'}" opacity="${.25+(i%4)*.12}"/>`}).join('')}
+  <g transform="translate(150,${hero?170:172}) scale(${o.scale||1})" filter="url(#ds${id})">${art}</g>
+  ${o.badge?`<g transform="translate(58,196)" filter="url(#ds${id})"><circle r="34" fill="#0b2131" stroke="${a1}" stroke-width="3"/><circle r="34" fill="url(#gl${id})"/><g transform="scale(${o.badge==='lungs'?.36:o.badge==='digest'?.3:o.badge==='kidneys'?.3:.4})">${ART[o.badge](id+'bd')}</g></g>`:''}
+  ${hero?'':`<g filter="url(#tg${id})" font-family="Lexend,system-ui,sans-serif" font-weight="900" text-anchor="middle" fill="#fff" style="paint-order:stroke" stroke="#04121c" stroke-width="5" stroke-linejoin="round">
+    ${lines.map((l,i)=>`<text x="150" y="${lines.length>1? 44+i*(fs+4) : 58}" font-size="${fs}" letter-spacing=".5">${l}</text>`).join('')}
+  </g>
+  <g transform="translate(150,262)">
+    <rect x="-118" y="-17" width="236" height="34" rx="10" fill="url(#rb${id}x)" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/>
+    <rect x="-118" y="-17" width="236" height="14" rx="10" fill="#fff" opacity=".18"/>
+    <text x="-14" y="6" text-anchor="middle" font-family="Lexend,system-ui,sans-serif" font-size="14" font-weight="800" fill="#fff" letter-spacing=".8" style="paint-order:stroke" stroke="rgba(0,0,0,.25)" stroke-width="2">${o.type}</text>
+    <g transform="translate(96,0)"><rect x="-15" y="-15" width="30" height="30" rx="8" fill="rgba(0,0,0,.22)" stroke="rgba(255,255,255,.5)"/>${RIBICON[ric]}</g>
+  </g>`}
+  <text x="150" y="${hero?28:14}" text-anchor="middle" font-family="Lexend,system-ui,sans-serif" font-size="${hero?13:9}" font-weight="800" letter-spacing="3" fill="${a1}" opacity=".95">${hero?'FEN BİLİMLERİ 7 · 3. ÜNİTE':'FEN 7 · VÜCUDUMUZDAKİ SİSTEMLER'}</text>
+  ${hero?`<g font-family="Lexend,system-ui,sans-serif" text-anchor="middle" font-weight="900" fill="#fff" style="paint-order:stroke" stroke="#04121c" stroke-width="5" stroke-linejoin="round" filter="url(#tg${id})"><text x="150" y="268" font-size="24">VÜCUDUMUZDAKİ</text><text x="150" y="292" font-size="22" fill="${a1}">SİSTEMLER</text></g>`:''}
+  <rect x="3" y="3" width="294" height="294" rx="${hero?22:16}" fill="none" stroke="#49f3ff" stroke-opacity=".55" stroke-width="2"/>
+</svg>`;
+}
+
+/* ==================================================================
+   MATERYALLER
+   ================================================================== */
+const T = [
+  {id:'konu-1',k:'sin',n:'Sindirim Sistemi',kz:'FB.7.3.1 · FB.7.3.2',d:'Sindirim sistemini oluşturan yapı ve organlar, fiziksel ve kimyasal sindirim, sindirim sisteminin sağlığı.',items:[
+    {h:'sindirim-yolculuk.html',type:'SİMÜLASYON',cap:['BESİNİN','YOLCULUĞU'],art:'digest',t:'Besinin Yolculuğu — Sindirim Simülasyonu',kind:'sim'},
+    {h:'etiketle.html?set=sindirim',type:'ETİKETLEME',cap:['SİNDİRİM','ORGANLARI'],art:'label',organ:'digest',t:'Sindirim Organlarını Etiketle',kind:'game'},
+    {badge:'digest',h:'ikili.html?deste=fiziksel-kimyasal',type:'İKİLİ SEÇİM',cap:['FİZİKSEL Mİ','KİMYASAL MI?'],art:'cards',t:'Fiziksel mi, Kimyasal mı?',kind:'game'},
+    {badge:'digest',h:'dy-labirent.html?set=sindirim',type:'DOĞRU-YANLIŞ',cap:['DOĞRU ÇIKIŞI','BUL'],art:'maze',t:'Doğru Çıkışı Bul — Sindirim',kind:'game'}]},
+  {id:'konu-2',k:'dol',n:'Dolaşım Sistemi',kz:'FB.7.3.3 · FB.7.3.4 · FB.7.3.5',d:'Kalp, kan ve damarlar; küçük ve büyük kan dolaşımı; kanın yapısı; kan ve organ bağışının toplumsal dayanışma açısından önemi; dolaşım sisteminin sağlığı.',items:[
+    {h:'dolasim-kalp.html',type:'SİMÜLASYON',cap:['KALP VE KAN','DOLAŞIMI'],art:'heart',t:'Kalp ve Kan Dolaşımı Simülatörü',kind:'sim',scale:1.15},
+    {h:'kan-laboratuvari.html',type:'SİMÜLASYON',cap:['KAN','LABORATUVARI'],art:'micro',t:'Kan Laboratuvarı — Mikroskop Altında Kan',kind:'sim',scale:.92},
+    {h:'etiketle.html?set=dolasim',type:'ETİKETLEME',cap:['DOLAŞIM','ŞEMASI'],art:'label',organ:'heart',t:'Dolaşım Şemasını Etiketle',kind:'game'},
+    {badge:'heart',h:'ikili.html?deste=atar-toplar',type:'İKİLİ SEÇİM',cap:['ATARDAMAR MI','TOPLARDAMAR MI?'],art:'cards',t:'Atardamar mı, Toplardamar mı?',kind:'game'},
+    {h:'kategori.html?set=kan',type:'SIRALAMA',cap:['KANIN','BİLEŞENLERİ'],art:'cells',t:'Kanın Bileşenleri ve Görevleri',kind:'game',scale:.95},
+    {h:'ikili.html?deste=bagis',type:'İKİLİ SEÇİM',cap:['KAN BAĞIŞI','YAPABİLİR Mİ?'],art:'drop',scale:.95,t:'Kan Bağışı Yapabilir mi?',kind:'game'},
+    {badge:'heart',h:'dy-labirent.html?set=dolasim',type:'DOĞRU-YANLIŞ',cap:['DOĞRU ÇIKIŞI','BUL'],art:'maze',t:'Doğru Çıkışı Bul — Dolaşım',kind:'game'}]},
+  {id:'konu-3',k:'sol',n:'Solunum Sistemi',kz:'FB.7.3.6 · FB.7.3.7',d:'Solunum sistemini oluşturan yapı ve organlar, soluk alma ve verme, doğru nefes alma, solunum sisteminin sağlığı, bağımlılık ve Yeşilay.',items:[
+    {h:'solunum-nefes.html',type:'SİMÜLASYON',cap:['SOLUK AL,','SOLUK VER'],art:'lungs',t:'Soluk Al, Soluk Ver — Solunum Simülasyonu',kind:'sim',scale:1.1},
+    {h:'etiketle.html?set=solunum',type:'ETİKETLEME',cap:['SOLUNUM','ORGANLARI'],art:'label',organ:'lungs',t:'Solunum Organlarını Etiketle',kind:'game'},
+    {badge:'lungs',h:'ikili.html?deste=soluk',type:'İKİLİ SEÇİM',cap:['SOLUK ALMA MI','VERME Mİ?'],art:'cards',t:'Soluk Alma mı, Soluk Verme mi?',kind:'game'},
+    {badge:'lungs',h:'dy-labirent.html?set=solunum',type:'DOĞRU-YANLIŞ',cap:['DOĞRU ÇIKIŞI','BUL'],art:'maze',t:'Doğru Çıkışı Bul — Solunum',kind:'game'}]},
+  {id:'konu-4',k:'bos',n:'Boşaltım Sistemi',kz:'FB.7.3.8 · FB.7.3.9',d:'Böbrekler, üreter, mesane ve üretra; boşaltıma yardımcı organlar (deri, akciğerler, kalın bağırsak, karaciğer); boşaltım sisteminin sağlığı.',items:[
+    {h:'bosaltim-bobrek.html',type:'SİMÜLASYON',cap:['BÖBREK','LABORATUVARI'],art:'kidneys',t:'Böbrek Laboratuvarı — Boşaltım Simülasyonu',kind:'sim',scale:1.05},
+    {h:'etiketle.html?set=bosaltim',type:'ETİKETLEME',cap:['BOŞALTIM','ORGANLARI'],art:'label',organ:'kidneys',t:'Boşaltım Organlarını Etiketle',kind:'game'},
+    {badge:'kidneys',h:'kategori.html?set=atik',type:'SIRALAMA',cap:['HANGİ ORGAN','UZAKLAŞTIRIR?'],art:'sort',t:'Hangi Organ Uzaklaştırır?',kind:'game'},
+    {badge:'kidneys',h:'dy-labirent.html?set=bosaltim',type:'DOĞRU-YANLIŞ',cap:['DOĞRU ÇIKIŞI','BUL'],art:'maze',t:'Doğru Çıkışı Bul — Boşaltım',kind:'game'}]},
+  {id:'konu-5',k:'gen',n:'Ünite Geneli',kz:'FB.7.3.1 – FB.7.3.9',d:'Dört sistemi birlikte tekrar et: kavramlar, sistemlere ait organlar ve sağlıklı yaşam davranışları.',items:[
+    {h:'bulmaca.html',type:'ÇENGEL BULMACA',cap:['ÇENGEL','BULMACA'],art:'cross',t:'Vücudumuzdaki Sistemler — Çengel Bulmaca',kind:'game'},
+    {h:'kategori.html?set=organ',type:'SIRALAMA',cap:['HANGİ SİSTEME','AİT?'],art:'sort',t:'Hangi Sisteme Ait?',kind:'game'},
+    {badge:'heart',h:'ikili.html?deste=saglik',type:'İKİLİ SEÇİM',cap:['SAĞLIĞI KORUR','MU?'],art:'cards',t:'Sağlığı Korur mu, Zarar mı Verir?',kind:'game'}]}
+];
+
+const total = T.reduce((a,t)=>a+t.items.length,0), sims = T.reduce((a,t)=>a+t.items.filter(i=>i.kind==='sim').length,0);
+ZD.$('#meta').innerHTML = `<span class="m"><b>4</b> konu</span><span class="m"><b>${sims}</b> simülasyon</span><span class="m"><b>${total-sims}</b> oyun</span><span class="m">Akıllı tahta uyumlu</span>`;
+ZD.$('#unitCount').textContent = `${total} materyal`;
+ZD.$('#heroCover').innerHTML = cover({k:'sol',type:'SİMÜLASYON',cap:[''],art:'body',hero:true,scale:1.08});
+
+const starSvg = (on)=>`<svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9Z" fill="${on?'#ffc93c':'#34465e'}"/></svg>`;
+function best(h){ return ZD.store.get('best:'+h,null); }
+const COLORS={sin:'#ffb547',dol:'#ff4d64',sol:'#35eefc',bos:'#ffd36b',gen:'#b993ff'};
+ZD.$('#topics').innerHTML = T.map((t,ti)=>`
+  <section class="topic" id="${t.id}" data-topic>
+    <div class="topic-h"><span class="num" style="background:linear-gradient(180deg,${ACC[t.k][0]},${ACC[t.k][1]})">${ti<4?ti+1:'★'}</span><h3>${t.n}</h3><span class="c">${t.items.length} materyal</span></div>
+    <p class="desc"><code>${t.kz}</code> &nbsp;${t.d}</p>
+    <div class="grid">${t.items.map((it,ii)=>{ const b=best(it.h); return `
+      <a class="card" href="${it.h}" data-kind="${it.kind}" data-title="${(it.t+' '+t.n).toLocaleLowerCase('tr')}">
+        <div class="cov">${cover({...it,k:t.k})}${b?`<div class="stars" title="En iyi sonucun">${[0,1,2].map(i=>starSvg(i<b.stars)).join('')}</div>`:''}<span class="play"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.8v14.4c0 .8.9 1.3 1.6.8l11-7.2c.6-.4.6-1.2 0-1.6l-11-7.2C7.9 3.5 7 4 7 4.8Z"/></svg></span></div>
+        <div class="t"><span><b>${ti<4?`3.${ti+1}`:'3'}</b>&nbsp; ${it.t}</span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 17 17 7M9 7h8v8"/></svg></div>
+      </a>`;}).join('')}</div>
+  </section>`).join('');
+ZD.$('#tocNav').innerHTML = T.map(t=>`<a href="#${t.id}" data-for="${t.id}"><i style="background:${COLORS[t.k]};box-shadow:0 0 8px ${COLORS[t.k]}"></i>${t.n}<em>${t.items.length}</em></a>`).join('');
+
+// ilerleme
+const doneN = T.reduce((a,t)=>a+t.items.filter(i=>best(i.h)).length,0);
+ZD.$('#progBar').style.width = (doneN/total*100)+'%';
+ZD.$('#progTxt').textContent = doneN? `${doneN} / ${total} materyal tamamlandı` : `${total} materyal seni bekliyor`;
+
+// arama + filtre
+let F='all';
+function apply(){
+  const q=ZD.$('#q').value.trim().toLocaleLowerCase('tr'); let shown=0;
+  ZD.$$('[data-topic]').forEach(sec=>{ let n=0; ZD.$$('.card',sec).forEach(c=>{ const ok=(F==='all'||c.dataset.kind===F)&&(!q||c.dataset.title.includes(q)); c.style.display=ok?'':'none'; if(ok)n++; }); sec.style.display=n?'':'none'; shown+=n; });
+  ZD.$('#empty').style.display=shown?'none':'block';
+}
+ZD.$('#q').addEventListener('input',apply);
+ZD.$$('#filters button').forEach(b=>b.onclick=()=>{F=b.dataset.f;ZD.$$('#filters button').forEach(x=>x.classList.toggle('on',x===b));apply();});
+// scrollspy
+const io=new IntersectionObserver(es=>es.forEach(e=>{ if(e.isIntersecting){ ZD.$$('#tocNav a').forEach(a=>a.classList.toggle('on',a.dataset.for===e.target.id)); } }),{rootMargin:'-30% 0px -60% 0px'});
+ZD.$$('[data-topic]').forEach(s=>io.observe(s));
+})();
+</script>
+</body>
+</html>

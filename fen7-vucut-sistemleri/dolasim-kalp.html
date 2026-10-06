@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kalp ve Kan Dolaşımı Simülatörü</title>
+<link rel="stylesheet" href="assets/zd.css">
+<style>
+  .dl-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(360px,.95fr);gap:18px;padding:4px 22px 22px;height:clamp(540px,calc(100vh - 196px),760px)}
+  .dl-figwrap{position:relative;min-height:0;display:grid;place-items:center;border-radius:22px;
+    background:radial-gradient(60% 55% at 50% 50%,rgba(255,59,85,.07),transparent 70%),radial-gradient(40% 30% at 50% 12%,rgba(255,159,184,.07),transparent 70%)}
+  .dl-fig{position:relative;height:100%;max-width:100%;aspect-ratio:640/600}
+  .dl-fig svg,.dl-fig canvas{position:absolute;inset:0;width:100%;height:100%}
+  .dl-fig canvas{pointer-events:none}
+  .dl-fig .hit{cursor:pointer;pointer-events:stroke}
+  .dl-fig .hitf{cursor:pointer;pointer-events:all}
+  .vessel{transition:opacity .5s var(--ease)}
+  .vessel.dim{opacity:.18}
+  .vessel .flow{stroke-dasharray:2 16;animation:dl-flow 1s linear infinite}
+  @keyframes dl-flow{to{stroke-dashoffset:-18}}
+  .hl-glow{filter:url(#fGlowBig)}
+  .lab{transition:opacity .4s}
+  .lab text{font-family:var(--font)}
+  .nolabels .lab{opacity:0}
+  .pick{transition:filter .25s}
+  .pick.hover{filter:url(#fGlow)}
+  .pick.flash{animation:dl-flash .9s 2}
+  @keyframes dl-flash{50%{filter:url(#fGlowBig) brightness(1.4)}}
+
+  /* panel */
+  .dl-panel{display:flex;flex-direction:column;gap:12px;min-height:0}
+  .dl-panel .zd-seg{align-self:flex-start}
+  .dl-scroll{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:12px;padding-right:4px;scrollbar-width:thin;scrollbar-color:#24405f transparent}
+  .dl-sec{padding:16px 18px}
+  .dl-sec h4{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:700;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+  .dl-acts{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .dl-act{padding:10px 6px 9px;border-radius:14px;background:rgba(0,0,0,.25);border:1.5px solid var(--line);display:flex;flex-direction:column;align-items:center;gap:5px;font-size:12px;font-weight:600;color:var(--muted);transition:.2s var(--ease)}
+  .dl-act svg{width:30px;height:30px}
+  .dl-act b{font-size:11px;font-weight:600;color:var(--dim)}
+  .dl-act:hover{border-color:var(--line-2);color:var(--text)}
+  .dl-act.on{border-color:var(--cyan);color:var(--text);background:linear-gradient(180deg,rgba(53,238,252,.16),rgba(53,238,252,.04));box-shadow:0 0 18px rgba(53,238,252,.25)}
+  .dl-act.on b{color:var(--cyan)}
+  .dl-vitals{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
+  .dl-bpm{display:flex;flex-direction:column;align-items:center;justify-content:center;width:98px;height:98px;border-radius:50%;
+    background:radial-gradient(circle at 35% 30%,rgba(255,255,255,.12),transparent 55%),radial-gradient(circle,#3a0d1c,#1a0610);
+    border:2px solid rgba(255,84,104,.6);box-shadow:0 0 24px rgba(255,84,104,.35),inset 0 0 22px rgba(255,84,104,.25);position:relative}
+  .dl-bpm::after{content:"";position:absolute;inset:-2px;border-radius:50%;border:2px solid rgba(255,84,104,.8);opacity:0}
+  .dl-bpm.beat::after{animation:dl-ring .6s ease-out}
+  @keyframes dl-ring{0%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.25)}}
+  .dl-bpm b{font-size:34px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums}
+  .dl-bpm span{font-size:10px;letter-spacing:1.5px;color:#ffb3bd;font-weight:700;margin-top:4px}
+  .dl-ecg{width:100%;height:76px;border-radius:14px;background:rgba(0,0,0,.35);border:1px solid var(--line)}
+  .dl-note{font-size:13px;line-height:1.55;color:#c9dbee;margin-top:10px}
+  .dl-note b{color:var(--text)}
+  .dl-toggles{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+  .dl-tg{display:inline-flex;align-items:center;gap:8px;padding:7px 12px 7px 8px;border-radius:999px;background:rgba(0,0,0,.25);border:1px solid var(--line);font-size:12.5px;font-weight:600;color:var(--muted)}
+  .dl-tg i{width:30px;height:18px;border-radius:99px;background:#24364f;position:relative;transition:.2s}
+  .dl-tg i::after{content:"";position:absolute;left:2px;top:2px;width:14px;height:14px;border-radius:50%;background:#8aa;transition:.25s var(--spring)}
+  .dl-tg.on{color:var(--text)}
+  .dl-tg.on i{background:var(--green-2)}
+  .dl-tg.on i::after{left:14px;background:#fff}
+  .dl-steps{display:flex;flex-direction:column;gap:6px;counter-reset:s}
+  .dl-steps li{list-style:none;display:flex;align-items:center;gap:10px;font-size:13.5px;color:#cfe0f2;padding:8px 10px;border-radius:12px;background:rgba(0,0,0,.2);border:1px solid transparent;transition:.3s}
+  .dl-steps li::before{counter-increment:s;content:counter(s);width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;background:#1f3550;color:var(--muted)}
+  .dl-steps li.on{border-color:rgba(53,238,252,.45);background:rgba(53,238,252,.08);color:#fff}
+  .dl-steps li.on::before{background:var(--cyan);color:#04262c}
+  .dot{display:inline-block;width:12px;height:12px;border-radius:50%;vertical-align:-1px;margin:0 2px;box-shadow:0 0 8px currentColor}
+  .dl-over{position:absolute;left:12px;top:10px;display:flex;flex-direction:column;gap:6px;padding:10px 12px;border-radius:14px;background:rgba(6,16,30,.7);border:1px solid var(--line);font-size:12px;color:#b9cde3;backdrop-filter:blur(6px)}
+  .dl-over span{display:flex;align-items:center;gap:8px}
+  .dl-over2{position:absolute;left:12px;bottom:10px;display:flex;flex-direction:column;gap:8px}
+  .dl-legend{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;font-size:12.5px;color:var(--muted)}
+  .dl-legend span{display:flex;align-items:center;gap:8px}
+
+  .dl-info{padding:16px 18px;border-color:rgba(53,238,252,.35)}
+  .dl-info .zd-chip{margin-bottom:8px}
+  .dl-info h3{font-size:19px;font-weight:800;margin-bottom:6px}
+  .dl-info p{font-size:14px;line-height:1.6;color:#d3e3f3}
+  .dl-info .warn{margin-top:10px;padding:10px 12px;border-radius:12px;background:rgba(255,187,61,.08);border:1px solid rgba(255,187,61,.35);color:#ffe2a6;font-size:13px;line-height:1.5}
+
+  /* görevler */
+  .dl-task{padding:18px}
+  .dl-task .q{font-size:17px;font-weight:700;line-height:1.45;margin:8px 0 12px}
+  .dl-task .hint{font-size:13px;color:var(--muted)}
+  .dl-tlist{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;margin-top:4px}
+  .dl-tlist i{height:8px;border-radius:99px;background:#1d324c}
+  .dl-tlist i.done{background:var(--green);box-shadow:0 0 10px rgba(47,227,155,.6)}
+  .dl-tlist i.miss{background:var(--amber)}
+  .dl-tlist i.cur{background:var(--cyan);box-shadow:0 0 10px rgba(53,238,252,.6)}
+
+  /* nabız */
+  .dl-tapwrap{display:flex;flex-direction:column;align-items:center;gap:12px;padding:22px 0 6px}
+  .dl-tap{width:150px;height:150px;border-radius:50%;display:grid;place-items:center;position:relative;
+    background:radial-gradient(circle at 35% 30%,#ff8094,#d8203f 60%,#8f0d25);color:#fff;font-weight:800;font-size:15px;letter-spacing:.5px;
+    box-shadow:0 10px 0 #5c0718,0 18px 40px rgba(255,59,85,.45),inset 0 3px 0 rgba(255,255,255,.35);transition:transform .08s}
+  .dl-tap:active{transform:translateY(6px);box-shadow:0 4px 0 #5c0718,0 10px 24px rgba(255,59,85,.4)}
+  .dl-tap svg{position:absolute;inset:-12px;width:174px;height:174px}
+  .dl-count{font-size:44px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+  .dl-wrist{display:grid;grid-template-columns:96px 1fr;gap:14px;align-items:center}
+  .dl-num{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:10px}
+  .dl-num button{width:44px;height:44px;border-radius:50%;background:#20354f;font-size:24px;font-weight:800;border:1px solid var(--line-2)}
+  .dl-num output{font-size:34px;font-weight:800;min-width:64px;text-align:center;font-variant-numeric:tabular-nums}
+  .dl-res{margin-top:10px;padding:12px 14px;border-radius:14px;background:rgba(47,227,155,.08);border:1px solid rgba(47,227,155,.35);font-size:14px;line-height:1.55}
+
+  .dl-hist{display:flex;gap:12px;align-items:flex-start;font-size:13px;line-height:1.5;color:#c9dbee}
+  .dl-hist svg{flex:none;width:44px;height:44px}
+
+  .dl-panel{min-width:0}
+  @media (max-width:960px){
+    .dl-grid{grid-template-columns:minmax(0,1fr);height:auto;padding:4px 12px 16px}
+    .dl-figwrap{display:block;height:auto}
+    .dl-fig{width:100%;height:auto;max-width:560px;margin:0 auto}
+    .dl-over{position:static;flex-direction:row;flex-wrap:wrap;justify-content:center;margin:8px auto 0;width:fit-content;max-width:100%}
+    .dl-over2{position:static;flex-direction:row;justify-content:center;margin-top:8px}
+    .dl-scroll{overflow:visible}
+    .dl-acts{grid-template-columns:repeat(4,1fr)}
+    .dl-act{font-size:11px}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="assets/zd.js"></script>
+<script>
+(function(){
+'use strict';
+const ui = ZD.mount({
+  kicker:'SİMÜLASYON · DOLAŞIM SİSTEMİ',
+  title:'Kalp ve Kan Dolaşımı',
+  crumb:['7. Sınıf Fen Bilimleri','3. Ünite','Dolaşım Sistemi'],
+  stats:[{id:'task',label:'Görev',value:'0/8'},{id:'score',label:'Puan',value:0},{id:'time',label:'Süre',value:'0:00'},{id:'bpm',label:'Nabız',value:72,cls:'cyan'}],
+  onHelp(){ showIntro(); },
+  onRestart(){ restart(); }
+});
+
+/* ------------------------------------------------------------------
+   SVG — çift dolaşım şeması
+   ------------------------------------------------------------------ */
+const PATHS = {
+  P4:'M212,520 C188,516 170,490 170,440 C170,380 220,330 258,320',
+  HR:'M258,320 C276,300 286,262 288,222',
+  P1:'M288,222 C288,180 205,185 196,140 C190,112 198,98 214,95',
+  LC:'M214,95 C262,70 282,122 320,96 C358,70 380,122 426,95',
+  P2:'M426,95 C444,98 452,114 446,140 C436,186 352,182 352,222',
+  HL:'M352,222 C356,262 370,296 384,318',
+  P3:'M384,318 C420,330 470,380 470,440 C470,490 452,516 428,520',
+  BC:'M428,520 C380,546 360,494 320,520 C280,546 260,494 212,520'
+};
+const ORDER = ['P4','HR','P1','LC','P2','HL','P3','BC'];
+const OXY = '#ff3b55', DEOXY = '#5b6cff';
+
+function tube(id, d, col, dark){
+  return `<g class="vessel" data-seg="${id}">
+    <path d="${d}" fill="none" stroke="${dark}" stroke-width="25" stroke-linecap="round"/>
+    <path d="${d}" fill="none" stroke="url(#tube-${col})" stroke-width="19" stroke-linecap="round"/>
+    <path d="${d}" fill="none" stroke="rgba(255,255,255,.28)" stroke-width="4" stroke-linecap="round" transform="translate(-3,-3)"/>
+    <path class="flow" d="${d}" fill="none" stroke="rgba(255,255,255,.55)" stroke-width="3" stroke-linecap="round"/>
+  </g>`;
+}
+function cap(id, d){
+  // kılcal ağ: ana iz + ince yan dallar
+  const offs = [-9,-4.5,4.5,9];
+  return `<g class="vessel" data-seg="${id}">
+    <path d="${d}" fill="none" stroke="url(#capGrad-${id})" stroke-width="14" stroke-linecap="round" opacity=".18" filter="url(#fSoft)"/>
+    ${offs.map(o=>`<path d="${d}" transform="translate(0,${o})" fill="none" stroke="url(#capGrad-${id})" stroke-width="2.2" stroke-linecap="round" opacity=".75"/>`).join('')}
+    <path d="${d}" fill="none" stroke="url(#capGrad-${id})" stroke-width="5" stroke-linecap="round"/>
+    <path d="${d}" fill="none" stroke="rgba(255,255,255,.35)" stroke-width="1.4" stroke-linecap="round" transform="translate(-1,-1.5)"/>
+  </g>`;
+}
+function label(x,y,t,s,anchor='middle',col='#eaf6ff'){
+  const w = Math.max(t.length, (s||'').length*0.85)*7.6+22;
+  const x0 = anchor==='middle'? x-w/2 : anchor==='end'? x-w : x;
+  return `<g class="lab" pointer-events="none">
+    <rect x="${x0}" y="${y-15}" width="${w}" height="${s?36:24}" rx="10" fill="rgba(8,20,36,.82)" stroke="rgba(120,200,255,.28)"/>
+    <text x="${x0+w/2}" y="${y+1}" text-anchor="middle" font-size="12.5" font-weight="700" fill="${col}">${t}</text>
+    ${s?`<text x="${x0+w/2}" y="${y+15}" text-anchor="middle" font-size="10.5" font-weight="500" fill="#8fb0cf">${s}</text>`:''}
+  </g>`;
+}
+
+// vücut hücreleri (doku)
+function tissue(){
+  let s=''; let seed=7; const rnd=()=>{seed=(seed*16807)%2147483647;return seed/2147483647};
+  for(let r=0;r<4;r++){ for(let c=0;c<11;c++){
+    const x=196+c*24+(r%2?12:0)+rnd()*4, y=488+r*24+rnd()*3;
+    if(x>446) continue;
+    const rx=11+rnd()*2, ry=10+rnd()*2;
+    s+=`<g transform="translate(${x.toFixed(1)},${y.toFixed(1)})"><ellipse rx="${rx}" ry="${ry}" fill="url(#cellG)" stroke="rgba(255,220,210,.35)" stroke-width="1"/><circle cx="${(rnd()*4-2).toFixed(1)}" cy="${(rnd()*3-1).toFixed(1)}" r="3.6" fill="#8e3e62" opacity=".85"/><ellipse cx="-3.5" cy="-4" rx="4" ry="2" fill="#fff" opacity=".25"/></g>`;
+  }}
+  return s;
+}
+function lungTex(id){ return `<pattern id="${id}" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="3.1" fill="none" stroke="rgba(255,255,255,.16)" stroke-width="1"/><circle cx="0" cy="0" r="2" fill="rgba(120,20,60,.12)"/><circle cx="10" cy="10" r="2" fill="rgba(120,20,60,.12)"/></pattern>`; }
+
+const SVG = `
+<svg viewBox="0 0 640 600" id="dlsvg" role="img" aria-label="Küçük ve büyük kan dolaşımı şeması">
+  <defs>
+    <linearGradient id="tube-red" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff7186"/><stop offset=".5" stop-color="#ef2848"/><stop offset="1" stop-color="#b3132f"/></linearGradient>
+    <linearGradient id="tube-blue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8d9bff"/><stop offset=".5" stop-color="#5465f2"/><stop offset="1" stop-color="#3241b8"/></linearGradient>
+    <linearGradient id="capGrad-LC" x1="214" y1="0" x2="426" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#6b78ff"/><stop offset=".5" stop-color="#b65ab8"/><stop offset="1" stop-color="#ff3b55"/></linearGradient>
+    <linearGradient id="capGrad-BC" x1="428" y1="0" x2="212" y2="0" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#ff3b55"/><stop offset=".5" stop-color="#b65ab8"/><stop offset="1" stop-color="#6b78ff"/></linearGradient>
+    <radialGradient id="lungG" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="#ffd0dc"/><stop offset=".45" stop-color="#f58fab"/><stop offset="1" stop-color="#b8466c"/></radialGradient>
+    <radialGradient id="heartG" cx=".35" cy=".28" r=".85"><stop offset="0" stop-color="#ff8a9b"/><stop offset=".35" stop-color="#e5304f"/><stop offset=".8" stop-color="#9c1030"/><stop offset="1" stop-color="#5e0619"/></radialGradient>
+    <radialGradient id="chR" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#93a0ff"/><stop offset="1" stop-color="#3442c4"/></radialGradient>
+    <radialGradient id="chL" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ff8899"/><stop offset="1" stop-color="#c0142f"/></radialGradient>
+    <radialGradient id="cellG" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ffe0d4"/><stop offset=".6" stop-color="#f0a690"/><stop offset="1" stop-color="#c76e5d"/></radialGradient>
+    <linearGradient id="trachG" x1="0" x2="1"><stop offset="0" stop-color="#9fb5cf"/><stop offset=".5" stop-color="#eef5ff"/><stop offset="1" stop-color="#8ea6c2"/></linearGradient>
+    <radialGradient id="tissueBg" cx=".5" cy=".5" r=".6"><stop offset="0" stop-color="rgba(255,150,130,.18)"/><stop offset="1" stop-color="rgba(255,150,130,0)"/></radialGradient>
+    ${lungTex('lungTex')}
+    <filter id="fSoft" x="-20%" y="-50%" width="140%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+    <filter id="fGlow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="fGlowBig" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="9" result="b"/><feColorMatrix in="b" type="matrix" values="0 0 0 0 .2  0 0 0 0 .93  0 0 0 0 .99  0 0 0 1.4 0" result="c"/><feMerge><feMergeNode in="c"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="fDrop" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="10" stdDeviation="10" flood-color="#000" flood-opacity=".55"/></filter>
+    <clipPath id="tissueClip"><rect x="180" y="474" width="280" height="112" rx="40"/></clipPath>
+  </defs>
+
+  <!-- arka plan halkaları -->
+  <circle cx="320" cy="300" r="250" fill="none" stroke="rgba(120,200,255,.06)" stroke-dasharray="2 8"/>
+  <circle cx="320" cy="300" r="190" fill="none" stroke="rgba(120,200,255,.05)"/>
+
+  <!-- AKCİĞERLER -->
+  <g id="lungs" class="pick" data-pick="LUNG" filter="url(#fDrop)">
+    <path d="M312,0 L328,0 L328,34 C346,42 362,52 378,66 L372,74 C358,62 340,52 320,46 C300,52 282,62 268,74 L262,66 C278,52 294,42 312,34 Z" fill="url(#trachG)" opacity=".9"/>
+    ${[6,13,20,27].map(y=>`<rect x="310" y="${y}" width="20" height="3" rx="1.5" fill="#ffffff" opacity=".55"/>`).join('')}
+    <path d="M232,32 C200,34 168,70 160,112 C152,150 158,180 176,186 C200,192 236,184 262,176 C276,170 280,150 278,120 C276,80 262,40 232,32 Z" fill="url(#lungG)"/>
+    <path d="M232,32 C200,34 168,70 160,112 C152,150 158,180 176,186 C200,192 236,184 262,176 C276,170 280,150 278,120 C276,80 262,40 232,32 Z" fill="url(#lungTex)"/>
+    <path d="M176,120 C200,112 230,116 270,104 M190,160 C214,150 240,152 272,146" stroke="rgba(120,20,50,.35)" stroke-width="1.6" fill="none"/>
+    <path d="M408,36 C436,40 466,74 474,114 C480,148 474,176 458,182 C436,188 410,182 392,176 C380,170 380,156 386,146 C376,140 366,128 366,112 C364,78 380,40 408,36 Z" fill="url(#lungG)"/>
+    <path d="M408,36 C436,40 466,74 474,114 C480,148 474,176 458,182 C436,188 410,182 392,176 C380,170 380,156 386,146 C376,140 366,128 366,112 C364,78 380,40 408,36 Z" fill="url(#lungTex)"/>
+    <path d="M372,124 C400,118 430,124 470,112" stroke="rgba(120,20,50,.35)" stroke-width="1.6" fill="none"/>
+    <ellipse cx="206" cy="66" rx="22" ry="12" fill="#fff" opacity=".22" transform="rotate(-30 206 66)"/>
+    <ellipse cx="430" cy="66" rx="18" ry="10" fill="#fff" opacity=".2" transform="rotate(30 430 66)"/>
+  </g>
+
+  <!-- VÜCUT HÜCRELERİ -->
+  <g id="body" class="pick" data-pick="BODY">
+    <rect x="170" y="466" width="300" height="128" rx="46" fill="url(#tissueBg)"/>
+    <g clip-path="url(#tissueClip)" opacity=".95">${tissue()}</g>
+    <rect x="180" y="474" width="280" height="112" rx="40" fill="none" stroke="rgba(255,190,170,.25)" stroke-dasharray="3 6"/>
+  </g>
+
+  <!-- DAMARLAR -->
+  ${tube('P4',PATHS.P4,'blue','#1e2878')}
+  ${tube('P1',PATHS.P1,'blue','#1e2878')}
+  ${tube('P2',PATHS.P2,'red','#6d0b1d')}
+  ${tube('P3',PATHS.P3,'red','#6d0b1d')}
+  ${cap('LC',PATHS.LC)}
+  ${cap('BC',PATHS.BC)}
+
+  <!-- KALP -->
+  <g id="heart" filter="url(#fDrop)">
+    <g id="heartBeat" style="transform-origin:320px 305px">
+      <path d="M258,250 C250,226 272,212 292,220 C304,206 336,206 348,220 C368,210 392,224 386,252 C400,290 392,330 362,362 C345,380 330,392 318,404 C300,388 278,368 262,342 C244,312 244,276 258,250 Z" fill="url(#heartG)"/>
+      <path d="M318,214 C322,260 318,330 318,402" stroke="#5e0619" stroke-width="3" opacity=".55" fill="none"/>
+      <!-- koroner damarlar (dekor) -->
+      <path d="M300,232 C290,270 296,320 312,370 M340,232 C352,270 352,300 346,340" stroke="rgba(255,190,120,.45)" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+      <!-- kesit pencereleri -->
+      <g class="pick" data-pick="HR"><path class="hitf" d="M266,252 C268,236 290,232 304,240 C310,280 310,330 308,370 C290,360 272,336 264,312 C258,292 260,270 266,252 Z" fill="url(#chR)" stroke="rgba(255,255,255,.55)" stroke-width="1.5" opacity=".95"/></g>
+      <g class="pick" data-pick="HL"><path class="hitf" d="M332,240 C348,232 372,236 376,256 C384,290 378,322 360,348 C350,362 340,372 330,380 C328,330 328,280 332,240 Z" fill="url(#chL)" stroke="rgba(255,255,255,.55)" stroke-width="1.5" opacity=".95"/></g>
+      <text x="284" y="356" text-anchor="middle" font-size="12" font-weight="800" fill="#fff" opacity=".9" pointer-events="none">SAĞ</text>
+      <text x="352" y="356" text-anchor="middle" font-size="12" font-weight="800" fill="#fff" opacity=".9" pointer-events="none">SOL</text>
+      <path d="M270,236 C286,214 314,212 326,218" stroke="#fff" stroke-width="6" stroke-linecap="round" opacity=".25" fill="none"/>
+      <ellipse cx="276" cy="270" rx="7" ry="16" fill="#fff" opacity=".18"/>
+    </g>
+  </g>
+
+  <!-- tıklama alanları (damarlar) -->
+  ${ORDER.filter(k=>k[0]==='P').map(k=>`<path class="hit" data-hit="${k}" d="${PATHS[k]}" fill="none" stroke="transparent" stroke-width="36" stroke-linecap="round"/>`).join('')}
+  <path class="hit" data-hit="LC" d="${PATHS.LC}" fill="none" stroke="transparent" stroke-width="44"/>
+  <path class="hit" data-hit="BC" d="${PATHS.BC}" fill="none" stroke="transparent" stroke-width="44"/>
+
+  <!-- gaz alışverişi etiketleri -->
+  <g class="lab" pointer-events="none" font-size="11" font-weight="800">
+    <text x="296" y="140" fill="#bff6ff">O₂ ↓</text><text x="322" y="140" fill="#c9b5ff">CO₂ ↑</text>
+    <text x="296" y="470" fill="#bff6ff">O₂ ↓</text><text x="322" y="470" fill="#c9b5ff">CO₂ ↑</text>
+  </g>
+
+  <!-- etiketler -->
+  ${label(118,226,'Atardamar','akciğere giden','middle','#b9c2ff')}
+  ${label(522,226,'Toplardamar','akciğerden gelen','middle','#ffb3bf')}
+  ${label(102,420,'Toplardamar','vücuttan gelen','middle','#b9c2ff')}
+  ${label(540,420,'Atardamar','vücuda giden','middle','#ffb3bf')}
+  ${label(560,96,'Akciğerler','kılcal damarlar')}
+  ${label(560,524,'Vücut hücreleri','kılcal damarlar')}
+  ${label(320,436,'Kalp')}
+</svg>`;
+
+/* ------------------------------------------------------------------
+   BİLGİ KARTLARI (ders kitabı)
+   ------------------------------------------------------------------ */
+const INFO = {
+  HR:{chip:'Kalp',t:'Kalbin sağ tarafı',p:'Vücuttan toplardamarlarla gelen <b>oksijen oranı düşük, karbon dioksit oranı yüksek</b> kan kalbin sağ tarafına gelir. Bu kan, sağ taraftaki atardamarla akciğerlere gönderilir: <b>küçük kan dolaşımı</b> başlar.'},
+  HL:{chip:'Kalp',t:'Kalbin sol tarafı',p:'Akciğerlerden toplardamarla gelen <b>oksijenlenmiş</b> kan kalbin sol tarafına gelir. Sol taraftaki atardamardan tüm vücuda gönderilir: <b>büyük kan dolaşımı</b> başlar.'},
+  P1:{chip:'Atardamar',t:'Akciğere giden atardamar',p:'Atardamarlar kalpten çıkan kanı taşır. Oksijen oranı düşük kan, kalbin sağ tarafındaki bu atardamarla akciğerlere gönderilir.',w:'İstisna: Kalpten akciğerlere giden atardamar hariç atardamarların tamamı oksijen oranı zengin kan taşır.'},
+  P2:{chip:'Toplardamar',t:'Akciğerden gelen toplardamar',p:'Toplardamarlar kanı toplayarak tekrar kalbe getirir. Akciğerlerde oksijenlenen kan bu toplardamarla kalbin sol tarafına gelir.',w:'İstisna: Akciğerlerden kalbe gelen toplardamar hariç toplardamarların tamamı oksijen oranı düşük kan taşır.'},
+  P3:{chip:'Atardamar',t:'Vücuda giden atardamar',p:'Oksijen oranı yüksek, karbon dioksit oranı düşük kan kalbin sol tarafındaki atardamardan <b>tüm vücuda</b> gönderilir. Kanın atardamar duvarına yaptığı basıncı bileğinizde <b>nabız</b> olarak hissedersiniz.'},
+  P4:{chip:'Toplardamar',t:'Vücuttan gelen toplardamar',p:'Vücuda yayılan kan hücrelerde kullanıldıktan sonra oksijen oranı azalır, karbon dioksit oranı artar. Bu kan toplardamarlarla <b>kalbin sağ tarafına</b> gelir ve büyük kan dolaşımı tamamlanır.'},
+  LC:{chip:'Kılcal damar',t:'Akciğerdeki kılcal damarlar',p:'Kılcal damarlar atardamarlarla toplardamarları birbirine bağlar; bu damarlara göre çok daha incedir. Akciğerlere ulaşan kanın <b>oksijen oranı artar</b>, <b>karbon dioksit oranı azalır</b>.'},
+  BC:{chip:'Kılcal damar',t:'Vücuttaki kılcal damarlar',p:'Kılcal damarlar <b>kan ile hücreler arasında madde alışverişini</b> sağlar. Kan hücrelere oksijen ve besin bırakır; karbon dioksit ve atık maddeleri alır.'},
+  LUNG:{chip:'Organ',t:'Akciğerler',p:'Kalpten gelen kan akciğerlerde karbon dioksidi bırakır, oksijen alır. Kalpten akciğerlere, oradan tekrar kalbe olan yola <b>küçük kan dolaşımı</b> denir.'},
+  BODY:{chip:'Hücreler',t:'Vücut hücreleri',p:'Kan; hücrelere besin, oksijen, hormon vb. maddeleri taşır, hücrelerde oluşan atık maddeleri ilgili organlara götürür. Kalpten vücuda, oradan tekrar kalbe olan yola <b>büyük kan dolaşımı</b> denir.'}
+};
+const ACTS = [
+  {k:'rest',n:'Dinlenme',bpm:72,ic:'<svg viewBox="0 0 32 32"><circle cx="16" cy="16" r="11" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 18c2 2 8 2 10 0M11.5 13h3M17.5 13h3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+    msg:'Dinlenme anında yetişkinlerde nabız genellikle <b>60-100 atım/dakika</b> aralığındadır. Nabız yaşa, cinsiyete ve aktiviteye göre değişebilir.'},
+  {k:'walk',n:'Yürüyüş',bpm:96,ic:'<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="18" cy="6" r="2.6"/><path d="M17 10l-3 7 4 3 1 7M14 17l-4 2M17 10l4 5 4 1M12 27l3-6"/></svg>',
+    msg:'Yürürken kaslar daha fazla çalışır; hücrelerin <b>oksijen ve besin ihtiyacı</b> artar, kalp biraz daha hızlı atar.'},
+  {k:'stage',n:'Heyecan',bpm:118,ic:'<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="16" cy="16" r="11"/><circle cx="12" cy="13" r="1.4" fill="currentColor"/><circle cx="20" cy="13" r="1.4" fill="currentColor"/><ellipse cx="16" cy="21" rx="3" ry="2.4"/></svg>',
+    msg:'İlk kez sahneye çıkma, korkma gibi durumlarda <b>salgılanan hormonlarla</b> kalp atış hızı artar (Defne\'nin tiyatro oyunu gibi).'},
+  {k:'ball',n:'Futbol',bpm:152,ic:'<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2"><circle cx="16" cy="16" r="11"/><path d="M16 9l5 3.6-1.9 6h-6.2L11 12.6Z" fill="currentColor" fill-opacity=".25"/><path d="M16 5v4M27 13l-6 0M5 13h6M9 25l4-6M23 25l-4-6"/></svg>',
+    msg:'Barış maçta çok koştuğu için kalbi çok hızlı atıyordu: artan <b>oksijen ve besin ihtiyacını</b> karşılamak için kan daha hızlı pompalanır.'}
+];
+const TASKS = [
+  {q:'Vücuttan gelen, oksijen oranı düşük kanın kalpte ulaştığı tarafa dokun.',a:'HR'},
+  {q:'Oksijen oranı <b>düşük</b> kan taşıyan <b>atardamara</b> dokun.',a:'P1'},
+  {q:'Kanın oksijen aldığı, karbon dioksit bıraktığı kılcal damarlara dokun.',a:'LC'},
+  {q:'Oksijen oranı <b>yüksek</b> kan taşıyan <b>toplardamara</b> dokun.',a:'P2'},
+  {q:'Oksijenlenmiş kanın vücuda pompalanmak üzere geldiği kalp tarafına dokun.',a:'HL'},
+  {q:'Oksijenli kanı tüm vücuda taşıyan damara dokun.',a:'P3'},
+  {q:'Kan ile hücreler arasında madde alışverişinin olduğu yere dokun.',a:'BC'},
+  {q:'Barış maçta çok koştu. Etkinliği <b>Futbol</b> yap ve nabzın nasıl değiştiğini gözle.',a:'ACT:ball'}
+];
+const NAMES = {HR:'kalbin sağ tarafı',HL:'kalbin sol tarafı',P1:'akciğere giden atardamar',P2:'akciğerden gelen toplardamar',P3:'vücuda giden atardamar',P4:'vücuttan gelen toplardamar',LC:'akciğer kılcalları',BC:'vücut kılcalları',LUNG:'akciğerler',BODY:'vücut hücreleri'};
+
+/* ------------------------------------------------------------------
+   PANEL
+   ------------------------------------------------------------------ */
+ui.body.innerHTML = `
+<div class="dl-grid">
+  <div class="dl-figwrap"><div class="dl-fig" id="fig">${SVG}<canvas id="cv"></canvas></div>
+    <div class="dl-over">
+      <span><i class="dot" style="color:${OXY};background:${OXY}"></i>Oksijeni bol kan</span>
+      <span><i class="dot" style="color:${DEOXY};background:${DEOXY}"></i>Oksijeni az kan</span>
+      <span><i class="dot" style="color:#c8fbff;background:#c8fbff;width:8px;height:8px"></i>O₂</span>
+      <span><i class="dot" style="color:#b39ddb;background:#b39ddb;width:8px;height:8px"></i>CO₂</span>
+    </div>
+    <div class="dl-over2">
+      <button class="dl-tg on" id="tgLab"><i></i>Etiketler</button>
+      <button class="dl-tg" id="tgSnd"><i></i>Kalp sesi</button>
+    </div></div>
+  <div class="dl-panel">
+    <div class="zd-seg" id="modeSeg" role="tablist">
+      <button class="on" data-m="explore">Keşfet</button><button data-m="tasks">Görevler</button><button data-m="pulse">Nabız Ölç</button>
+    </div>
+    <div class="dl-scroll" id="panel"></div>
+  </div>
+</div>`;
+
+const panel = ZD.$('#panel');
+const S = { mode:'explore', act:'rest', bpm:72, loop:'all', labels:true, heartSound:false, info:null,
+  task:0, taskTries:0, results:[], score:0, streak:0, done:false, started:false };
+const timer = new ZD.Timer(t=>ui.stat('time',ZD.Timer.fmt(t)));
+
+function renderPanel(){
+  if(S.mode==='explore') panel.innerHTML = explorePanel();
+  else if(S.mode==='tasks') panel.innerHTML = taskPanel();
+  else panel.innerHTML = pulsePanel();
+  bindPanel();
+  ecgCv = ZD.$('#ecg'); sizeEcg();
+}
+function vitals(){
+  return `<div class="zd-card dl-sec">
+    <h4>Kalp atışı ve nabız</h4>
+    <div class="dl-vitals"><div class="dl-bpm" id="bpmCircle"><b id="bpmVal">${S.bpm}</b><span>ATIM/DK</span></div><canvas class="dl-ecg" id="ecg"></canvas></div>
+    <div class="dl-acts" style="margin-top:12px">${ACTS.map(a=>`<button class="dl-act ${a.k===S.act?'on':''}" data-act="${a.k}" aria-label="${a.n}">${a.ic}${a.n}<b>${a.bpm} atım</b></button>`).join('')}</div>
+    <p class="dl-note" id="actMsg">${ACTS.find(a=>a.k===S.act).msg}</p>
+  </div>`;
+}
+function explorePanel(){
+  const steps = S.loop==='small' ? ['Kalbin sağ tarafı','Atardamar (akciğere)','Akciğerler: O₂ alınır, CO₂ verilir','Toplardamar (akciğerden)','Kalbin sol tarafı']
+    : S.loop==='big' ? ['Kalbin sol tarafı','Atardamar (vücuda)','Vücut hücreleri: O₂ ve besin bırakılır, CO₂ alınır','Toplardamar (vücuttan)','Kalbin sağ tarafı'] : null;
+  return `
+  ${infoCard()}
+  <div class="zd-card dl-sec">
+    <h4>Dolaşım yolu</h4>
+    <div class="zd-seg" id="loopSeg"><button data-l="all" class="${S.loop==='all'?'on':''}">İkisi birlikte</button><button data-l="small" class="${S.loop==='small'?'on':''}">Küçük dolaşım</button><button data-l="big" class="${S.loop==='big'?'on':''}">Büyük dolaşım</button></div>
+    ${steps?`<ol class="dl-steps" style="margin-top:12px" id="stepList">${steps.map(s=>`<li>${s}</li>`).join('')}</ol>`:''}
+  </div>
+  ${vitals()}
+  <div class="zd-card dl-sec"><h4>Tarihe not düşenler</h4>
+    <div class="dl-hist"><svg viewBox="0 0 44 44"><circle cx="22" cy="22" r="20" fill="#1c3550" stroke="#35eefc" stroke-opacity=".4"/><path d="M14 30c0-5 3.6-8 8-8s8 3 8 8M22 20a5 5 0 1 0 0-10 5 5 0 0 0 0 10Z" fill="none" stroke="#bfe9ff" stroke-width="2"/></svg>
+    <span><b>İbnü'n Nefîs</b> (1213-1288) küçük kan dolaşımını keşfetti ve anatomik çizimini yaptı. Yıllar sonra <b>William Harvey</b> (1628) kanın atardamarlarla vücuda gönderilip toplardamarlarla kalbe döndüğünü gösterdi.</span></div>
+  </div>`;
+}
+function infoCard(){
+  const k = S.info;
+  if(!k) return `<div class="zd-card dl-info zd-fade-in"><span class="zd-chip">İpucu</span><h3>Şemayı keşfet</h3><p>Kalbe, damarlara, akciğerlere veya vücut hücrelerine <b>dokun</b>. Kanın rengi oksijen oranını gösterir: <span style="color:#ff6b80;font-weight:700">kırmızı</span> oksijeni bol, <span style="color:#98a3ff;font-weight:700">mavi-mor</span> oksijeni az.</p></div>`;
+  const it = INFO[k];
+  return `<div class="zd-card dl-info zd-fade-in"><span class="zd-chip ${it.chip==='Atardamar'?'red':it.chip==='Toplardamar'?'purple':''}">${it.chip}</span><h3>${it.t}</h3><p>${it.p}</p>${it.w?`<div class="warn">${it.w}</div>`:''}</div>`;
+}
+function taskPanel(){
+  if(S.done) return `<div class="zd-card dl-task"><span class="zd-chip green">Tamamlandı</span><div class="q">Tüm görevleri bitirdin!</div><button class="zd-btn" id="again">${ZD.I.restart} Görevleri yeniden başlat</button></div>${vitals()}`;
+  const t = TASKS[S.task];
+  return `<div class="zd-card dl-task">
+    <div class="zd-row"><span class="zd-chip">Görev ${S.task+1} / ${TASKS.length}</span><span class="zd-grow"></span><span class="hint">İlk denemede: 100 puan</span></div>
+    <div class="q">${t.q}</div>
+    <div class="dl-tlist">${TASKS.map((_,i)=>`<i class="${i<S.task?(S.results[i]?'done':'miss'):i===S.task?'cur':''}"></i>`).join('')}</div>
+  </div>
+  ${S.info?infoCard():''}
+  ${vitals()}`;
+}
+let pulse = {phase:'idle',taps:0,t0:0,self:0};
+function pulsePanel(){
+  return `
+  <div class="zd-card dl-sec">
+    <h4>1 · Simülasyondaki kalbi say</h4>
+    <p class="dl-note" style="margin-top:0">Başlat'a bas. <b>15 saniye</b> boyunca kalbin her atışında kırmızı butona dokun. Sayıyı 4 ile çarparak 1 dakikadaki nabzı bulacağız.</p>
+    <div class="dl-tapwrap">
+      <button class="dl-tap" id="tapBtn" aria-label="Atışta dokun"><svg viewBox="0 0 174 174"><circle cx="87" cy="87" r="82" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="6"/><circle id="tapRing" cx="87" cy="87" r="82" fill="none" stroke="#35eefc" stroke-width="6" stroke-linecap="round" stroke-dasharray="515" stroke-dashoffset="515" transform="rotate(-90 87 87)"/></svg><span id="tapLbl">${pulse.phase==='run'?'DOKUN':'BAŞLAT'}</span></button>
+      <div class="dl-count" id="tapCount">${pulse.taps}</div>
+      <div class="hint" style="font-size:13px;color:var(--muted)" id="tapHint">sayılan atım</div>
+    </div>
+    <div id="tapRes"></div>
+  </div>
+  <div class="zd-card dl-sec">
+    <h4>2 · Kendi nabzını ölç</h4>
+    <div class="dl-wrist">
+      <svg viewBox="0 0 96 96"><defs><linearGradient id="skin" x1="0" x2="1"><stop offset="0" stop-color="#f6cfb1"/><stop offset="1" stop-color="#d99a76"/></linearGradient></defs>
+        <rect x="10" y="40" width="76" height="34" rx="16" fill="url(#skin)"/><path d="M18 50 C40 46 60 50 82 48" stroke="#5b6cff" stroke-width="2.5" fill="none" opacity=".7"/><path d="M20 62 C42 60 62 64 80 60" stroke="#ff3b55" stroke-width="2.5" fill="none" opacity=".7"/>
+        <rect x="44" y="18" width="12" height="40" rx="6" fill="#f2c2a2" stroke="#b97d5e"/><rect x="58" y="22" width="12" height="38" rx="6" fill="#f2c2a2" stroke="#b97d5e"/>
+        <circle cx="57" cy="60" r="10" fill="none" stroke="#35eefc" stroke-width="2"><animate attributeName="r" values="6;13;6" dur="1s" repeatCount="indefinite"/><animate attributeName="opacity" values="1;0;1" dur="1s" repeatCount="indefinite"/></circle></svg>
+      <p class="dl-note" style="margin:0">İşaret ve orta parmağını bileğinin iç yüzüne, başparmak tarafına hafifçe bastır. Kronometreyi başlat ve <b>15 saniye</b> boyunca hissettiğin atımları say.</p>
+    </div>
+    <div class="zd-row" style="justify-content:center;margin-top:12px"><button class="zd-btn sm" id="selfStart">${ZD.I.play} 15 sn kronometre</button><span class="dl-count" style="font-size:28px" id="selfT">15</span></div>
+    <div class="dl-num"><button id="mn" aria-label="Azalt">−</button><output id="selfN">${pulse.self}</output><button id="pl" aria-label="Arttır">+</button></div>
+    <div class="zd-row" style="justify-content:center;margin-top:10px"><button class="zd-btn green sm" id="selfCalc">Nabzımı hesapla</button></div>
+    <div id="selfRes"></div>
+  </div>`;
+}
+
+function bindPanel(){
+  ZD.$$('[data-act]',panel).forEach(b=>b.onclick=()=>setAct(b.dataset.act));
+  ZD.$$('#loopSeg button',panel).forEach(b=>b.onclick=()=>{ZD.sfx('click');S.loop=b.dataset.l;applyLoop();renderPanel();});
+  const ag=ZD.$('#again',panel); if(ag) ag.onclick=()=>{resetTasks();renderPanel();};
+  const tb=ZD.$('#tapBtn',panel); if(tb) tb.onclick=onTap;
+  const ss=ZD.$('#selfStart',panel); if(ss) ss.onclick=selfTimer;
+  const mn=ZD.$('#mn',panel), pl=ZD.$('#pl',panel);
+  if(mn){ mn.onclick=()=>{pulse.self=Math.max(0,pulse.self-1);ZD.$('#selfN').textContent=pulse.self;ZD.sfx('tick');}; pl.onclick=()=>{pulse.self=Math.min(60,pulse.self+1);ZD.$('#selfN').textContent=pulse.self;ZD.sfx('tick');}; }
+  const sc=ZD.$('#selfCalc',panel); if(sc) sc.onclick=()=>{
+    const b=pulse.self*4; ZD.sfx(b?'good':'bad');
+    ZD.$('#selfRes').innerHTML = b? `<div class="dl-res"><b>${pulse.self} × 4 = ${b} atım/dakika.</b> Nabız yaşa, cinsiyete ve aktiviteye göre değişir. Yetişkinlerde dinlenme anında genellikle 60-100 atım/dakikadır; çocuklarda biraz daha yüksek olabilir. Biraz zıpladıktan sonra tekrar ölç ve karşılaştır!</div>` : `<div class="dl-res" style="border-color:rgba(255,84,104,.4);background:rgba(255,84,104,.08)">Önce 15 saniyede saydığın atım sayısını gir.</div>`;
+  };
+}
+
+ZD.$('#tgLab').onclick=function(){S.labels=!S.labels;ZD.$('#fig').classList.toggle('nolabels',!S.labels);this.classList.toggle('on',S.labels);ZD.sfx('click');};
+ZD.$('#tgSnd').onclick=function(){S.heartSound=!S.heartSound;this.classList.toggle('on',S.heartSound);ZD.sfx('click');};
+ZD.$$('#modeSeg button').forEach(b=>b.onclick=()=>{
+  ZD.$$('#modeSeg button').forEach(x=>x.classList.toggle('on',x===b));
+  ZD.sfx('click'); S.mode=b.dataset.m; S.info=null; stopPulse();
+  if(S.mode==='tasks' && !S.done && !timer.run) timer.start();
+  if(S.mode==='tasks'){ S.loop='all'; applyLoop(); }
+  renderPanel();
+});
+
+function setAct(k){
+  const a = ACTS.find(x=>x.k===k); S.act=k; S.targetBpm=a.bpm; ZD.sfx('click');
+  ZD.$$('[data-act]',panel).forEach(b=>b.classList.toggle('on',b.dataset.act===k));
+  const m=ZD.$('#actMsg'); if(m) m.innerHTML=a.msg;
+  if(S.mode==='tasks' && TASKS[S.task] && TASKS[S.task].a==='ACT:'+k) answer('ACT:'+k);
+}
+S.targetBpm = 72;
+
+/* ------------------------------------------------------------------
+   Döngü filtresi
+   ------------------------------------------------------------------ */
+const SMALL = new Set(['HR','P1','LC','P2','HL']), BIG = new Set(['HL','P3','BC','P4','HR']);
+function segAlpha(id){ if(S.loop==='small') return SMALL.has(id)?1:.15; if(S.loop==='big') return BIG.has(id)?1:.15; return 1; }
+function applyLoop(){
+  ZD.$$('.vessel').forEach(g=>g.classList.toggle('dim',segAlpha(g.dataset.seg)<1));
+  ZD.$('#lungs').style.opacity = S.loop==='big'?.3:1;
+  ZD.$('#body').style.opacity = S.loop==='small'?.3:1;
+}
+
+/* ------------------------------------------------------------------
+   Tıklama / seçme
+   ------------------------------------------------------------------ */
+const svg = ZD.$('#dlsvg');
+function pickFromEl(el){
+  if(!el) return null;
+  const h = el.closest('[data-hit]'); if(h) return h.dataset.hit;
+  const p = el.closest('[data-pick]'); if(p) return p.dataset.pick;
+  return null;
+}
+function vesselEl(k){ return ZD.$(`.vessel[data-seg="${k}"]`) || ZD.$(`[data-pick="${k}"]`); }
+let hoverK=null;
+svg.addEventListener('pointermove',e=>{
+  const k=pickFromEl(e.target); if(k===hoverK) return;
+  if(hoverK){ const o=vesselEl(hoverK); o&&o.classList.remove('hl-glow'); }
+  hoverK=k; if(k){ const n=vesselEl(k); n&&n.classList.add('hl-glow'); }
+});
+svg.addEventListener('pointerleave',()=>{ if(hoverK){ const o=vesselEl(hoverK); o&&o.classList.remove('hl-glow'); hoverK=null; }});
+svg.addEventListener('click',e=>{
+  const k=pickFromEl(e.target); if(!k) return;
+  if(S.mode==='tasks' && !S.done){ answer(k); return; }
+  if(S.mode!=='explore'){ return; }
+  ZD.sfx('pop'); S.info=k; renderPanel();
+});
+
+/* ------------------------------------------------------------------
+   Görevler
+   ------------------------------------------------------------------ */
+function answer(k){
+  const t = TASKS[S.task]; if(!t) return;
+  if(k===t.a || (t.a==='HR' && k==='HR') ){
+    const first = S.taskTries===0;
+    S.results[S.task]=first; S.streak = first? S.streak+1 : 0;
+    const pts = first? 100 + Math.min(S.streak-1,4)*10 : 50;
+    S.score += pts; ui.stat('score',S.score,true);
+    ZD.sfx('good'); ZD.toast(`Doğru! +${pts} puan${S.streak>1?` · Seri ×${S.streak}`:''}`,'good',1800);
+    if(k.startsWith('ACT')){} else { const el=vesselEl(k); el&&el.classList.add('hl-glow'); setTimeout(()=>el&&el.classList.remove('hl-glow'),1200); }
+    S.info = k.startsWith('ACT')? null : k;
+    S.task++; S.taskTries=0; ui.stat('task',`${S.task}/${TASKS.length}`,true);
+    if(S.task>=TASKS.length){ S.done=true; timer.stop(); setTimeout(finish,900); }
+    renderPanel();
+  } else {
+    S.taskTries++; S.streak=0; ZD.sfx('bad');
+    const nm = k.startsWith('ACT')? 'bu etkinlik' : NAMES[k] || 'burası';
+    ZD.toast(`Bu <b>${nm}</b>. ${hintFor(t.a)}`,'bad',3200);
+    const el = k.startsWith('ACT')?null:vesselEl(k); if(el){ el.classList.add('zd-shake'); setTimeout(()=>el.classList.remove('zd-shake'),500); }
+  }
+}
+function hintFor(a){
+  return ({HR:'Vücuttan dönen kan önce kalbin sağ tarafına gelir.',P1:'Atardamarlar kalpten kan götürür; akciğere giden atardamar oksijeni az kan taşır.',LC:'Oksijen alışverişi akciğerlerdeki çok ince damarlarda olur.',P2:'Toplardamarlar kanı kalbe getirir; akciğerden gelen kan oksijenlidir.',HL:'Akciğerden gelen oksijenli kan kalbin sol tarafına gelir.',P3:'Kalbin sol tarafından çıkan atardamarı izle.',BC:'Madde alışverişi kılcal damarlarda, hücrelerin yanında olur.','ACT:ball':'Sağdaki etkinlik düğmelerinden Futbol\'u seç.'})[a]||'';
+}
+function finish(){
+  const c = S.results.filter(Boolean).length;
+  ZD.result({title: c>=7?'Dolaşım Ustası!':'Görevler tamamlandı',correct:c,total:TASKS.length,score:S.score,time:timer.t,
+    text:'Küçük ve büyük kan dolaşımında kanın izlediği yolu ve damarların görevlerini keşfettin.',onReplay:restart});
+}
+function resetTasks(){ S.task=0;S.taskTries=0;S.results=[];S.score=0;S.streak=0;S.done=false; timer.reset(); ui.stat('task','0/8'); ui.stat('score',0); if(S.mode==='tasks') timer.start(); }
+function restart(){ resetTasks(); S.info=null; S.loop='all'; applyLoop(); setAct('rest'); stopPulse(); pulse.taps=0; pulse.self=0; renderPanel(); }
+
+/* ------------------------------------------------------------------
+   Nabız ölçme
+   ------------------------------------------------------------------ */
+let pulseIv=0, selfIv=0;
+function onTap(){
+  if(pulse.phase!=='run'){
+    pulse.phase='run'; pulse.taps=0; pulse.t0=performance.now(); pulse.heard=0; ZD.sfx('click');
+    ZD.$('#tapLbl').textContent='DOKUN'; ZD.$('#tapCount').textContent='0'; ZD.$('#tapRes').innerHTML='';
+    pulseIv = setInterval(()=>{
+      const el=(performance.now()-pulse.t0)/1000, r=ZD.$('#tapRing');
+      if(r) r.setAttribute('stroke-dashoffset', 515*(1-Math.min(1,el/15)));
+      if(el>=15){ endPulse(); }
+    },50);
+    return;
+  }
+  pulse.taps++; ZD.sfx('tap'); const c=ZD.$('#tapCount'); if(c){c.textContent=pulse.taps;}
+}
+function endPulse(){
+  clearInterval(pulseIv); pulse.phase='idle';
+  const est = pulse.taps*4, real = Math.round(S.bpm), err=Math.abs(est-real)/real;
+  const ok = err<=.15;
+  ZD.sfx(ok?'good':'bad'); if(ok){ S.score+=50; ui.stat('score',S.score,true); }
+  const l=ZD.$('#tapLbl'); if(l) l.textContent='TEKRAR';
+  const r=ZD.$('#tapRes'); if(r) r.innerHTML=`<div class="dl-res" style="${ok?'':'border-color:rgba(255,187,61,.45);background:rgba(255,187,61,.08)'}"><b>${pulse.taps} × 4 = ${est} atım/dakika.</b> Simülasyondaki kalp ${real} atım/dakika hızla atıyordu. ${ok?'Harika ölçüm! +50 puan':'Biraz farklı çıktı; atış sesine odaklanarak tekrar dene.'}<br>Etkinliği değiştirip (ör. Futbol) yeniden ölç.</div>`;
+}
+function stopPulse(){ clearInterval(pulseIv); clearInterval(selfIv); pulse.phase='idle'; }
+function selfTimer(){
+  clearInterval(selfIv); let t=15; const el=ZD.$('#selfT'); el.textContent=t; ZD.sfx('click');
+  selfIv=setInterval(()=>{ t--; const e=ZD.$('#selfT'); if(e) e.textContent=t; if(t>0) ZD.sfx('tick'); if(t<=0){ clearInterval(selfIv); ZD.sfx('level'); ZD.toast('Süre doldu! Saydığın atım sayısını gir.','',2400);} },1000);
+}
+
+/* ------------------------------------------------------------------
+   PARÇACIK SİMÜLASYONU (canvas)
+   ------------------------------------------------------------------ */
+const cv = ZD.$('#cv'), g = cv.getContext('2d');
+const fig = ZD.$('#fig');
+let W=0,H=0,DPR=1;
+function sizeCanvas(){
+  const r = fig.getBoundingClientRect(); DPR=Math.min(2,devicePixelRatio||1);
+  W=r.width; H=r.height; cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
+}
+// yolu örnekle
+const STEP=1.6; const PTS=[]; const SEGSTART={}; let TOTAL=0;
+(function sample(){
+  const ns='http://www.w3.org/2000/svg';
+  ORDER.forEach(id=>{
+    const p=document.createElementNS(ns,'path'); p.setAttribute('d',PATHS[id]); svg.appendChild(p);
+    const L=p.getTotalLength(); SEGSTART[id]=PTS.length;
+    for(let s=0;s<L;s+=STEP){ const q=p.getPointAtLength(s); PTS.push({x:q.x,y:q.y,seg:id,t:s/L}); }
+    p.remove();
+  });
+  TOTAL=PTS.length;
+  // normaller
+  for(let i=0;i<TOTAL;i++){ const a=PTS[(i-1+TOTAL)%TOTAL], b=PTS[(i+1)%TOTAL]; const dx=b.x-a.x, dy=b.y-a.y, l=Math.hypot(dx,dy)||1; PTS[i].nx=-dy/l; PTS[i].ny=dx/l; }
+})();
+// renk sprite'ları (oksijen oranına göre 0..1)
+function mix(a,b,t){ const pa=parseInt(a.slice(1),16), pb=parseInt(b.slice(1),16); const r=(pa>>16)+(((pb>>16)-(pa>>16))*t), gg=((pa>>8)&255)+((((pb>>8)&255)-((pa>>8)&255))*t), bl=(pa&255)+(((pb&255)-(pa&255))*t); return `rgb(${r|0},${gg|0},${bl|0})`; }
+const SPR=[]; (function(){ for(let i=0;i<=10;i++){ const c=document.createElement('canvas'); c.width=c.height=36; const x=c.getContext('2d'); const col=mix(DEOXY,OXY,i/10);
+  const gr=x.createRadialGradient(15,14,1,18,18,15); gr.addColorStop(0,'rgba(255,255,255,.85)'); gr.addColorStop(.25,col); gr.addColorStop(.7,col); gr.addColorStop(1,'rgba(0,0,0,.0)');
+  x.fillStyle=gr; x.beginPath(); x.arc(18,18,15,0,7); x.fill();
+  x.fillStyle='rgba(0,0,0,.22)'; x.beginPath(); x.arc(18,18,5.5,0,7); x.fill();
+  SPR.push(c);} })();
+function oxyOf(p){ if(p.seg==='LC') return ZD.clamp((p.t-.15)/.7,0,1); if(p.seg==='BC') return 1-ZD.clamp((p.t-.15)/.7,0,1); return ['P2','HL','P3'].includes(p.seg)?1:0; }
+
+const N = 120;
+const parts = Array.from({length:N},(_,i)=>({s:(i/N)*TOTAL + Math.random()*4, o:(Math.random()*2-1), r:.85+Math.random()*.35}));
+const gas = [];
+let last=performance.now(), beatT=0, phase=0, kBeat=0, ecgBuf=[];
+let ecgCv=null, ecgG=null;
+function sizeEcg(){ if(!ecgCv) return; const r=ecgCv.getBoundingClientRect(); ecgCv.width=Math.round(r.width*DPR); ecgCv.height=Math.round(r.height*DPR); ecgG=ecgCv.getContext('2d'); ecgBuf=[]; }
+function ecgWave(p){ // PQRST
+  const G=(c,w,a)=>a*Math.exp(-Math.pow((p-c)/w,2));
+  return G(.12,.035,.12) + G(.245,.012,-.12) + G(.27,.014,1) + G(.295,.014,-.25) + G(.5,.06,.28);
+}
+const heartG = ZD.$('#heartBeat');
+
+function frame(now){
+  const dt=Math.min(.05,(now-last)/1000); last=now;
+  // nabız hedefe yumuşakça yaklaşır
+  S.bpm += (S.targetBpm-S.bpm)*Math.min(1,dt*1.2);
+  const bpmR=Math.round(S.bpm); ui.stat('bpm',bpmR); const bv=ZD.$('#bpmVal'); if(bv && bv.textContent!=String(bpmR)) bv.textContent=bpmR;
+  const T=60/S.bpm; const prev=phase; phase=(phase+dt/T)%1;
+  if(prev<.27 && phase>=.27 || (prev>phase && phase>=.27)){ onBeat(); }
+  kBeat = Math.exp(-Math.pow((phase-.31)/.07,2));
+  heartG.style.transform=`scale(${1-.055*kBeat})`;
+
+  // parçacıklar
+  const v = (TOTAL/16)*(S.bpm/72);
+  g.setTransform(DPR*W/640,0,0,DPR*H/600,0,0); g.clearRect(0,0,640,600);
+  for(const p of parts){
+    let i=Math.floor(p.s)%TOTAL; const pt=PTS[i];
+    const isArt = pt.seg==='P1'||pt.seg==='P3'||pt.seg==='HR'||pt.seg==='HL';
+    const isCap = pt.seg==='LC'||pt.seg==='BC';
+    const sp = v*(isCap?.55:1)*(1+(isArt?1.1:.35)*kBeat);
+    p.s=(p.s+sp*dt)%TOTAL; i=Math.floor(p.s)%TOTAL; const q=PTS[i];
+    const off = p.o*(isCap?3.5:6.2);
+    const x=q.x+q.nx*off, y=q.y+q.ny*off;
+    const a = segAlpha(q.seg); if(a<.5) g.globalAlpha=.12; else g.globalAlpha=1;
+    const spr = SPR[Math.round(oxyOf(q)*10)]; const sz=(isCap?7.5:10)*p.r;
+    g.drawImage(spr,x-sz/2,y-sz/2,sz,sz);
+  }
+  g.globalAlpha=1;
+  // gaz alışverişi
+  const rate = (S.bpm/72)*dt*7;
+  if(Math.random()<rate && S.loop!=='big') spawnGas('L');
+  if(Math.random()<rate && S.loop!=='small') spawnGas('B');
+  for(let j=gas.length-1;j>=0;j--){ const q=gas[j]; q.t+=dt/q.d; if(q.t>=1){gas.splice(j,1);continue;}
+    const e=q.t<.5?2*q.t*q.t:1-Math.pow(-2*q.t+2,2)/2; const y=q.y0+(q.y1-q.y0)*e, x=q.x+Math.sin(q.t*6+q.ph)*2;
+    const al=Math.sin(q.t*Math.PI); g.globalAlpha=al;
+    g.fillStyle=q.c; g.shadowColor=q.c; g.shadowBlur=8; g.beginPath(); g.arc(x,y,q.r,0,7); g.fill(); g.shadowBlur=0; }
+  g.globalAlpha=1;
+  drawEcg(dt);
+  requestAnimationFrame(frame);
+}
+function spawnGas(where){
+  const x = where==='L'? 230+Math.random()*180 : 222+Math.random()*196;
+  const o2 = Math.random()<.5, c=o2?'#c8fbff':'#b39ddb';
+  if(where==='L') gas.push(o2?{x,y0:52,y1:94,c,r:3,d:1.4,t:0,ph:Math.random()*6}:{x,y0:96,y1:50,c,r:3.3,d:1.5,t:0,ph:Math.random()*6});
+  else gas.push(o2?{x,y0:521,y1:566,c,r:3,d:1.4,t:0,ph:Math.random()*6}:{x,y0:568,y1:522,c,r:3.3,d:1.5,t:0,ph:Math.random()*6});
+}
+function onBeat(){
+  if(S.heartSound || (S.mode==='pulse' && pulse.phase==='run')) ZD.sfx('beat');
+  const c=ZD.$('#bpmCircle'); if(c){ c.classList.remove('beat'); void c.offsetWidth; c.classList.add('beat'); }
+}
+let ecgX=0;
+function drawEcg(dt){
+  if(!ecgCv || !ecgG || !ecgCv.isConnected) return;
+  const w=ecgCv.width, h=ecgCv.height; const speed=w/3.2; // 3.2 sn ekran
+  ecgBuf.push(ecgWave(phase)); const maxN=Math.ceil(w/ (speed*dt||1))*2;
+  const pts = ecgBuf.length; if(pts>1200) ecgBuf.splice(0,pts-1200);
+  ecgG.clearRect(0,0,w,h);
+  // ızgara
+  ecgG.strokeStyle='rgba(53,238,252,.07)'; ecgG.lineWidth=1;
+  for(let x=0;x<w;x+=14*DPR){ecgG.beginPath();ecgG.moveTo(x,0);ecgG.lineTo(x,h);ecgG.stroke();}
+  for(let y=0;y<h;y+=14*DPR){ecgG.beginPath();ecgG.moveTo(0,y);ecgG.lineTo(w,y);ecgG.stroke();}
+  const n=ecgBuf.length, step=speed*(1/60); // piksel / örnek (yaklaşık)
+  ecgG.lineWidth=2.2*DPR; ecgG.strokeStyle='#2fe39b'; ecgG.shadowColor='#2fe39b'; ecgG.shadowBlur=10*DPR; ecgG.beginPath();
+  let started=false;
+  for(let i=n-1, x=w-4*DPR; i>=0 && x>0; i--, x-=step){ const y=h*.62 - ecgBuf[i]*h*.5; if(!started){ecgG.moveTo(x,y);started=true;} else ecgG.lineTo(x,y); }
+  ecgG.stroke(); ecgG.shadowBlur=0;
+  ecgG.fillStyle='#bfffe3'; ecgG.beginPath(); ecgG.arc(w-4*DPR,h*.62-ecgBuf[n-1]*h*.5,3*DPR,0,7); ecgG.fill();
+}
+
+/* ------------------------------------------------------------------
+   Başlangıç
+   ------------------------------------------------------------------ */
+function showIntro(){
+  ZD.intro({kicker:'SİMÜLASYON',title:'Kalp ve Kan Dolaşımı',
+    text:'Kalbin pompaladığı kanın vücudunda izlediği iki yolu keşfet: küçük ve büyük kan dolaşımı.',
+    steps:['<b>Keşfet:</b> Kalbe, damarlara, akciğerlere ve hücrelere dokunarak görevlerini öğren. Kırmızı = oksijeni bol kan, mavi-mor = oksijeni az kan.',
+      '<b>Etkinlik</b> düğmeleriyle (dinlenme, yürüyüş, heyecan, futbol) kalp atışının ve kan akışının nasıl değiştiğini gözle.',
+      '<b>Görevler:</b> 8 soruyu şema üzerinde doğru yere dokunarak çöz. <b>Nabız Ölç:</b> 15 saniye say, 4 ile çarp!'],
+    start:'Simülasyonu Başlat',onStart:()=>{ if(!S.started){S.started=true;} ZD.pointAt(ZD.$('[data-hit="P1"]'),{ms:2600}); }});
+}
+window.addEventListener('resize',()=>{sizeCanvas();sizeEcg();});
+renderPanel(); sizeCanvas(); applyLoop();
+requestAnimationFrame(t=>{last=t;requestAnimationFrame(frame);});
+showIntro();
+})();
+</script>
+</body>
+</html>
