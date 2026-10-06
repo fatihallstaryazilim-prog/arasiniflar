@@ -1222,10 +1222,11 @@ function oxDraw() {
 }
 function oxDrawUI() {
   const X = (x) => C + x * k, P = (y) => C + y * k;
-  pill(X(-22), P(-38), 'AKCİĞER KILCALI', '#ff9fb8', { fs: 12 });
-  pill(X(22), P(-38), 'VÜCUT HÜCRELERİ', '#f3c7a6', { fs: 12 });
-  pill(C, P(-12), 'Oksijen oranı zengin kan  →', '#ff3b55', { fs: 11.5 });
-  pill(C, P(12), '←  Oksijen oranı düşük kan', '#7d8bff', { fs: 11.5 });
+  if (Si < 400) { pill(X(-21), C, 'AKCİĞER', '#ff9fb8', { fs: 10.5 }); pill(X(21), C, 'VÜCUT HÜCRELERİ', '#f3c7a6', { fs: 10.5 }); }
+  else { pill(X(-22), P(-38), 'AKCİĞER KILCALI', '#ff9fb8', { fs: 12 }); pill(X(22), P(-38), 'VÜCUT HÜCRELERİ', '#f3c7a6', { fs: 12 }); }
+  const fs = Si < 400 ? 10 : 11.5;
+  pill(C, P(-13), 'Oksijen oranı zengin kan  →', '#ff3b55', { fs });
+  pill(C, P(13), '←  Oksijen oranı düşük kan', '#7d8bff', { fs });
   drawTags();
 }
 
@@ -1263,7 +1264,7 @@ function renderPane() {
     const tk = TASKS[GM.ti];
     if (!st.everFocused) {
       h = `<div class="p-head"><span class="zd-chip amber">HAZIRLIK</span><span class="p-step">Mikroskobu ayarla</span></div>
-      <div class="task warn"><div class="tk">1. ADIM</div><div class="tt">Görüntüyü netleştir</div><div class="td">Mikroskobun <b>odak düğmesini</b> çevir ya da <b>ODAK AYARI</b> kaydırıcısını sürükle. Hücreler netleşince görev başlar.</div>
+      <div class="task warn"><div class="tk">1. ADIM</div><div class="tt">Görüntüyü netleştir</div><div class="td">Mikroskobun <b>odak düğmesini</b> çevir ya da <b>ODAK</b> kaydırıcısını sürükle. Hücreler netleşince görev başlar.</div>
       <div class="netlik"><span>NETLİK</span><div class="zd-meter amber"><i id="netM"></i></div></div></div>
       <p class="p-small">Kan; plazma ve kan hücrelerinden oluşur. Kan hücreleri yapı ve görevlerine göre alyuvar, akyuvar ve kan pulcukları olmak üzere üç gruba ayrılır.</p>`;
     } else if (GM.done) {
@@ -1561,7 +1562,7 @@ function restartMode() {
   else setMode(st.mode);
 }
 const HELP = {
-  tani: { t: 'Hücreleri Tanı', s: ['Mikroskobun <strong>odak düğmesini</strong> çevir ya da <strong>ODAK AYARI</strong> kaydırıcısını sürükle; görüntü netleşsin.', 'Büyütmeyi <strong>400×</strong> veya <strong>1000×</strong> yap; hücreler büyüsün. 100× büyütmede geniş bir alan görürsün.', 'Yönerge kartında istenen hücreyi bul ve üzerine dokun. 8 bulgunun hepsini tamamla.', 'Sonunda sayım sonucunu incele: hangi hücre en fazla, hangisi en az?'] },
+  tani: { t: 'Hücreleri Tanı', s: ['Mikroskobun <strong>odak düğmesini</strong> çevir ya da <strong>ODAK</strong> kaydırıcısını sürükle; görüntü netleşsin.', 'Büyütmeyi <strong>400×</strong> veya <strong>1000×</strong> yap; hücreler büyüsün. 100× büyütmede geniş bir alan görürsün.', 'Yönerge kartında istenen hücreyi bul ve üzerine dokun. 8 bulgunun hepsini tamamla.', 'Sonunda sayım sonucunu incele: hangi hücre en fazla, hangisi en az?'] },
   yara: { t: 'Yaralanma', s: ['Görüş alanında bir damarın kesiti var: üstte damarın içi, altta damarın dışı.', '<strong>Damarı çiz</strong> düğmesine bas; damar duvarı yırtılsın.', 'Alyuvarların dışarı sızmasını ve kan pulcuklarının yaraya toplanıp pıhtı oluşturmasını izle.', 'Paneldeki adımları ve kan kaybı göstergesini takip et.'] },
   mikrop: { t: 'Mikrop Saldırısı', s: ['Yeşil, tüylü canlılar mikroplardır; zamanla çoğalırlar.', 'Akyuvarlar mikropları takip eder, sarar ve yok eder.', 'Mikroplar çoğalırsa <strong>Akyuvarları çağır</strong> düğmesine bas: akyuvar sayısı artar.', 'Grafikte mikrop ve akyuvar sayısının nasıl değiştiğini izle.'] },
   oksijen: { t: 'Oksijen Taşıma', s: ['Alyuvarlar akciğer kılcalı ile vücut hücreleri arasında dolaşır.', 'Akciğerde O₂ alır, CO₂ bırakır: parlak kırmızı olur.', 'Vücut hücrelerinde O₂ bırakır, CO₂ alır: koyu mavimsi-mora döner.', '<strong>Spor</strong> seçeneğiyle kanın daha hızlı dolaştığını gör. Bir alyuvara dokunarak ne taşıdığını öğren.'] },
