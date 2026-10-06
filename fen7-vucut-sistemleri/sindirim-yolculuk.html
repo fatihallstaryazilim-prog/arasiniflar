@@ -1,7 +1,7 @@
 <!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Besinin Yolculuğu</title><link rel="stylesheet" href="assets/zd.css"><style>
 /* ================= Yerleşim ================= */
-.sim{display:grid;grid-template-columns:minmax(0,1fr) 500px;gap:14px;padding:2px 16px 16px;height:calc(100vh - 186px);min-height:540px;max-height:880px}
+.sim{display:grid;grid-template-columns:minmax(0,1fr) 540px;gap:14px;padding:2px 16px 16px;height:calc(100vh - 186px);min-height:540px;max-height:880px}
 .view{position:relative;min-height:0;border-radius:20px;overflow:hidden;border:1px solid var(--line);
   background:radial-gradient(55% 50% at 45% 42%,rgba(53,238,252,.09),transparent 70%),radial-gradient(120% 80% at 50% 110%,rgba(20,70,130,.45),transparent 60%),linear-gradient(180deg,rgba(6,16,30,.55),rgba(3,9,18,.85));
   box-shadow:inset 0 0 50px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.04)}
@@ -51,9 +51,8 @@
 .lens .lg{display:flex;gap:10px;font-size:11px;color:var(--muted);font-weight:600;flex-wrap:wrap;justify-content:center;background:rgba(6,16,30,.8);padding:5px 10px;border-radius:12px}
 .lens .lg span{display:inline-flex;align-items:center;gap:4px}
 .lens .lg svg{width:12px;height:12px}
-.lens .x{position:absolute;right:2%;top:2%;z-index:3;width:44px;height:44px;border-radius:50%;background:linear-gradient(180deg,#fff,#dfe8f2);color:#0b1626;display:grid;place-items:center;box-shadow:0 4px 0 rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:.3s}
-.lens .x.show{opacity:1;pointer-events:auto}
-.lens .x svg{width:20px;height:20px}
+.lens .x{display:none}
+.lens .x.show{display:inline-flex}
 .vil{transform-box:fill-box;transform-origin:50% 100%;animation:sway 3.4s ease-in-out infinite alternate}
 .vil:nth-child(2n){animation-duration:2.9s;animation-delay:-1.2s}
 .vil:nth-child(3n){animation-duration:3.8s;animation-delay:-.6s}
@@ -63,35 +62,35 @@
 /* ================= Panel ================= */
 .panel{display:flex;flex-direction:column;gap:10px;min-height:0}
 .ptop{display:flex;align-items:center;gap:10px;justify-content:space-between}
-.ptop .zd-seg button{min-height:40px;padding:8px 16px;font-size:13.5px}
-.foodchip{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted);padding:4px 12px 4px 4px;border-radius:999px;background:rgba(0,0,0,.25);border:1px solid var(--line);min-height:40px}
-.foodchip svg{width:32px;height:32px}
+.ptop .zd-seg button{min-height:38px;padding:8px 16px;font-size:13.5px}
+.foodchip{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--muted);padding:4px 12px 4px 4px;border-radius:999px;background:rgba(0,0,0,.25);border:1px solid var(--line);min-height:38px}
+.foodchip svg{width:30px;height:30px}
 .foodchip.empty{padding:4px 14px}
-.rail{position:relative;display:grid;grid-template-columns:repeat(7,1fr);padding:8px 6px 6px;border-radius:16px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
-.rail::before{content:"";position:absolute;left:7%;right:7%;top:21px;height:3px;border-radius:3px;background:rgba(255,255,255,.1)}
-.rail .fill{position:absolute;left:7%;top:21px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--cyan-2),var(--cyan));box-shadow:0 0 10px var(--cyan-glow);transition:width .8s var(--ease)}
-.rn{position:relative;display:flex;flex-direction:column;align-items:center;gap:4px;z-index:1}
-.rn i{width:28px;height:28px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;background:#13263e;border:2px solid rgba(140,200,255,.25);color:var(--dim);transition:.4s var(--ease)}
-.rn i svg{width:15px;height:15px}
-.rn span{font-size:11px;font-weight:600;color:var(--dim);white-space:nowrap;transition:.4s}
+.rail{position:relative;display:grid;grid-template-columns:repeat(7,1fr);padding:6px 6px 5px;border-radius:16px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
+.rail::before{content:"";position:absolute;left:7%;right:7%;top:17px;height:3px;border-radius:3px;background:rgba(255,255,255,.1)}
+.rail .fill{position:absolute;left:7%;top:17px;height:3px;border-radius:3px;background:linear-gradient(90deg,var(--cyan-2),var(--cyan));box-shadow:0 0 10px var(--cyan-glow);transition:width .8s var(--ease)}
+.rn{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;z-index:1}
+.rn i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:12px;font-weight:800;background:#13263e;border:2px solid rgba(140,200,255,.25);color:var(--dim);transition:.4s var(--ease)}
+.rn i svg{width:13px;height:13px}
+.rn span{font-size:10.5px;font-weight:600;color:var(--dim);white-space:nowrap;transition:.4s}
 .rn.done i{background:linear-gradient(180deg,#5ff6ff,#14c3dc);border-color:#bdfaff;color:#03303a}
 .rn.done span{color:#9fdcec}
 .rn.cur i{background:#0b1a2d;border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 0 4px rgba(53,238,252,.15),0 0 16px rgba(53,238,252,.6);transform:scale(1.12)}
 .rn.cur span{color:#fff;font-weight:800}
-.card{flex:1;min-height:0;position:relative;padding:16px 18px;overflow:auto;scrollbar-width:thin}
-.pane{display:flex;flex-direction:column;gap:12px;min-height:100%}
+.card{flex:1;min-height:0;position:relative;padding:14px 16px;overflow:auto;scrollbar-width:thin}
+.pane{display:flex;flex-direction:column;gap:10px;min-height:100%}
 .pane[hidden]{display:none}
 .sh{display:flex;align-items:center;gap:12px}
-.sh .ic{flex:none;width:56px;height:56px;border-radius:17px;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,#27507a,#0f2239 70%);border:1px solid var(--line-2);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 16px rgba(0,0,0,.35)}
-.sh .ic svg{width:44px;height:44px}
+.sh .ic{flex:none;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,#27507a,#0f2239 70%);border:1px solid var(--line-2);box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 6px 16px rgba(0,0,0,.35)}
+.sh .ic svg{width:36px;height:36px}
 .sh small{display:block;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--cyan);text-transform:uppercase}
-.sh h3{font-size:22px;font-weight:800;line-height:1.15}
-.ctx{font-size:14px;line-height:1.5;color:#cfe0f2;padding:10px 14px;border-radius:14px;background:rgba(53,238,252,.06);border:1px solid rgba(53,238,252,.18)}
+.sh h3{font-size:20px;font-weight:800;line-height:1.15}
+.ctx{font-size:13.5px;line-height:1.45;color:#cfe0f2;padding:8px 12px;border-radius:14px;background:rgba(53,238,252,.06);border:1px solid rgba(53,238,252,.18)}
 .ctx b{color:#fff}
-.q{font-size:18px;font-weight:800;display:flex;align-items:center;gap:8px}
+.q{font-size:17px;font-weight:800;display:flex;align-items:center;gap:8px}
 .q em{font-style:normal;color:var(--cyan)}
 .opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.opt{display:flex;align-items:center;gap:10px;text-align:left;padding:10px 12px;min-height:62px;border-radius:16px;background:linear-gradient(180deg,#1d3657,#13263f);border:1.5px solid rgba(140,200,255,.22);box-shadow:0 4px 0 rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06);font-weight:700;font-size:14.5px;line-height:1.2;transition:transform .15s var(--ease),border-color .2s,background .3s}
+.opt{display:flex;align-items:center;gap:10px;text-align:left;padding:8px 12px;min-height:56px;border-radius:16px;background:linear-gradient(180deg,#1d3657,#13263f);border:1.5px solid rgba(140,200,255,.22);box-shadow:0 4px 0 rgba(0,0,0,.28),inset 0 1px 0 rgba(255,255,255,.06);font-weight:700;font-size:14.5px;line-height:1.2;transition:transform .15s var(--ease),border-color .2s,background .3s}
 .opt:hover{border-color:rgba(53,238,252,.7);transform:translateY(-1px)}
 .opt:active{transform:translateY(2px)}
 .opt .oi{flex:none;width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:rgba(0,0,0,.28)}
@@ -102,12 +101,15 @@
 .opts.lock .opt{pointer-events:none}
 .why{font-size:13.5px;line-height:1.5;padding:10px 14px;border-radius:14px;background:rgba(255,84,104,.1);border:1px solid rgba(255,84,104,.4);color:#ffd5db}
 .why b{color:#ff9aa8}
-.def{position:relative;font-size:13.5px;line-height:1.55;color:#d6e6f5;padding:12px 14px 12px 16px;border-radius:14px;background:rgba(0,0,0,.24);border:1px solid var(--line);border-left:3px solid var(--cyan)}
-.def .bk{display:inline-block;font-size:10px;font-weight:800;letter-spacing:1.6px;color:var(--cyan);margin-bottom:4px}
-.acts{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border-radius:16px;background:linear-gradient(180deg,rgba(53,238,252,.06),rgba(53,238,252,.02));border:1px dashed rgba(53,238,252,.3)}
-.acts .hint{font-size:13px;color:var(--muted);line-height:1.45}
-.acts .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-.acts .zd-btn{min-height:48px}
+.def{position:relative;font-size:13.5px;line-height:1.5;color:#d6e6f5;padding:10px 14px 10px 14px;border-radius:14px;background:rgba(0,0,0,.24);border:1px solid var(--line);border-left:3px solid var(--cyan)}
+.def .bk{display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:800;letter-spacing:1.6px;color:var(--cyan);margin-bottom:5px}
+.def .bk svg{width:24px;height:24px}
+.actbox{display:flex;flex-direction:column;gap:10px;padding:12px 14px;border-radius:16px;background:linear-gradient(180deg,rgba(53,238,252,.06),rgba(53,238,252,.02));border:1px dashed rgba(53,238,252,.3)}
+.actbox .hint{font-size:13px;color:var(--muted);line-height:1.45}
+.arow{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.actbox .zd-btn{min-height:48px}
+.arow .nextb{margin-left:auto}
+.nextb[hidden]{display:none}
 .pips{display:flex;gap:6px;align-items:center}
 .pips i{width:14px;height:14px;border-radius:50%;background:rgba(255,255,255,.1);border:1.5px solid rgba(140,200,255,.3);transition:.3s var(--spring)}
 .pips i.on{background:var(--cyan);border-color:#c9fbff;box-shadow:0 0 10px var(--cyan);transform:scale(1.15)}
@@ -116,10 +118,9 @@
 .abs span{display:inline-flex;align-items:center;gap:6px;padding:6px 11px;border-radius:999px;font-size:12px;font-weight:700;background:rgba(255,255,255,.05);border:1px solid var(--line);color:var(--dim);transition:.4s}
 .abs span svg{width:14px;height:14px}
 .abs span.on{color:#d9fff0;border-color:rgba(47,227,155,.55);background:rgba(47,227,155,.12);box-shadow:0 0 12px rgba(47,227,155,.25)}
-.nextb{align-self:flex-start}
 .nextb.pulse{animation:nb 1.6s infinite}
 @keyframes nb{0%,100%{box-shadow:0 5px 0 rgba(0,0,0,.28),0 0 0 0 rgba(47,227,155,.6)}60%{box-shadow:0 5px 0 rgba(0,0,0,.28),0 0 0 14px rgba(47,227,155,0)}}
-.okmsg{font-size:13.5px;line-height:1.45;padding:9px 14px;border-radius:14px;background:rgba(47,227,155,.1);border:1px solid rgba(47,227,155,.4);color:#c8f7e3}
+.okmsg{font-size:13px;line-height:1.45;padding:8px 12px;border-radius:14px;background:rgba(47,227,155,.1);border:1px solid rgba(47,227,155,.4);color:#c8f7e3}
 /* besin seçimi */
 .lead{font-size:14px;line-height:1.55;color:#cfe0f2}
 .lead b{color:#fff}
@@ -127,7 +128,7 @@
 .food{display:flex;flex-direction:column;align-items:center;gap:4px;padding:10px 8px 12px;border-radius:18px;background:linear-gradient(180deg,#fbfdff,#dde8f3);color:#0b1a2d;box-shadow:0 6px 0 rgba(0,0,0,.28),0 16px 30px rgba(0,0,0,.35),inset 0 -3px 0 rgba(0,0,0,.06);transition:transform .2s var(--spring),box-shadow .2s}
 .food:hover{transform:translateY(-4px) rotate(-1deg)}
 .food:active{transform:translateY(2px)}
-.food svg{width:100%;max-width:120px;height:auto;aspect-ratio:120/104}
+.food svg{width:100%;max-width:104px;height:auto;aspect-ratio:120/104}
 .food b{font-size:15px;font-weight:800;line-height:1.15;text-align:center}
 .food small{font-size:11.5px;color:#4a6280;font-weight:600;text-align:center;line-height:1.25}
 .food .mini{display:flex;gap:3px;width:86%;margin-top:6px}
@@ -144,17 +145,17 @@
 .auxc p{font-size:13px;line-height:1.5;color:#cfe0f2}
 .auxc .tg{display:inline-block;margin-top:6px}
 /* besin içeriği */
-.nut{padding:10px 14px 12px}
-.nut h5{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase;margin-bottom:6px}
+.nut{padding:9px 14px 8px}
+.nut h5{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase;margin-bottom:2px}
 .nut h5 span{letter-spacing:.4px;text-transform:none;font-weight:600;color:var(--dim)}
-.nrow{display:grid;grid-template-columns:118px 1fr 168px;gap:10px;align-items:center;padding:5px 0}
+.nrow{display:grid;grid-template-columns:112px 1fr 196px;gap:10px;align-items:center;padding:4px 0}
 .nrow+.nrow{border-top:1px solid rgba(140,200,255,.08)}
 .nname{display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:700}
 .nname svg{width:16px;height:16px;flex:none}
-.nbar{display:flex;flex-direction:column;gap:3px}
-.nbar .zd-meter{height:9px}
-.nbar small{font-size:10.5px;color:var(--muted);font-weight:600}
-.badge{justify-self:end;display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:5px 10px;border-radius:999px;white-space:nowrap;border:1px solid;transition:.4s var(--ease)}
+.nbar{display:flex;align-items:center;gap:8px}
+.nbar .zd-meter{height:8px;flex:1}
+.nbar small{font-size:10.5px;color:var(--muted);font-weight:600;white-space:nowrap;min-width:42px}
+.badge{justify-self:end;display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:999px;white-space:nowrap;border:1px solid;transition:.4s var(--ease)}
 .badge i{width:7px;height:7px;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor}
 .b0{color:#8fa8c4;border-color:rgba(143,168,196,.3);background:rgba(143,168,196,.08)}
 .b1{color:#ffd27a;border-color:rgba(255,187,61,.5);background:rgba(255,187,61,.12)}
@@ -173,7 +174,7 @@
 .intro-art{display:flex;justify-content:center;gap:6px;margin-bottom:4px}
 .intro-art svg{width:74px;height:64px}
 /* ================= Duyarlı ================= */
-@media (max-width:1180px){.sim{grid-template-columns:minmax(0,1fr) 440px}.nrow{grid-template-columns:104px 1fr 150px}}
+@media (max-width:1180px){.sim{grid-template-columns:minmax(0,1fr) 450px}.nrow{grid-template-columns:100px 1fr 168px}.nbar small{display:none}}
 @media (max-width:860px){
   .sim{grid-template-columns:1fr;height:auto;max-height:none;min-height:0;padding:2px 10px 12px}
   .view{height:min(60vh,470px);min-height:360px}
@@ -285,7 +286,7 @@ const STOPS = [null,
     ok: 'Doğru! Anüste sindirim olmaz; sindirilmeyen besinler vücuttan uzaklaştırılır.',
     why: { d: '<b>Yanlış.</b> Anüste sindirim olmaz. Sindirilmeyen besinlerin vücuttan uzaklaştırılmasında görevlidir.' } }
 ];
-const OVERVIEW = [270, 394, 1], AUXCAM = [262, 430, 1.75];
+const OVERVIEW = [272, 396, .93], AUXCAM = [262, 430, 1.75];
 const AUXTXT = {
   liver: { name: 'Karaciğer', txt: 'Sindirime yardımcı organlardan biri olan karaciğerin salgıladığı safra sıvısı, karaciğerin altında bulunan safra kesesinde toplanır. Karaciğerden salgılanıp ince bağırsağa gönderilen safra sıvısı yağların fiziksel sindirimine yardımcı olur.', tag: 'Yağların fiziksel sindirimine yardım' },
   gall: { name: 'Safra kesesi', txt: 'Karaciğerin altında bulunur. Karaciğerin salgıladığı safra sıvısı burada toplanır. Burada toplanan sıvı, bir kanal yardımıyla ince bağırsağa gönderilir.', tag: 'Safrayı toplar ve gönderir' },
@@ -355,7 +356,7 @@ const DEFS = `
 <radialGradient id="gPanc" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#fff2cc"/><stop offset=".45" stop-color="#ffcf7a"/><stop offset="1" stop-color="#d48f2a"/></radialGradient>
 <pattern id="pPanc" width="7" height="6" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3" r="2.3" fill="none" stroke="#b9781f" stroke-opacity=".35" stroke-width=".8"/></pattern>
 <radialGradient id="gCec" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#ffb3a6"/><stop offset=".5" stop-color="#e07c70"/><stop offset="1" stop-color="#a24444"/></radialGradient>
-<radialGradient id="gMes" cx=".5" cy=".45" r=".6"><stop offset="0" stop-color="#9a3443" stop-opacity=".75"/><stop offset=".75" stop-color="#5a1424" stop-opacity=".55"/><stop offset="1" stop-color="#3a0c18" stop-opacity="0"/></radialGradient>
+<radialGradient id="gMes" cx=".5" cy=".45" r=".6"><stop offset="0" stop-color="#9a3443" stop-opacity=".42"/><stop offset=".75" stop-color="#5a1424" stop-opacity=".25"/><stop offset="1" stop-color="#3a0c18" stop-opacity="0"/></radialGradient>
 <radialGradient id="gApSkin" cx=".33" cy=".28" r=".85"><stop offset="0" stop-color="#ff9b8f"/><stop offset=".35" stop-color="#f0353c"/><stop offset=".75" stop-color="#b3141f"/><stop offset="1" stop-color="#7a0b16"/></radialGradient>
 <radialGradient id="gApFlesh" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#fffdf0"/><stop offset=".5" stop-color="#f8efc0"/><stop offset="1" stop-color="#ddc979"/></radialGradient>
 <linearGradient id="gApShade" x1="0" y1="0" x2="0" y2="1"><stop offset=".55" stop-color="#3a0008" stop-opacity="0"/><stop offset="1" stop-color="#3a0008" stop-opacity=".45"/></linearGradient>
@@ -421,7 +422,6 @@ const MAIN = `
     <g fill="none" stroke="#e9eef6" stroke-opacity=".07" stroke-width="6" stroke-linecap="round">${ribs()}</g>
     <path d="M270,282 L270,392" stroke="#e9eef6" stroke-opacity=".05" stroke-width="9" stroke-linecap="round"/>
     <path d="M96,350 C150,298 232,318 270,332 C308,318 390,298 444,350" fill="none" stroke="#ff8a5c" stroke-opacity=".14" stroke-width="3"/>
-    <path d="M186,110 C200,103 240,99 280,102" fill="none" stroke="#ff9aa8" stroke-opacity=".28" stroke-width="7" stroke-linecap="round"/>
     <path d="M206,76 C212,71 221,71 227,76 C221,80 212,80 206,76 Z" fill="none" stroke="#9ff8ff" stroke-opacity=".35" stroke-width="1.4"/>
     <path d="M320,94 C333,89 341,102 337,116 C334,125 326,127 321,122" fill="none" stroke="#9ff8ff" stroke-opacity=".3" stroke-width="2"/>
     <rect class="scan" x="0" y="-60" width="520" height="60" fill="url(#gScan)"/>
@@ -608,8 +608,8 @@ ui.body.innerHTML = `
     <div class="lens" id="lens" aria-hidden="true">
       <div class="tag">VİLLUSLAR · YAKIN GÖRÜNÜM</div>
       <div class="ring"><svg id="lsvg" viewBox="0 0 300 300"></svg></div>
-      <button class="x" id="lensX" aria-label="Yakın görünümü kapat">${ZD.I.x}</button>
       <div class="foot"><div class="cnt" id="lvCnt">Kana geçen yapı taşı <b>0</b> / 0</div>
+      <button class="zd-btn sm x" id="lensX" aria-label="Yakın görünümü kapat">${ZD.I.x}Kapat</button>
       <div class="lg"><span>${NIC.k}Karbohidrat</span><span>${NIC.p}Protein</span><span>${NIC.y}Yağ</span><span style="color:#ffd0d8">yapı taşları</span></div></div>
     </div>
   </div>
@@ -814,11 +814,11 @@ function tick(now) {
   try { frame(now); } catch (e) { console.error(e); }
 }
 function frame(now) {
-  const dt = Math.min(.05, (now - last) / 1000); last = now; const t = now / 1000;
+  const dtR = Math.min(.25, (now - last) / 1000), dt = Math.min(.05, dtR); last = now; const t = now / 1000;
   // yemek borusu kası
   if (S.phase === 'act' && S.stop === 3 && !S.a.done) {
-    if (S.esoHold) S.esoT = Math.min(1, S.esoT + dt * .3);
-    const prev = S.esoP; S.esoP += (S.esoT - S.esoP) * Math.min(1, dt * 4.5);
+    if (S.esoHold) S.esoT = Math.min(1, S.esoT + dtR * .3);
+    const prev = S.esoP; S.esoP += (S.esoT - S.esoP) * Math.min(1, dtR * 4.5);
     if (S.esoT - S.esoP < .002) S.esoP = S.esoT;
     S.bolusS = B[0] + S.esoP * (B[1] - B[0]); S.trailS = Math.max(S.trailS, S.bolusS);
     if (Math.floor(S.esoP * 6) > Math.floor(prev * 6)) ZD.sfx('squish');
@@ -869,9 +869,9 @@ function renderCard() {
   ZD.hideHand();
   if (S.phase === 'select') {
     pYol.innerHTML = `<div class="sh"><div class="ic">${ICON.mouth}</div><div><small>Başlangıç</small><h3>Bir besin seç</h3></div></div>
-      <p class="lead">Burçak dedesinin bahçesinden topladığı elmayı yıkadı, <b>ısırdı, çiğnedi ve yuttu.</b> Sen hangi besinin vücuttaki yolculuğunu yönetmek istersin?</p>
+      <p class="lead">Burçak bahçeden topladığı elmayı <b>ısırdı, çiğnedi ve yuttu.</b> Sen hangi besinin yolculuğunu yönetmek istersin? Her durakta önce soruyu yanıtla, sonra organı çalıştır.</p>
       <div class="foods">${Object.keys(FOODS).map(k => { const f = FOODS[k]; return `<button class="food" data-food="${k}" aria-label="${f.name} seç">${ART[k]()}<b>${f.name}</b><small>${f.sub}</small><div class="mini">${NUT.map(n => `<i style="--w:${Math.round(f.amt[n.k] * 100)}%;--c:${n.col}" title="${n.name}"></i>`).join('')}</div></button>`; }).join('')}</div>
-      <div class="tipbox">${ZD.I.bulb}<span>Besin, <b style="color:#fff">ağız → yutak → yemek borusu → mide → ince bağırsak → kalın bağırsak → anüs</b> yolunu izler. Her durakta önce soruyu yanıtla, sonra organı çalıştır.</span></div>`;
+      <div class="tipbox">${ZD.I.bulb}<span>Yol: <b style="color:#fff">ağız → yutak → yemek borusu → mide → ince bağırsak → kalın bağırsak → anüs</b></span></div>`;
     $$('.food', pYol).forEach(b => b.onclick = () => chooseFood(b.dataset.food));
     return;
   }
@@ -881,10 +881,9 @@ function renderCard() {
   }
   if (S.phase === 'q') {
     const st = STOPS[S.stop];
-    pYol.innerHTML = `${head(S.stop)}<div class="ctx">${st.ctx(FOODS[S.fk])}</div>
+    pYol.innerHTML = `${head(S.stop)}<div class="ctx" id="ctxBox">${st.ctx(FOODS[S.fk])}</div>
       <div class="q">Burada ne olur?</div>
-      <div class="opts" id="opts">${OPTS.map((o, i) => `<button class="opt" data-i="${i}"><span class="oi">${OIC[o.ic]}</span><span>${o.t}<small>${o.s}</small></span></button>`).join('')}</div>
-      <div id="whyBox"></div>`;
+      <div class="opts" id="opts">${OPTS.map((o, i) => `<button class="opt" data-i="${i}"><span class="oi">${OIC[o.ic]}</span><span>${o.t}<small>${o.s}</small></span></button>`).join('')}</div>`;
     $$('.opt', pYol).forEach(b => b.onclick = () => answer(+b.dataset.i, b));
     return;
   }
@@ -894,7 +893,7 @@ function renderCard() {
     pYol.innerHTML = `<div class="sh"><div class="ic">${ICON.anus}</div><div><small>Yolculuk tamamlandı</small><h3>${FOODS[S.fk].name} vücuttan geçti!</h3></div></div>
       <div class="okmsg">Besin ağızdan anüse kadar 7 durağı geçti. İlk denemede doğru: <b>${ok}/7</b> · Puan: <b>${S.score}</b></div>
       <div class="def"><span class="bk">BAĞLANTI NOKTASI</span><br>Elma hem fiziksel hem kimyasal sindirime uğrar; yutaktan geçerek yemek borusu yardımıyla mideye ulaşır. Midede bulamaç hâline gelen parçalar ince bağırsağa gönderilir; sindirim tamamlanır ve gerekli kısımlar emilir. Posadaki fazla su ve mineraller kalın bağırsakta emilir, kalan atıklar anüs yardımıyla uzaklaştırılır.</div>
-      <div class="row" style="display:flex;gap:10px;flex-wrap:wrap"><button class="zd-btn green" data-primary id="againB">${ZD.I.restart}Başka besinle dene</button></div>`;
+      <div class="arow"><button class="zd-btn green" data-primary id="againB">${ZD.I.restart}Başka besinle dene</button></div>`;
     $('#againB').onclick = () => reset(true);
   }
 }
@@ -923,13 +922,14 @@ async function chooseFood(k) {
   await enterStop(1);
 }
 async function enterStop(n) {
+  if ($('#lens').classList.contains('show')) lensClose();
   S.stop = n; S.tried = false; S.answered = false; S.a = {}; S.phase = 'travel';
   hud(); renderRail(); renderCard(); applyFocus();
   const g = S.gen;
   const cam = camTo(camFor(), 1200);
   if (n === 4) { S.spread = .5; await travel(B[2], 1200); if (g !== S.gen) return; S.spread = 1.15; S.sx = 1.25; S.sy = 1; ZD.sfx('drip'); }
   else if (n === 5) {
-    S.spread = .45; S.sx = 1; S.sy = 1; await travel(B[3], 1500); if (g !== S.gen) return;
+    S.spread = .38; S.sx = 1; S.sy = 1; await travel(B[3], 1500); if (g !== S.gen) return;
     S.fat = []; const nf = FOODS[S.fk].fat; for (let i = 0; i < nf; i++) { const a = i / nf * 6.28 + .6; S.fat.push({ x: 0, y: 0, tx: Math.cos(a) * 10, ty: Math.sin(a) * 10, r: 5.2, k: .2 }); }
     ZD.sfx('pop');
   }
@@ -945,30 +945,30 @@ function answer(i, btn) {
     if (first) { S.streak++; S.score += 100 + 25 * (S.streak - 1); } else S.score += 40;
     hud(); ZD.sfx('good'); ZD.toast(st.ok, 'good', 2600);
     btn.classList.add('good', 'zd-glow-good'); $('#opts').classList.add('lock');
-    $('#whyBox').innerHTML = '';
+    const cb = $('#ctxBox'); cb.className = 'okmsg'; cb.innerHTML = st.ok;
     setTimeout(() => { if (S.phase === 'q' && S.answered) { S.phase = 'act'; renderCard(); } }, 900);
   } else {
     S.tried = true; S.streak = 0; hud(); ZD.sfx('bad');
     btn.classList.add('bad', 'zd-shake'); btn.disabled = true;
-    const w = st.why[i] || st.why.d; $('#whyBox').innerHTML = `<div class="why">${w} <span style="color:#ffe3e7">Tekrar dene.</span></div>`;
+    const w = st.why[i] || st.why.d, cb = $('#ctxBox'); cb.className = 'why zd-fade-in'; cb.innerHTML = `${w} <span style="color:#ffe3e7">Tekrar dene.</span>`;
     ZD.toast('Tekrar düşün! Seri sıfırlandı.', 'bad', 1800);
   }
 }
 function actDone(msg) {
-  S.a.done = true; S.score += 20; hud(); renderRail();
+  S.a.done = true; S.a.msg = msg; S.score += 20; hud(); renderRail();
   const nb = $('#nextB'); if (nb) { nb.hidden = false; nb.classList.add('pulse'); }
-  if (msg) { const m = $('#actMsg'); if (m) { m.innerHTML = `<div class="okmsg">${msg}</div>`; } }
+  const h = $('#acts .hint'); if (h && msg) { h.className = 'okmsg zd-fade-in'; h.innerHTML = msg; }
   ZD.sfx('level');
 }
 function renderAct() {
   const i = S.stop, st = STOPS[i];
   const next = i < 7 ? `Sonraki durak: ${STOPS[i + 1].name}` : 'Yolculuğu bitir';
-  pYol.innerHTML = `${head(i)}<div class="def"><span class="bk">DERS KİTABI · ${st.name.toLocaleUpperCase('tr')}</span><br>${st.def}</div>
-    <div class="acts" id="acts"></div><div id="actMsg"></div>
-    <button class="zd-btn green nextb" id="nextB" ${S.a.done ? '' : 'hidden'}>${next}${ZD.I.arrowR}</button>`;
+  pYol.innerHTML = `<div class="actbox" id="acts"></div>
+    <div class="def"><span class="bk">${ICON[st.org]}DERS KİTABI · DURAK ${i}/7 · ${st.name.toLocaleUpperCase('tr')}</span>${st.def}</div>`;
+  const box = $('#acts'); ACT[i](box);
+  const rows = $$('.arow', box); rows[rows.length - 1].insertAdjacentHTML('beforeend', `<button class="zd-btn green nextb" id="nextB" ${S.a.done ? '' : 'hidden'}>${next}${ZD.I.arrowR}</button>`);
   $('#nextB').onclick = () => { ZD.sfx('click'); ZD.hideHand(); if (i < 7) enterStop(i + 1); else finish(); };
-  ACT[i]($('#acts'));
-  if (S.a.done) $('#nextB').classList.add('pulse');
+  if (S.a.done) { $('#nextB').classList.add('pulse'); const h = $('.hint', box); if (h && S.a.msg) { h.className = 'okmsg'; h.innerHTML = S.a.msg; } }
 }
 
 /* ---------------- Durak eylemleri ---------------- */
@@ -977,7 +977,7 @@ const ACT = {
   1(box) {
     const a = S.a; a.ch = a.ch || 0;
     box.innerHTML = `<div class="hint">Dişler besini parçalar (fiziksel sindirim). <b style="color:#fff">Çiğne</b> düğmesine 5 kez bas, sonra tükürüğün etkisini izle.</div>
-      <div class="row"><button class="zd-btn amber" id="chewB" data-primary aria-label="Çiğne">${ZD.I.play}Çiğne</button><div class="pips" id="chewP">${[0, 1, 2, 3, 4].map(j => `<i class="${j < a.ch ? 'on' : ''}"></i>`).join('')}</div></div>`;
+      <div class="arow"><button class="zd-btn amber" id="chewB" data-primary aria-label="Çiğne">${ZD.I.play}Çiğne</button><div class="pips" id="chewP">${[0, 1, 2, 3, 4].map(j => `<i class="${j < a.ch ? 'on' : ''}"></i>`).join('')}</div></div>`;
     const b = $('#chewB'); if (a.ch >= 5) b.disabled = true;
     b.onclick = async () => {
       if (a.busy || a.ch >= 5) return; a.busy = true; a.ch++;
@@ -996,7 +996,7 @@ const ACT = {
   /* 2 · YUTAK */
   2(box) {
     box.innerHTML = `<div class="hint">Dil lokmayı geriye iter; yutak lokmayı yemek borusuna iletir.</div>
-      <div class="row"><button class="zd-btn" id="swB" data-primary aria-label="Yut">${ZD.I.play}Yut</button></div>`;
+      <div class="arow"><button class="zd-btn" id="swB" data-primary aria-label="Yut">${ZD.I.play}Yut</button></div>`;
     const b = $('#swB'); if (S.a.done) b.disabled = true;
     b.onclick = async () => {
       if (S.a.busy || S.a.done) return; S.a.busy = true; b.disabled = true; b.removeAttribute('data-primary');
@@ -1017,7 +1017,7 @@ const ACT = {
   /* 3 · YEMEK BORUSU */
   3(box) {
     box.innerHTML = `<div class="hint">Yemek borusunun kasları lokmanın <b style="color:#fff">arkasında kasılır</b> ve onu mideye doğru iter. Düğmeyi <b style="color:#fff">basılı tut</b> ya da tekrar tekrar bas.</div>
-      <div class="row"><button class="zd-btn purple" id="perB" data-primary aria-label="Kas hareketi: basılı tut">${ZD.I.arrowR}Kas hareketi</button>
+      <div class="arow"><button class="zd-btn purple" id="perB" data-primary aria-label="Kas hareketi: basılı tut">${ZD.I.arrowR}Kas hareketi</button>
       <div class="meter2"><div class="zd-meter"><i id="esoM" style="width:${Math.round(S.esoP * 100)}%"></i></div></div></div>`;
     const b = $('#perB'); if (S.a.done) { b.disabled = true; return; }
     let down = 0;
@@ -1031,7 +1031,7 @@ const ACT = {
   4(box) {
     const a = S.a; a.n = a.n || 0;
     box.innerHTML = `<div class="hint">Mide kasları kasılıp gevşer; mide öz suyu salgılanır. <b style="color:#fff">Mideyi çalkala</b> düğmesine 4 kez bas.</div>
-      <div class="row"><button class="zd-btn red" id="stB" data-primary aria-label="Mideyi çalkala">${ZD.I.restart}Mideyi çalkala</button><div class="pips" id="stP">${[0, 1, 2, 3].map(j => `<i class="${j < a.n ? 'on' : ''}"></i>`).join('')}</div></div>`;
+      <div class="arow"><button class="zd-btn red" id="stB" data-primary aria-label="Mideyi çalkala">${ZD.I.restart}Mideyi çalkala</button><div class="pips" id="stP">${[0, 1, 2, 3].map(j => `<i class="${j < a.n ? 'on' : ''}"></i>`).join('')}</div></div>`;
     const b = $('#stB'); if (a.n >= 4) b.disabled = true;
     b.onclick = async () => {
       if (a.busy || a.n >= 4) return; a.busy = true; a.n++;
@@ -1049,8 +1049,8 @@ const ACT = {
   5(box) {
     const a = S.a;
     box.innerHTML = `<div class="hint">Yardımcı organlar salgılarını kanallarla ince bağırsağa gönderir. İkisini de çalıştır, sonra emilimi yakından izle.</div>
-      <div class="row"><button class="zd-btn green" id="bileB" aria-label="Safrayı gönder">${ZD.I.arrowR}Safrayı gönder</button><button class="zd-btn amber" id="pancB" aria-label="Pankreas öz suyunu gönder">${ZD.I.arrowR}Pankreas öz suyu</button></div>
-      <div class="row"><button class="zd-btn" id="vilB" aria-label="Villusları yakınlaştır" disabled>${ZD.I.info}Villusları yakınlaştır</button></div>`;
+      <div class="arow"><button class="zd-btn green" id="bileB" aria-label="Safrayı gönder">${ZD.I.arrowR}Safrayı gönder</button><button class="zd-btn amber" id="pancB" aria-label="Pankreas öz suyunu gönder">${ZD.I.arrowR}Pankreas öz suyu</button></div>
+      <div class="arow"><button class="zd-btn" id="vilB" aria-label="Villusları yakınlaştır" disabled>${ZD.I.info}Villusları yakınlaştır</button></div>`;
     const bb = $('#bileB'), pb = $('#pancB'), vb = $('#vilB');
     const sync = () => {
       bb.disabled = !!a.bile || !!a.busy; pb.disabled = !!a.panc || !!a.busy; vb.disabled = !(a.bile && a.panc) || !!a.vil || !!a.busy;
@@ -1072,7 +1072,7 @@ const ACT = {
   6(box) {
     const a = S.a; a.n = a.n || 0;
     box.innerHTML = `<div class="hint">Posa kalın bağırsakta ilerlerken geriye kalan <b style="color:#fff">su, bazı mineral ve vitaminler</b> emilir. <b style="color:#fff">Posayı ilerlet</b> düğmesine 3 kez bas.</div>
-      <div class="row"><button class="zd-btn" id="liB" data-primary aria-label="Posayı ilerlet">${ZD.I.arrowR}Posayı ilerlet</button><div class="pips" id="liP">${[0, 1, 2].map(j => `<i class="${j < a.n ? 'on' : ''}"></i>`).join('')}</div></div>
+      <div class="arow"><button class="zd-btn" id="liB" data-primary aria-label="Posayı ilerlet">${ZD.I.arrowR}Posayı ilerlet</button><div class="pips" id="liP">${[0, 1, 2].map(j => `<i class="${j < a.n ? 'on' : ''}"></i>`).join('')}</div></div>
       <div class="abs" id="absC"><span data-a="su" class="${a.su ? 'on' : ''}"><svg viewBox="-11 -12 22 24"><use href="#sDrop"/></svg>Su</span><span data-a="min" class="${a.min ? 'on' : ''}"><svg viewBox="-11 -11 22 22"><use href="#sMin"/></svg>Mineral</span><span data-a="vit" class="${a.vit ? 'on' : ''}"><svg viewBox="-11 -11 22 22"><use href="#sVit"/></svg>Vitamin</span></div>`;
     const b = $('#liB'); if (a.n >= 3) b.disabled = true;
     b.onclick = async () => {
@@ -1089,7 +1089,7 @@ const ACT = {
   /* 7 · ANÜS */
   7(box) {
     box.innerHTML = `<div class="hint">Sindirilmeyen besinler (atıklar) anüs yardımıyla vücuttan uzaklaştırılır.</div>
-      <div class="row"><button class="zd-btn purple" id="outB" data-primary aria-label="Uzaklaştır">${ZD.I.arrowR}Uzaklaştır</button></div>`;
+      <div class="arow"><button class="zd-btn purple" id="outB" data-primary aria-label="Uzaklaştır">${ZD.I.arrowR}Uzaklaştır</button></div>`;
     const b = $('#outB'); if (S.a.done) b.disabled = true;
     b.onclick = async () => {
       if (S.a.busy || S.a.done) return; S.a.busy = true; b.disabled = true; b.removeAttribute('data-primary');
@@ -1155,10 +1155,10 @@ async function churn(n) {
   if (n === 1) { splitTo(30, 2.6); setInfo(30, 2.6 / 12, 'Parçalanıyor'); }
   if (n === 2) { splitTo(38, 2.2); setInfo(38, 2.2 / 12, 'Parçalanıyor'); }
   if (n === 3) {
-    S.goo = true; S.pieces = S.pieces.slice(0, 22); S.pieces.forEach(p => { p.s = 'pcCh'; p.r = 3.6 * p.rv; });
-    tween(600, t => { S.spread = lerp(1.15, .95, t); }); setInfo('—', .12, 'Bulamaç oluşuyor');
+    S.goo = true; S.pieces = S.pieces.slice(0, 22); S.pieces.forEach(p => { p.s = 'pcCh'; p.r = 5 * p.rv; });
+    tween(600, t => { S.spread = lerp(1.15, .78, t); }); setInfo(1, .12, 'Bulamaç oluşuyor');
   }
-  if (n === 4) { tween(600, t => { S.spread = lerp(.95, .78, t); }); setInfo('—', .1, 'Bulamaç'); }
+  if (n === 4) { tween(600, t => { S.spread = lerp(.78, .66, t); }); setInfo(1, .1, 'Bulamaç'); }
   await sq; if (g !== S.gen) return; st.removeAttribute('transform');
 }
 function bubble(delay) {
@@ -1213,8 +1213,8 @@ async function absorb() {
   }, E.io);
   const lv = lensRun();
   await Promise.all([tr, lv]); if (g !== S.gen) return;
-  S.pieces = S.pieces.filter(p => p.isPosa); S.pieces.forEach(p => { p.r = 3.4 * p.rv; });
-  while (S.pieces.length < 5) { const q = mkPiece('pcPo', 3.2); q.isPosa = true; S.pieces.push(q); }
+  S.pieces = S.pieces.filter(p => p.isPosa); S.pieces.forEach(p => { p.r = 4.2 * p.rv; p.k = .4; });
+  while (S.pieces.length < 5) { const q = mkPiece('pcPo', 4.2); q.isPosa = true; S.pieces.push(q); }
   S.goo = true; S.spread = .55; setInfo(S.pieces.length, .25, 'Posa');
   $('#lensX').classList.add('show');
 }
@@ -1234,7 +1234,7 @@ async function colonStep(n) {
     const want = Math.floor(t * 14);
     while (em < want) {
       em++; const c = bolusPos(), a = rnd(0, 6.28), k = kinds[em % kinds.length];
-      bezParticle(fxTop, { use: k, sc: k === 'sDrop' ? .32 : .28, a: { x: c.x + Math.cos(a) * 6, y: c.y + Math.sin(a) * 6 }, k: { x: c.x + Math.cos(a) * 18, y: c.y + Math.sin(a) * 18 - 4 }, b: { x: c.x + Math.cos(a) * 30, y: c.y + Math.sin(a) * 30 - 8 }, dur: rnd(.9, 1.3), fadeOut: .55 });
+      bezParticle(fxTop, { use: k, sc: k === 'sDrop' ? .46 : .42, a: { x: c.x + Math.cos(a) * 6, y: c.y + Math.sin(a) * 6 }, k: { x: c.x + Math.cos(a) * 18, y: c.y + Math.sin(a) * 18 - 4 }, b: { x: c.x + Math.cos(a) * 30, y: c.y + Math.sin(a) * 30 - 8 }, dur: rnd(.9, 1.3), fadeOut: .55 });
       if (em % 3 === 0) ZD.sfx('drip');
     }
   }, E.io);
@@ -1253,7 +1253,7 @@ function posaColor(d) {
 const LV = { on: false, blocks: [], queue: [], total: 0, absorbed: 0, t: 0, next: 0, res: null, villi: [] };
 (function buildLens() {
   const l = $('#lsvg');
-  const V = [[30, 92], [80, 76], [130, 88], [180, 72], [230, 86], [280, 80]];
+  const V = [[30, 114], [80, 100], [130, 110], [180, 96], [230, 108], [280, 102]];
   LV.villi = V.map(([x, y]) => ({ x, y }));
   const vil = V.map(([xc, yt], i) => `<g class="vil">
     <path d="M${xc - 19},246 C${xc - 19},200 ${xc - 16},${yt + 40} ${xc - 16},${yt + 15} C${xc - 16},${yt - 5} ${xc + 16},${yt - 5} ${xc + 16},${yt + 15} C${xc + 16},${yt + 40} ${xc + 19},200 ${xc + 19},246 Z" fill="url(#lgVil)" stroke="#ffd1c6" stroke-opacity=".55" stroke-width="1.2"/>
@@ -1275,7 +1275,7 @@ const LV = { on: false, blocks: [], queue: [], total: 0, absorbed: 0, t: 0, next
   <path d="M0,276 H300" stroke="#5b6cff" stroke-width="8" stroke-linecap="round"/><path class="flowA" d="M0,276 H300" stroke="#c9d0ff" stroke-width="2" opacity=".8"/>
   <g id="lvB"></g>
   <g font-family="Lexend, system-ui, sans-serif" font-size="10.5" font-weight="700">
-    <g transform="translate(150,40)"><rect x="-26" y="-11" width="52" height="19" rx="9.5" fill="rgba(8,22,40,.85)" stroke="#35eefc"/><text text-anchor="middle" y="3" fill="#eaffff">villus</text><path d="M-2,8 L-12,30" stroke="#35eefc" stroke-width="1.2" stroke-dasharray="2 2"/></g>
+    <g transform="translate(150,62)"><rect x="-26" y="-11" width="52" height="19" rx="9.5" fill="rgba(8,22,40,.85)" stroke="#35eefc"/><text text-anchor="middle" y="3" fill="#eaffff">villus</text><path d="M-4,8 L-14,36" stroke="#35eefc" stroke-width="1.2" stroke-dasharray="2 2"/></g>
     <g transform="translate(236,176)"><rect x="-40" y="-11" width="80" height="19" rx="9.5" fill="rgba(8,22,40,.85)" stroke="#35eefc"/><text text-anchor="middle" y="3" fill="#eaffff">kılcal damar</text></g>
     <g transform="translate(78,292)"><text text-anchor="middle" fill="#ffd6dc" font-size="9.5">kan damarları</text></g>
   </g>
@@ -1383,7 +1383,7 @@ function showIntro() {
     kicker: 'SİMÜLASYON · BAĞLANTI NOKTASI', title: 'Besinin Yolculuğu',
     art: `<div class="intro-art">${artApple()}</div>`,
     text: 'Burçak elmayı ısırdı, çiğnedi ve yuttu. Peki elma vücudunda hangi organlardan geçerek dışarı atılır? Bir besin seç ve yolculuğunu sen yönet!',
-    steps: ['Bir besin seç; içindeki <b>karbohidrat, protein ve yağı</b> panelden takip et.', 'Her durakta <b>“Burada ne olur?”</b> sorusunu yanıtla: fiziksel mi, kimyasal mı, ikisi mi, yoksa sindirim olmaz mı?', 'Organı çalıştır: çiğne, yut, kas hareketi, mideyi çalkala, safra ve pankreas öz suyunu gönder…', 'Villuslarda emilimi yakından izle ve yolculuğu anüse kadar tamamla.'],
+    steps: ['Bir besin seç; karbohidrat, protein ve yağın durumunu panelden izle.', 'Her durakta “Burada ne olur?” sorusunu yanıtla.', 'Organı çalıştır: çiğne, yut, kas hareketi, çalkala, salgıları gönder…', 'Villuslarda emilimi yakından izle; yolculuğu anüse kadar tamamla.'],
     start: 'Yolculuğa başla', onStart: () => { ZD.sfx('level'); setTimeout(() => { if (S.phase === 'select') ZD.pointAt($('.food'), { ms: 2400 }); }, 450); }
   });
 }

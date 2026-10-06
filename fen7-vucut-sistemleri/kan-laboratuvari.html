@@ -70,8 +70,9 @@ input.kr::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;bac
 /* ---- sağ panel ---- */
 .panel{display:flex;flex-direction:column;gap:12px;min-height:0;min-width:0}
 .pane{flex:1 1 auto;min-height:0;overflow:auto;padding:15px 18px;display:flex;flex-direction:column;gap:11px;scrollbar-width:thin}
-.p-head{display:flex;align-items:center;gap:10px;justify-content:space-between}
-.p-step{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.4px}
+.p-head{display:flex;align-items:center;gap:10px}
+.p-step{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.4px;margin-left:auto;text-align:right}
+.p-ttl{font-size:18px;font-weight:800;line-height:1.15}
 .p-title{font-size:20px;font-weight:800;line-height:1.2}
 .p-text{font-size:14.5px;line-height:1.55;color:#cfe0f2}
 .p-text b{color:#fff}
@@ -89,8 +90,8 @@ input.kr::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;bac
 .task .dots i.on{background:var(--green);border-color:var(--green);box-shadow:0 0 10px rgba(47,227,155,.6)}
 .netlik{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px;font-weight:700;letter-spacing:1.2px;color:var(--muted)}
 .netlik .zd-meter{flex:1}
-.tlist{list-style:none;display:grid;gap:6px}
-.tlist li{display:flex;align-items:center;gap:10px;padding:7px 10px;border-radius:12px;font-size:14px;background:rgba(0,0,0,.2);border:1px solid var(--line);color:#a9bdd4}
+.tlist{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tlist li{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:12px;font-size:13.5px;line-height:1.25;background:rgba(0,0,0,.2);border:1px solid var(--line);color:#a9bdd4}
 .tlist li .b{width:24px;height:24px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;background:rgba(255,255,255,.07)}
 .tlist li .b svg{width:15px;height:15px}
 .tlist li .n{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
@@ -104,8 +105,8 @@ input.kr::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;bac
 .mrow{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:600;color:#c9d8ea;margin-bottom:5px}
 .mrow b{font-size:15px;font-variant-numeric:tabular-nums}
 .steps{list-style:none;display:grid;gap:6px}
-.steps li{display:flex;gap:10px;align-items:flex-start;padding:7px 10px;border-radius:12px;font-size:13.5px;line-height:1.4;color:#7f97b3;border:1px solid transparent;transition:.35s var(--ease)}
-.steps li b{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:12px;background:rgba(255,255,255,.07)}
+.steps li{display:flex;gap:9px;align-items:center;padding:4px 9px;border-radius:12px;font-size:13.5px;line-height:1.3;color:#7f97b3;border:1px solid transparent;transition:.35s var(--ease)}
+.steps li b{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;background:rgba(255,255,255,.07)}
 .steps li.act{color:#fff;background:rgba(255,84,104,.1);border-color:rgba(255,84,104,.45)}
 .steps li.act b{background:var(--red);color:#fff}
 .steps li.done{color:#cfe0f2}
@@ -119,7 +120,8 @@ input.kr::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;bac
 .mk-stats b{display:block;font-size:21px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15}
 .mk-stats span{font-size:10.5px;font-weight:700;letter-spacing:1.1px;color:var(--muted);text-transform:uppercase}
 .chart{position:relative;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--line);padding:6px 8px}
-.chart canvas{width:100%;height:78px;display:block}
+.chart canvas{width:100%;height:62px;display:block}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .legend{display:flex;gap:14px;font-size:12px;font-weight:600;color:#c9d8ea;padding:2px 2px 0}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .lg2{display:grid;gap:7px}
@@ -131,7 +133,7 @@ input.kr::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;bac
 .oxc span{font-size:10.5px;font-weight:700;letter-spacing:1.1px;color:var(--muted)}
 /* sayım grafiği */
 .count{display:grid;gap:9px}
-.crow{display:grid;grid-template-columns:118px 1fr 54px;gap:10px;align-items:center;font-size:14px;font-weight:600}
+.crow{display:grid;grid-template-columns:168px 1fr 54px;gap:10px;align-items:center;font-size:14px;font-weight:600}
 .crow .cbar{height:16px;border-radius:99px;background:rgba(0,0,0,.4);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
 .crow .cbar i{display:block;height:100%;min-width:8px;border-radius:99px;background:linear-gradient(90deg,var(--c2),var(--c));box-shadow:0 0 12px var(--c);width:0;transition:width 1.2s var(--ease)}
 .crow b{text-align:right;font-variant-numeric:tabular-nums}
@@ -177,7 +179,7 @@ input.kr::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;bac
 .facts .wide{grid-column:1/-1}
 .facts .bad b{color:#ff8a98}
 .facts .good b{color:#7ff3c4}
-.stamp{position:absolute;right:16px;top:12px;z-index:2;padding:5px 12px;border:3px solid;border-radius:10px;font-weight:900;font-size:17px;letter-spacing:2px;transform:rotate(-9deg) scale(1.7);opacity:0;transition:.45s var(--spring);background:rgba(5,12,22,.6)}
+.stamp{position:absolute;right:22px;top:58px;z-index:2;padding:5px 12px;border:3px solid;border-radius:10px;font-weight:900;font-size:17px;letter-spacing:2px;transform:rotate(-9deg) scale(1.7);opacity:0;transition:.45s var(--spring);background:rgba(5,12,22,.6)}
 .stamp.show{opacity:1;transform:rotate(-9deg) scale(1)}
 .stamp.ok{color:#2fe39b;border-color:#2fe39b;box-shadow:0 0 18px rgba(47,227,155,.45)}
 .stamp.no{color:#ff5468;border-color:#ff5468;box-shadow:0 0 18px rgba(255,84,104,.45)}
@@ -227,6 +229,7 @@ input.kr::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;bac
 .malp svg{width:120px;height:120px;flex:none}
 .malp p{font-size:14.5px}
 .intro-art{width:230px;height:96px;margin:0 auto 4px;display:block}
+.zd-btn[hidden]{display:none}
 /* ---- duyarlı ---- */
 @media (max-width:1100px) and (min-width:861px){
   .lab{grid-template-columns:var(--S) 130px minmax(0,1fr)}
@@ -253,6 +256,11 @@ input.kr::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;bac
   .st4:nth-child(2)::after{display:none}
   .crow{grid-template-columns:96px 1fr 46px}
   .malp{flex-direction:column;text-align:center}
+  .tile .tn{font-size:11px;white-space:normal;text-align:center;line-height:1.15}
+  .tlist{grid-template-columns:1fr}
+  .mgrid{grid-template-columns:1fr}
+  .zd-modal{position:fixed}
+  .stamp{top:12px}
 }
 </style></head>
 <body><div id="app"></div><script src="assets/zd.js"></script><script>
@@ -378,7 +386,6 @@ const MSCOPE = `<svg class="mscope" viewBox="0 0 160 250" aria-label="Mikroskop:
   <circle cx="110.5" cy="172" r="3" fill="#fff" opacity=".35"/>
  </g>
 </g>
-<text x="114" y="212" text-anchor="middle" font-size="8.5" font-weight="700" fill="#8fa8c4" letter-spacing="1" font-family="Lexend,system-ui,sans-serif">ODAK</text>
 </svg>`;
 
 ui.body.innerHTML = `
@@ -400,7 +407,7 @@ ui.body.innerHTML = `
   <div class="ctrl" id="ctrl">
     ${MSCOPE}
     <div class="ctrl-r">
-      <div class="fwrap"><div class="fl"><label for="focusR">ODAK AYARI</label><span class="fstat" id="fStat">BULANIK</span></div>
+      <div class="fwrap"><div class="fl"><label for="focusR">ODAK</label><span class="fstat" id="fStat">BULANIK</span></div>
         <input type="range" class="kr" id="focusR" min="0" max="1000" value="100" aria-label="Odak ayarı kaydırıcısı"></div>
       <div class="mag" id="mag" role="group" aria-label="Büyütme seçici"><div class="mh">BÜYÜTME</div>${[100, 400, 1000].map(m => `<button data-mag="${m}" aria-label="${m} kat büyütme">${m}×</button>`).join('')}</div>
     </div>
@@ -581,12 +588,12 @@ function drawWBC(c, t, al = 1, veil = 0) {
 function drawMicrobe(m, t) {
   const sx = C + m.x * k, sy = C + m.y * k, s = k * (m.sc ?? 1); if (!inView(sx, sy, 6 * s)) return;
   resetT(); g.save(); g.translate(sx, sy); g.rotate(m.a); g.globalAlpha = m.al ?? 1;
-  const rod = m.type === 'rod', L = rod ? 1.9 : 0, W = rod ? .9 : 1.2, dg = m.dig || 0;
-  const n = rod ? 16 : 11; g.strokeStyle = dg ? `rgba(170,150,90,${.8 - dg * .6})` : 'rgba(150,236,110,.85)'; g.lineWidth = Math.max(.8, .13 * s); g.lineCap = 'round'; g.beginPath();
+  const rod = m.type === 'rod', L = rod ? 2.9 : 0, W = rod ? 1.25 : 1.75, dg = m.dig || 0;
+  const n = rod ? 20 : 14; g.strokeStyle = dg ? `rgba(170,150,90,${.8 - dg * .6})` : 'rgba(150,236,110,.85)'; g.lineWidth = Math.max(.8, .13 * s); g.lineCap = 'round'; g.beginPath();
   for (let i = 0; i < n; i++) {
     const a = i / n * TAU, ex = L + W, px = Math.cos(a) * ex, py = Math.sin(a) * W;
     let nx = Math.cos(a) / ex, ny = Math.sin(a) / W; const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
-    const wig = Math.sin(t * 9 + i * 1.7 + m.ph) * .45, len = .95;
+    const wig = Math.sin(t * 9 + i * 1.7 + m.ph) * .55, len = 1.25;
     g.moveTo(px * s, py * s); g.quadraticCurveTo((px + nx * len * .5 - ny * wig * .5) * s, (py + ny * len * .5 + nx * wig * .5) * s, (px + nx * len - ny * wig * .2) * s, (py + ny * len + nx * wig * .2) * s);
   }
   g.stroke();
@@ -606,12 +613,13 @@ function drawGas(x, y, r, type, al = 1) {
   gr.addColorStop(0, o ? '#ffd5db' : '#eaf0ff'); gr.addColorStop(.5, o ? '#ff5a72' : '#8fa4d8'); gr.addColorStop(1, o ? '#bd1638' : '#3f5089');
   g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); g.shadowBlur = 0;
   g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = 1; g.stroke();
-  g.fillStyle = '#fff'; g.font = `800 ${Math.max(8, Math.round(r * (o ? .92 : .74)))}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillStyle = '#fff'; g.font = `800 ${Math.max(9, Math.round(r * (o ? .95 : .78)))}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
   g.fillText(o ? 'O₂' : 'CO₂', x, y + r * .06); g.restore();
 }
 /* UI katmanı */
 function pill(x, y, txt, col = '#35eefc', o = {}) {
   const fs = o.fs || 13; u.font = `700 ${fs}px ${FONT}`; const w = u.measureText(txt).width + 22, h = fs + 13;
+  const lim = Math.max(0, C - w / 2 - 12), ddx = x - C, ddy = y - C, dd = Math.hypot(ddx, ddy); if (dd > lim) { x = C + ddx / dd * lim; y = C + ddy / dd * lim; }
   let bx = clamp(x - w / 2, 8, Si - w - 8), by = clamp(y - h / 2, 8, Si - h - 8);
   u.save(); u.shadowColor = 'rgba(0,0,0,.5)'; u.shadowBlur = 12; u.fillStyle = o.bg || 'rgba(7,20,36,.9)'; rrect(u, bx, by, w, h, h / 2); u.fill(); u.shadowBlur = 0;
   u.strokeStyle = col; u.lineWidth = 1.6; u.stroke();
@@ -668,8 +676,8 @@ function taniInit() {
   TN.cells = []; TN.ox = TN.oy = 0;
   place('wbc', 0, -14, 9); place('wbc', 0, 200, -120);
   for (let i = 0; i < 8; i++) place('wbc', 0);
-  for (let i = 0; i < 1400; i++) { const r = Math.random(); place('rbc', r < .72 ? 0 : r < .91 ? -1 : 1); }
-  for (let i = 0; i < 110; i++) { const r = Math.random(); place('plt', r < .8 ? 0 : -1); }
+  for (let i = 0; i < 1900; i++) { const r = Math.random(); place('rbc', r < .72 ? 0 : r < .91 ? -1 : 1); }
+  for (let i = 0; i < 130; i++) { const r = Math.random(); place('plt', r < .8 ? 0 : -1); }
   TN.specks = Array.from({ length: 160 }, () => ({ x: rnd(-H, H), y: rnd(-H, H), r: rnd(.15, .45), bx: 0, by: 0 }));
   TN.total = { rbc: TN.cells.filter(c => c.k === 'rbc').length, plt: TN.cells.filter(c => c.k === 'plt').length, wbc: TN.cells.filter(c => c.k === 'wbc').length };
 }
@@ -734,7 +742,7 @@ function pickIn(cells, sx, sy, kinds) {
   let best = null, bs = 1e9;
   for (const c of cells) {
     if (kinds && !kinds.includes(c.k)) continue; if (c.fade < .4 || c.state === 'out' || c.state === 'dead') continue;
-    const cx = C + c.x * k, cy = C + c.y * k, r = (c.r || 1.5) * k * (c.k === 'mic' ? 2.2 : 1);
+    const cx = C + c.x * k, cy = C + c.y * k, r = (c.r || 1.5) * k * (c.k === 'mic' ? 1.6 : 1);
     const hr = Math.max(r * 1.08, c.k === 'plt' || c.k === 'mic' ? 17 : 14), d = Math.hypot(cx - sx, cy - sy);
     if (d > hr) continue; const s = d / hr * ((c.z || 0) ? 1.35 : 1) * (c.k === 'plt' ? .8 : 1); if (s < bs) { bs = s; best = c; }
   }
@@ -914,7 +922,7 @@ function yaraUpdate(dt) {
     const inGap = Y.torn && Y.closure < 1 && c.z === 0 && c.k === 'rbc' && Math.abs(c.x) < gx - c.r * .35;
     const wy = YW(c.x) - c.r * .9; if (c.y > wy && !inGap) c.y = wy;
     if (inGap && c.y > YW(c.x) + YT * .65) {
-      c.state = 'out'; const a = rnd(.3, Math.PI - .3), sp = rnd(5, 10); c.vx = Math.cos(a) * sp; c.vy = Math.sin(a) * sp * .9; c.vt = rnd(-.6, .6);
+      c.state = 'out'; const a = rnd(.3, Math.PI - .3), sp = rnd(8, 15); c.vx = Math.cos(a) * sp; c.vy = Math.sin(a) * sp * .9; c.vt = rnd(-.6, .6);
       Y.leaked++; Y.rate += 1; if (Y.step < 2) { Y.step = 2; renderPane(); }
       if (Y.leaked % 2) sfx('drip'); yAdd('rbc', -62 + rnd(0, 3));
       const outs = Y.cells.filter(o => o.state === 'out'); if (outs.length > 70) Y.cells.splice(Y.cells.indexOf(outs[0]), 1);
@@ -942,6 +950,7 @@ function yaraDraw() {
   resetT(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(Y.cache.tis, 0, 0); resetT();
   const lv0 = layerLvl(0), lvb = layerLvl(-1);
   for (const c of Y.cells) if (c.state === 'out') drawRBC(c, lv0, .92);
+  resetT();
   // yırtık boşluk dışında damar duvarı
   const gx = Y.g, kk = k, X = (x) => C + x * kk, P = (y) => C + y * kk;
   g.save();
@@ -1006,7 +1015,7 @@ function mkInit() {
   addWBC(-22, 12, 1); addWBC(26, -16, 1);
 }
 function addWBC(x, y, fade = 0) { const w = mkCell('wbc', x, y, 0); w.fade = fade; w.speed = rnd(3.2, 3.8); w.target = null; w.eat = null; w.cool = 0; w.rt = 0; MK.wbc.push(w); return w; }
-function spawnMic(x, y, a) { const m = { k: 'mic', x, y, a: a ?? rnd(0, TAU), hd: a ?? rnd(0, TAU), type: Math.random() < .6 ? 'rod' : 'coc', ph: rnd(0, TAU), div: rnd(6.5, 9), sc: .2, al: 1, state: 'free', r: 1.6, fade: 1 }; MK.mic.push(m); return m; }
+function spawnMic(x, y, a) { const m = { k: 'mic', x, y, a: a ?? rnd(0, TAU), hd: a ?? rnd(0, TAU), type: Math.random() < .6 ? 'rod' : 'coc', ph: rnd(0, TAU), div: rnd(6.5, 9), sc: .2, al: 1, state: 'free', r: 2.4, fade: 1 }; MK.mic.push(m); return m; }
 const wd = (d) => d - MK.W * Math.round(d / MK.W);
 function callWBC() {
   if (MK.wbc.length >= 14) { toast('Akyuvarlar zaten çok sayıda; mikropları yok etmelerini izle.', '', 2200); return; }
@@ -1058,7 +1067,7 @@ function mkUpdate(dt) {
       const m = w.target, dx = wd(m.x - w.x), dy = wd(m.y - w.y), d = Math.hypot(dx, dy), sp = w.speed * bf * dt;
       w.x = wrapW(w.x + dx / d * Math.min(sp, d) + fx * .25 * dt, MK.W); w.y = wrapW(w.y + dy / d * Math.min(sp, d), MK.W);
       w.bumps = d < 26 ? [{ a: Math.atan2(dy, dx), amp: .12 + .45 * (1 - d / 26), w: .42 }] : [{ a: Math.atan2(dy, dx), amp: .08, w: .5 }];
-      if (d < w.r + 1.6 && w.cool <= 0) {
+      if (d < w.r + 2.4 && w.cool <= 0) {
         w.eat = m; m.state = 'eaten'; m.p = 0; w.eatA = Math.atan2(dy, dx); w.target = null;
         if (!MK.firstEat) { MK.firstEat = true; TAGS.push({ c: w, kind: 'wbc', label: 'AKYUVAR MİKROBU SARIYOR', t0: st.t, ms: 3.2 }); }
       }
@@ -1195,7 +1204,7 @@ function oxDraw() {
   const l0 = layerLvl(0);
   for (const c of OX.rbc) {
     c.ax = 0; c.fl = 1; drawRBC(c, l0, 1, SPR.rbcD); if (c.o > .02) drawRBC(c, l0, c.o, null);
-    resetT(); const sx = C + c.x * k, sy = C + c.y * k, R = c.r * k, br = 2.15 * k;
+    resetT(); const sx = C + c.x * k, sy = C + c.y * k, R = c.r * k, br = 2.5 * k;
     const ang = Math.atan2(c.ny || -1, c.nx || 0);
     for (let i = 0; i < c.o2; i++) { const a = ang + Math.PI + (i ? .75 : -.75); drawGas(sx + Math.cos(a) * R * .95, sy + Math.sin(a) * R * .95, br, 'o2'); }
     if (c.co2) { const a = ang; drawGas(sx + Math.cos(a) * R * .95, sy + Math.sin(a) * R * .95, br * 1.08, 'co2'); }
@@ -1206,14 +1215,14 @@ function oxDraw() {
     const x = fx + dx * e - dy / d * off, y = fy + dy * e + dx / d * off;
     const toCell = !!p.to.k, al = toCell ? 1 : (p.t > 1 ? Math.max(0, 1 - (p.t - 1) / .35) : 1);
     if (toCell && p.t >= 1) continue;
-    drawGas(C + x * k, C + y * k, 2.4 * k * (toCell ? 1 : 1 + .12 * Math.min(1, p.t)), p.type, al);
+    drawGas(C + x * k, C + y * k, 2.8 * k * (toCell ? 1 : 1 + .12 * Math.min(1, p.t)), p.type, al);
   }
   resetT(); lampGlow();
 }
 function oxDrawUI() {
   const X = (x) => C + x * k, P = (y) => C + y * k;
-  pill(X(-30), P(-41), 'AKCİĞER KILCALI', '#ff9fb8', { fs: 12.5 });
-  pill(X(30), P(-41), 'VÜCUT HÜCRELERİ', '#f3c7a6', { fs: 12.5 });
+  pill(X(-22), P(-38), 'AKCİĞER KILCALI', '#ff9fb8', { fs: 12 });
+  pill(X(22), P(-38), 'VÜCUT HÜCRELERİ', '#f3c7a6', { fs: 12 });
   pill(C, P(-12), 'Oksijen oranı zengin kan  →', '#ff3b55', { fs: 11.5 });
   pill(C, P(12), '←  Oksijen oranı düşük kan', '#7d8bff', { fs: 11.5 });
   drawTags();
@@ -1269,24 +1278,21 @@ function renderPane() {
     }
   } else if (m === 'yara') {
     const S = ['Damar duvarı zedelendi; kenar çizgisi kırıldı.', 'Alyuvarlar yırtıktan dışarı sızıyor: kan kaybı başladı.', 'Kan pulcukları yaraya doğru hareket edip birikiyor.', 'Kan pulcukları pıhtılaştı, zedelenen kısmı tıkadı: kan kaybı önlendi.'];
-    h = `<div class="p-head"><span class="zd-chip red">SENARYO</span><span class="p-step">400× · Damar kesiti</span></div>
-    <div class="p-title">Yaralanma ve pıhtılaşma</div>
-    <p class="p-text">Kan pulcukları, yaralanmalarda damarların iç yüzeyinde pıhtılaşır. <b>Damarı çiz</b> ve neler olduğunu izle.</p>
+    h = `<div class="p-head"><span class="zd-chip red">SENARYO</span><span class="p-ttl">Yaralanma ve pıhtılaşma</span><span class="p-step">400× · Damar kesiti</span></div>
+    <p class="p-text"><b>Damarı çiz</b>; yırtıktan sızan kanı ve kan pulcuklarının yarayı nasıl tıkadığını izle.</p>
     <div class="row"><button class="zd-btn red" id="cutBtn" ${Y.torn ? 'disabled' : ''}>${SVGI.scalpel}Damarı çiz</button><button class="zd-btn ghost sm" id="yRe" aria-label="Senaryoyu yeniden başlat">${ZD.I.restart}Yeniden</button></div>
     <ol class="steps">${S.map((s, i) => `<li class="${Y.step > i + 1 || (Y.step === 4 && i === 3) ? (i === 3 ? 'fin' : 'done') : Y.step === i + 1 ? 'act' : ''}"><b>${Y.step > i + 1 || (Y.step === 4) ? CHECK : i + 1}</b><span>${s}</span></li>`).join('')}</ol>
-    <div><div class="mrow"><span>Kan kaybı hızı</span><b id="yRateT">—</b></div><div class="zd-meter red"><i id="yRate"></i></div></div>
-    <div><div class="mrow"><span>Pıhtı oluşumu</span><b id="yClT">0%</b></div><div class="zd-meter amber"><i id="yCl"></i></div></div>`;
+    <div class="mgrid"><div><div class="mrow"><span>Kan kaybı hızı</span><b id="yRateT">—</b></div><div class="zd-meter red"><i id="yRate"></i></div></div>
+    <div><div class="mrow"><span>Pıhtı oluşumu</span><b id="yClT">0%</b></div><div class="zd-meter amber"><i id="yCl"></i></div></div></div>`;
   } else if (m === 'mikrop') {
-    h = `<div class="p-head"><span class="zd-chip green">SAVUNMA</span><span class="p-step">${MK.won ? 'Mikroplar yok edildi' : 'Mikroplar kana girdi'}</span></div>
-    <div class="p-title">Mikrop saldırısı</div>
+    h = `<div class="p-head"><span class="zd-chip green">SAVUNMA</span><span class="p-ttl">Mikrop saldırısı</span><span class="p-step">${MK.won ? 'Mikroplar yok edildi' : 'Mikroplar kana girdi'}</span></div>
     <p class="p-text">Akyuvarlar vücudun mikroplara karşı savunmasında görevlidir: mikropları sarar ve yok eder.</p>
-    <div class="row"><button class="zd-btn purple" id="callBtn">${SVGI.shield}Akyuvarları çağır</button>${MK.won ? `<button class="zd-btn ghost sm" id="mkRe">${ZD.I.restart}Yeni dalga</button>` : ''}</div>
-    <div class="mk-stats"><div><b id="mkM" style="color:#8be36a">0</b><span>Mikrop</span></div><div><b id="mkW" style="color:#c6a8ff">0</b><span>Akyuvar</span></div><div><b id="mkK">0</b><span>Yok edilen</span></div></div>
+    <div class="row"><button class="zd-btn purple" id="callBtn">${SVGI.shield}Akyuvarları çağır</button>${MK.won ? `<button class="zd-btn ghost sm" id="mkRe">${ZD.I.restart}Yeni dalga</button>` : ''}
+    <div class="mk-stats"><div><b id="mkM" style="color:#8be36a">0</b><span>Mikrop</span></div><div><b id="mkW" style="color:#c6a8ff">0</b><span>Akyuvar</span></div><div><b id="mkK">0</b><span>Yok edilen</span></div></div></div>
     <div class="chart"><canvas id="mkChart"></canvas><div class="legend"><span><i style="background:#8be36a"></i>Mikrop sayısı</span><span><i style="background:#c6a8ff"></i>Akyuvar sayısı</span></div></div>
     <div class="note" id="mkNote">${SVGI.book}<span><b>Kitaptan:</b> Hastalanan insanların kanındaki akyuvar sayısı artar.</span></div>`;
   } else if (m === 'oksijen') {
-    h = `<div class="p-head"><span class="zd-chip">MODEL</span><span class="p-step">Akciğer kılcalı ↔ Vücut hücreleri</span></div>
-    <div class="p-title">Oksijen taşıma</div>
+    h = `<div class="p-head"><span class="zd-chip">MODEL</span><span class="p-ttl">Oksijen taşıma</span><span class="p-step">Akciğer kılcalı ↔ Vücut hücreleri</span></div>
     <p class="p-quote">“Alyuvarlar, oksijen ve karbon dioksidin taşınmasında görevlidir.”</p>
     <div class="lg2">
       <div><svg class="sw" viewBox="0 0 30 30"><circle cx="15" cy="15" r="12" fill="#e8394e"/><circle cx="15" cy="15" r="5" fill="#ffb3aa" opacity=".5"/></svg><span><b>Oksijen oranı zengin kan:</b> alyuvar akciğerde O₂ alır, parlak kırmızı olur.</span></div>
@@ -1465,7 +1471,7 @@ function finishBagis() {
   $('#pstack').innerHTML = `<article class="pcard in" style="text-align:center"><span class="zd-chip green">8 KİŞİ DEĞERLENDİRİLDİ</span><h3 style="font-size:28px;font-weight:800;margin:10px 0 6px">${ok} doğru karar</h3>
   <p class="p-text">Uygun bağışçılar: ${PEOPLE.filter(p => evalP(p).every(e => e.ok)).map(p => p.ad).join(', ')}.</p>
   <div style="display:flex;justify-content:center;gap:6px;margin-top:12px;flex-wrap:wrap">${BG.order.map((pi, i) => `<div style="width:52px;height:52px;border-radius:50%;padding:2px;background:${BG.res[i] ? 'var(--green)' : 'var(--red)'}">${avatar(PEOPLE[pi], 'f' + i).replace('<svg ', '<svg style="width:100%;height:100%;border-radius:50%" ')}</div>`).join('')}</div></article>`;
-  $('#bNo').disabled = true; $('#bYes').disabled = true;
+  document.querySelector('.don-acts').style.display = 'none';
   renderSteps();
   setTimeout(() => ZD.result({ title: 'Kan bağışı uzmanı!', correct: ok, total: 8, score: st.score, time: timer.t, text: 'Kan bağışı, toplumsal dayanışmayı güçlendirir.', extra: `<div style="margin-top:14px">${stepsHTML()}</div>`, onReplay: () => restartMode() }), 900);
 }
@@ -1531,7 +1537,7 @@ $('#histBtn').onclick = () => {
 /* ---------------- Mod geçişi ---------------- */
 const FOUND_LBL = { tani: 'Bulunan', yara: 'Pıhtı', mikrop: 'Yok edilen', oksijen: 'O₂ teslim', bagis: 'Kart' };
 function setMode(m) {
-  st.mode = m; TAGS = []; ZD.hideHand();
+  st.mode = m; TAGS = []; ZD.hideHand(); if (st.started) timer.start();
   document.querySelectorAll('#modes button').forEach(b => { b.classList.toggle('on', b.dataset.m === m); b.setAttribute('aria-selected', b.dataset.m === m); });
   const lbl = document.querySelector('[data-stat="found"] .l'); if (lbl) lbl.textContent = FOUND_LBL[m];
   const bag = m === 'bagis'; labEl.hidden = bag; donEl.hidden = !bag;
@@ -1554,11 +1560,11 @@ function restartMode() {
   else setMode(st.mode);
 }
 const HELP = {
-  tani: { t: 'Hücreleri Tanı', s: ['Mikroskobun <b>odak düğmesini</b> çevir ya da <b>ODAK AYARI</b> kaydırıcısını sürükle; görüntü netleşsin.', 'Büyütmeyi <b>400×</b> veya <b>1000×</b> yap; hücreler büyüsün. 100× büyütmede geniş bir alan görürsün.', 'Yönerge kartında istenen hücreyi bul ve üzerine dokun. 8 bulgunun hepsini tamamla.', 'Sonunda sayım sonucunu incele: hangi hücre en fazla, hangisi en az?'] },
-  yara: { t: 'Yaralanma', s: ['Görüş alanında bir damarın kesiti var: üstte damarın içi, altta damarın dışı.', '<b>Damarı çiz</b> düğmesine bas; damar duvarı yırtılsın.', 'Alyuvarların dışarı sızmasını ve kan pulcuklarının yaraya toplanıp pıhtı oluşturmasını izle.', 'Paneldeki adımları ve kan kaybı göstergesini takip et.'] },
-  mikrop: { t: 'Mikrop Saldırısı', s: ['Yeşil, tüylü canlılar mikroplardır; zamanla çoğalırlar.', 'Akyuvarlar mikropları takip eder, sarar ve yok eder.', 'Mikroplar çoğalırsa <b>Akyuvarları çağır</b> düğmesine bas: akyuvar sayısı artar.', 'Grafikte mikrop ve akyuvar sayısının nasıl değiştiğini izle.'] },
-  oksijen: { t: 'Oksijen Taşıma', s: ['Alyuvarlar akciğer kılcalı ile vücut hücreleri arasında dolaşır.', 'Akciğerde O₂ alır, CO₂ bırakır: parlak kırmızı olur.', 'Vücut hücrelerinde O₂ bırakır, CO₂ alır: koyu mavimsi-mora döner.', '<b>Spor</b> seçeneğiyle kanın daha hızlı dolaştığını gör. Bir alyuvara dokunarak ne taşıdığını öğren.'] },
-  bagis: { t: 'Kan Bağışı', s: ['Her kartta bir kişinin bağışçı bilgi formu var.', 'Yaşı, kilosu, sağlık durumu ve son bağış zamanına bak.', 'Kitaptaki koşullara göre <b>Yapabilir</b> ya da <b>Yapamaz</b> düğmesine bas.', '8 kişiden sonra kan bağışının 4 adımını öğren.'] }
+  tani: { t: 'Hücreleri Tanı', s: ['Mikroskobun <strong>odak düğmesini</strong> çevir ya da <strong>ODAK AYARI</strong> kaydırıcısını sürükle; görüntü netleşsin.', 'Büyütmeyi <strong>400×</strong> veya <strong>1000×</strong> yap; hücreler büyüsün. 100× büyütmede geniş bir alan görürsün.', 'Yönerge kartında istenen hücreyi bul ve üzerine dokun. 8 bulgunun hepsini tamamla.', 'Sonunda sayım sonucunu incele: hangi hücre en fazla, hangisi en az?'] },
+  yara: { t: 'Yaralanma', s: ['Görüş alanında bir damarın kesiti var: üstte damarın içi, altta damarın dışı.', '<strong>Damarı çiz</strong> düğmesine bas; damar duvarı yırtılsın.', 'Alyuvarların dışarı sızmasını ve kan pulcuklarının yaraya toplanıp pıhtı oluşturmasını izle.', 'Paneldeki adımları ve kan kaybı göstergesini takip et.'] },
+  mikrop: { t: 'Mikrop Saldırısı', s: ['Yeşil, tüylü canlılar mikroplardır; zamanla çoğalırlar.', 'Akyuvarlar mikropları takip eder, sarar ve yok eder.', 'Mikroplar çoğalırsa <strong>Akyuvarları çağır</strong> düğmesine bas: akyuvar sayısı artar.', 'Grafikte mikrop ve akyuvar sayısının nasıl değiştiğini izle.'] },
+  oksijen: { t: 'Oksijen Taşıma', s: ['Alyuvarlar akciğer kılcalı ile vücut hücreleri arasında dolaşır.', 'Akciğerde O₂ alır, CO₂ bırakır: parlak kırmızı olur.', 'Vücut hücrelerinde O₂ bırakır, CO₂ alır: koyu mavimsi-mora döner.', '<strong>Spor</strong> seçeneğiyle kanın daha hızlı dolaştığını gör. Bir alyuvara dokunarak ne taşıdığını öğren.'] },
+  bagis: { t: 'Kan Bağışı', s: ['Her kartta bir kişinin bağışçı bilgi formu var.', 'Yaşı, kilosu, sağlık durumu ve son bağış zamanına bak.', 'Kitaptaki koşullara göre <strong>Yapabilir</strong> ya da <strong>Yapamaz</strong> düğmesine bas.', '8 kişiden sonra kan bağışının 4 adımını öğren.'] }
 };
 function showHelp() {
   const h = HELP[st.mode];
@@ -1578,7 +1584,7 @@ function layout(force) {
   const mob = innerWidth < 861, body = ui.body, cw = body.clientWidth - (mob ? 24 : 44);
   let S;
   if (mob) S = Math.min(cw, 460);
-  else { const ref = st.mode === 'bagis' ? donEl : labEl; const top = ref.getBoundingClientRect().top + scrollY; const availH = innerHeight - top - 48; S = Math.min(availH, cw - (innerWidth < 1100 ? 130 : 150) - 440 - 32, 640); }
+  else { const ref = st.mode === 'bagis' ? donEl : labEl; const top = ref.getBoundingClientRect().top + scrollY; const availH = innerHeight - top - 54; S = Math.min(availH, cw - (innerWidth < 1100 ? 130 : 150) - 440 - 32, 640); }
   S = Math.max(280, Math.floor(S));
   document.documentElement.style.setProperty('--S', S + 'px');
   const nSi = S - 32, nD = Math.min(2, window.devicePixelRatio || 1);
@@ -1629,7 +1635,7 @@ const INTRO_ART = `<svg class="intro-art" viewBox="0 0 230 96" aria-hidden="true
 ZD.intro({
   kicker: 'SİMÜLASYON · KANIN YAPISI', title: 'Kan Laboratuvarı', art: INTRO_ART,
   text: 'Bir damla kanı mikroskopla incele: plazma, alyuvar, akyuvar ve kan pulcuklarını tanı; yaralanmada, mikrop saldırısında ve oksijen taşınmasında görevlerini izle; kan bağışı koşullarını öğren.',
-  steps: ['Mikroskobun <b>odak düğmesini</b> çevirerek bulanık görüntüyü netleştir.', '<b>100× · 400× · 1000×</b> büyütmeler arasında geçiş yap.', 'Üstteki 5 moddan birini seç ve yönergeleri takip et.'],
+  steps: ['Mikroskobun <strong>odak düğmesini</strong> çevirerek bulanık görüntüyü netleştir.', '<strong>100× · 400× · 1000×</strong> büyütmeler arasında geçiş yap.', 'Üstteki 5 moddan birini seç ve yönergeleri takip et.'],
   start: 'Başla', onStart: () => { timer.start(); st.started = true; setTimeout(() => ZD.pointAt(knobEl, { ms: 3200 }), 350); }
 });
 </script></body></html>

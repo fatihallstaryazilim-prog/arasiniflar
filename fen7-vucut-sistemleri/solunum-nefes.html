@@ -24,7 +24,7 @@
   .tgl.dis{opacity:.4;pointer-events:none}
 
   .lp,.rp{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}
-  .mp{flex:1;min-height:0;display:flex;flex-direction:column;gap:10px;overflow:auto;scrollbar-width:thin}
+  .mp{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;overflow:auto;scrollbar-width:thin}
   .mp>.card{padding:14px 15px}
   .card{background:linear-gradient(180deg,rgba(26,48,76,.72),rgba(14,30,50,.72));border:1px solid var(--line);border-radius:18px;
     box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 34px rgba(0,0,0,.28)}
@@ -44,7 +44,7 @@
   .scene .part.okf{filter:url(#fOk)!important}
   .scene .part.badf{filter:url(#fBad)!important}
   #labels{transition:opacity .35s}
-  .scene.nolabels #labels{opacity:0;pointer-events:none}
+  .scene.nolabels #labels,.scene.mob #labels{opacity:0;pointer-events:none}
   .lbl rect{fill:rgba(7,20,37,.86);stroke:rgba(53,238,252,.55);stroke-width:1.3}
   .lbl text{fill:#eef6ff;font-size:16px;font-weight:700}
   .lbl text .sub{font-size:12.5px;font-weight:600}
@@ -60,7 +60,7 @@
 
   /* basılı tut butonu */
   .holdwrap{display:flex;flex-direction:column;gap:6px}
-  .hold{position:relative;width:100%;min-height:70px;border-radius:22px;overflow:hidden;display:flex;align-items:center;gap:12px;padding:10px 16px;
+  .hold{position:relative;width:100%;min-height:66px;border-radius:22px;overflow:hidden;display:flex;align-items:center;gap:12px;padding:10px 16px;
     background:linear-gradient(180deg,#1d4166,#10253e);border:2px solid rgba(73,243,255,.85);color:#fff;
     box-shadow:0 0 0 1px rgba(53,238,252,.25),0 0 22px rgba(53,238,252,.38),0 7px 0 rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.16);
     touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .14s var(--ease),box-shadow .2s,border-color .2s}
@@ -101,33 +101,37 @@
   .tree li span{color:#d6e4f3}
 
   /* antrenör */
-  .story{padding:11px 14px!important}
+  .story{padding:9px 13px!important}
   .story p{font-size:13.5px;line-height:1.45;color:#d6e4f3;margin-top:7px}
-  .ringwrap{position:relative;width:136px;height:136px;margin:0 auto}
+  .ringwrap{position:relative;width:120px;height:120px;margin:0 auto}
   .ringwrap svg{width:100%;height:100%}
   .ringwrap .trk{fill:none;stroke:rgba(255,255,255,.08);stroke-width:12}
   .ringwrap .trk2{fill:none;stroke-width:3;transition:stroke .25s}
   .ringwrap .arc{fill:none;stroke-width:12;stroke-linecap:round;transition:stroke .3s}
-  .ringwrap .rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-  .ringwrap .rc b{font-size:40px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+  .ringwrap .rc{position:absolute;inset:13px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;transition:background .25s}
+  .ringwrap .rc:hover{background:rgba(255,255,255,.04)}
+  .ringwrap .rc .go{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#3ff0a8,#16b979);color:#022a1a;box-shadow:0 0 18px rgba(47,227,155,.5),0 4px 0 rgba(0,0,0,.3)}
+  .ringwrap .rc .go svg{width:22px;height:22px;margin-left:3px}
+  .ringwrap .rc b{font-size:36px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
   .ringwrap .rc span{font-size:11.5px;font-weight:800;letter-spacing:.8px;margin-top:3px;max-width:96px;line-height:1.15}
-  .trsub{text-align:center;font-size:13px;color:#cfe0f2;min-height:42px;margin-top:4px;line-height:1.3}
+  .trsub{text-align:center;font-size:13px;color:#cfe0f2;min-height:36px;margin-top:4px;line-height:1.3}
   .trsub .st{display:inline-block;margin-top:4px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800}
   .trsub .st.ok{background:rgba(47,227,155,.15);color:var(--green)}
   .trsub .st.no{background:rgba(255,84,104,.15);color:#ff8a98}
-  .trsteps{display:flex;gap:6px;justify-content:center;margin-top:8px}
+  .trsteps{display:flex;gap:6px;justify-content:center;margin-top:5px}
   .trsteps span{white-space:nowrap;font-size:11px;font-weight:800;letter-spacing:.3px;padding:5px 7px;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid var(--line);color:var(--muted);transition:.25s}
   .trsteps span.on[data-k="in"]{color:#04262c;background:#35eefc;border-color:#35eefc}
   .trsteps span.on[data-k="hold"]{color:#3a2300;background:#ffbb3d;border-color:#ffbb3d}
   .trsteps span.on[data-k="out"]{color:#fff;background:#8f63ff;border-color:#b993ff}
-  .trrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+  .trrow{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
   .trrow .zd-btn{min-height:44px}
-  .heart{width:46px;height:46px;display:grid;place-items:center}
+  .heart{width:40px;height:40px;display:grid;place-items:center}
+  .heart svg{width:36px!important;height:34px!important}
   .heart svg{width:42px;height:40px;animation:hb 1s infinite;filter:drop-shadow(0 0 10px rgba(255,77,100,.55))}
   @keyframes hb{0%,100%{transform:scale(1)}12%{transform:scale(1.18)}24%{transform:scale(.98)}36%{transform:scale(1.1)}}
   .bpm b{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums}
   .bpm small{display:block;font-size:12px;font-weight:700}
-  .uy{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);font-weight:700;margin-top:8px}
+  .uy{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);font-weight:700;margin-top:6px}
   .uy .zd-meter{flex:1}
   .uy b{color:var(--text);min-width:40px;text-align:right}
 
@@ -146,7 +150,7 @@
   .task .acts{display:flex;gap:8px;margin-top:12px}
 
   /* ortam */
-  .opt{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+  .opt{display:flex;flex-direction:column;gap:5px;margin-bottom:7px}
   .opt .zd-seg{width:100%}
   .opt .zd-seg button{flex:1}
   .cnt{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -154,8 +158,24 @@
   .cnt b{display:block;font-size:26px;font-weight:900;line-height:1.05;color:var(--green);font-variant-numeric:tabular-nums}
   .cnt .bad b{color:#ff8a98}
   .cnt span{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.25;display:block;margin-top:2px}
-  .envmsg{font-size:13.5px;line-height:1.45;color:#d6e4f3;margin-top:10px}
-  .tips{display:grid;gap:7px}
+  .cnt2{display:grid;gap:5px}
+  .cnt2 div{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid var(--line);font-size:12.5px;font-weight:600;color:#c9d8ea}
+  .cnt2 b{margin-left:auto;font-size:20px;font-weight:900;color:var(--green);font-variant-numeric:tabular-nums}
+  .cnt2 .bad b{color:#ff8a98}
+  .cnt2 i{width:10px;height:10px;border-radius:50%;flex:none}
+  .cnt2 .dg{background:var(--green);box-shadow:0 0 8px var(--green)} .cnt2 .dr{background:#ff5468;box-shadow:0 0 8px #ff5468}
+  .envmsg{font-size:13.3px;line-height:1.42;color:#d6e4f3;margin-top:8px}
+  .tipc{padding:10px 12px!important}
+  .tiphd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .tdots{display:flex;gap:2px}
+  .tdots button{width:22px;height:22px;display:grid;place-items:center}
+  .tdots button::after{content:"";width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.18);transition:.25s}
+  .tdots button.on::after{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+  button.tip{width:100%;text-align:left;min-height:58px;cursor:pointer;padding:9px 11px}
+  .tip .tk{display:block;font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:1.4px;color:var(--cyan);margin-bottom:2px}
+  .tip.note .tk{color:var(--green)}
+  .tip.note{background:linear-gradient(180deg,rgba(47,227,155,.14),rgba(47,227,155,.05));border-color:rgba(47,227,155,.4);color:#d6f7e6}
+  .tip.note svg{color:var(--green)} .tip.note b{color:#7ff0c0}
   .tip{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:14px;background:rgba(0,0,0,.22);border:1px solid var(--line);font-size:13.5px;line-height:1.35;color:#d6e4f3}
   .tip svg{width:30px;height:30px;flex:none;color:var(--cyan)}
   .note{font-size:12.5px;line-height:1.45;color:#cfe9d6;padding:10px 12px;border-radius:14px;background:linear-gradient(180deg,rgba(47,227,155,.12),rgba(47,227,155,.05));border:1px solid rgba(47,227,155,.35)}
@@ -196,11 +216,13 @@
   .m-kesif [data-stat="s1"]{min-width:150px}
   /* duyarlı */
   @media (max-width:1100px){ .sim{grid-template-columns:250px minmax(0,1fr) 270px} }
+  @media (max-width:600px){ .scene{aspect-ratio:1/1} }
   @media (max-width:860px){
     .zd-body{padding:2px 10px 12px}
     .sim{grid-template-columns:minmax(0,1fr);height:auto;gap:10px}
-    .scene{aspect-ratio:820/680;height:auto}
+    .bar{order:0} .scene{order:1;aspect-ratio:820/680;height:auto} .lp{order:2} .rp{order:3}
     .lp .holdwrap{order:-1}
+    .zd-modal{place-items:start center;padding-top:24px}
     .mp{overflow:visible}
     #modeSeg{display:grid;grid-template-columns:1fr 1fr;width:100%;border-radius:18px}
     #modeSeg button{white-space:normal;line-height:1.2}
@@ -856,11 +878,12 @@ function drawArrows(){
 
 /* =====================  KANVAS: PARÇACIKLAR  ===================== */
 const cv=$('#cv'),cx=cv.getContext('2d'),scene=$('#scene');
-let VS=1,VOX=0,VOY=0,DPR=1,CW=0,CH=0;
+let VS=1,VOX=0,VOY=0,DPR=1,CW=0,CH=0,VB=[0,0,VW,VH],MOB=false;
 function resize(){
   const r=scene.getBoundingClientRect();DPR=Math.min(2,devicePixelRatio||1);CW=r.width;CH=r.height;
   cv.width=Math.round(r.width*DPR);cv.height=Math.round(r.height*DPR);
-  VS=Math.min(r.width/VW,r.height/VH);VOX=(r.width-VW*VS)/2;VOY=(r.height-VH*VS)/2;
+  const mob=innerWidth<=600;if(mob!==MOB){MOB=mob;VB=mob?[140,0,680,680]:[0,0,VW,VH];svg.setAttribute('viewBox',VB.join(' '));scene.classList.toggle('mob',mob);}
+  VS=Math.min(r.width/VB[2],r.height/VB[3]);VOX=(r.width-VB[2]*VS)/2-VB[0]*VS;VOY=(r.height-VB[3]*VS)/2-VB[1]*VS;
   const sp=$('#spiro'),sr=sp.getBoundingClientRect();sp.width=Math.round(sr.width*DPR);sp.height=Math.round(sr.height*DPR);
 }
 function sprite(core,glow,rim){const c=document.createElement('canvas');c.width=c.height=48;const g=c.getContext('2d');const gr=g.createRadialGradient(24,24,0,24,24,24);
@@ -893,20 +916,20 @@ function lerpCol(a,b,t){return `rgb(${a.map((v,i)=>Math.round(lerp(v,b[i],t))).j
 const DEOX=[91,108,255],OXY=[255,59,85];
 
 function stepParticles(dt){
-  const fl=S.flow,v=clamp(fl,-2.6,2.6)*360;
+  const fl=S.flow,v=clamp(fl,-2.6,2.6)*600;
   if(fl>.05){accIn+=fl*40*dt;while(accIn>=1&&parts.length<280){accIn--;spawnAir(Math.random()<.35?'o2':'air',false);}}
   else accIn=0;
   if(fl<-.05){accOut+=-fl*36*dt;while(accOut>=1&&parts.length<280){accOut--;spawnAir(Math.random()<.58?'co2':'air',true);}}
   else accOut=0;
   for(let i=parts.length-1;i>=0;i--){const p=parts[i];
     if(p.free){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.985;p.life-=dt*.75;}
-    else{p.s+=v*dt*(.8+.4*p.r);
+    else{const vv=p.kind==='co2'?(v>0?v*.12:v):(v<0?v*.12:v);p.s+=vv*dt*(.8+.4*p.r);
       if(p.s>=p.pa.len){p.s=p.pa.len;p.life-=dt*3.5;if(!p.abs&&p.kind!=='co2'){p.abs=1;magBoost=Math.min(3,magBoost+.12);}}
       else if(p.s<=0){p.free=true;const q=posAt(p.pa,0);p.x=q[0];p.y=q[1];p.vx=-60-Math.random()*50;p.vy=(Math.random()-.5)*40;}
       if(Math.abs(fl)<.04)p.life-=dt*.3;}
     if(p.life<=0)parts.splice(i,1);}
   /* toz */
-  if(S.mode==='ortam'&&S.air==='dirty'){while(dust.filter(d=>d.st==='air').length<42)spawnDust();}
+  if(S.mode==='ortam'&&S.air==='dirty'){while(dust.filter(d=>d.st==='air').length<32)spawnDust();}
   const E0=ENTRY[S.route];
   for(let i=dust.length-1;i>=0;i--){const d=dust[i];
     if(d.st==='air'){
@@ -918,7 +941,7 @@ function stepParticles(dt){
           d.trap=S.route==='nose'?Math.random()<.84:Math.random()<.14;d.trapAt=d.s+(S.route==='nose'?6+Math.random()*90:10+Math.random()*120);}}
       if(S.air!=='dirty'||S.mode!=='ortam'){d.life=(d.life??1)-dt*1.5;if(d.life<=0)dust.splice(i,1);}
     }else{
-      d.s+=v*dt*.92;const q=posAt(d.pa,d.s);d.x=q[0];d.y=q[1];
+      d.s+=(v<0?v*.1:v)*dt*.92;const q=posAt(d.pa,d.s);d.x=q[0];d.y=q[1];
       if(d.trap&&d.s>=d.trapAt){stuck.push({x:d.x+(Math.random()-.5)*5,y:d.y+(Math.random()-.5)*5,r:d.r,soot:d.soot});if(stuck.length>110)stuck.shift();S.trapped++;dust.splice(i,1);ortamStats();}
       else if(d.s>=d.pa.len-1){const t=d.pa.tip;dep.push({x:t.x+(Math.random()-.5)*12,y:t.y+(Math.random()-.5)*12,side:t.side,r:d.r*.9,soot:d.soot});if(dep.length>160)dep.shift();S.reached++;dust.splice(i,1);ortamStats();}
       else if(d.s<d.pa.entryS-2){d.st='air';}
@@ -1084,24 +1107,23 @@ function renderTrainer(){
   Object.assign(TR,{run:false,cyc:0,pi:-1,pt:0,m:[0,0,0],tot:[0,0,0],bpm:118,bpmT:118,time:0});
   setStats([['Döngü','0/3'],['Uyum','%0','cyan'],['Nabız','118'],['Süre','0:00']]);
   mp.innerHTML=`<div class="card story"><span class="zd-chip amber">DEFNE'NİN SAHNE HEYECANI</span>
-      <p>Sahneye çıkma sırası Defne'de: kalbi hızla atıyor, nefesi zorlanıyor. Doğru nefesle onu sakinleştir!</p></div>
-    <div class="card" style="padding:12px 14px">
+      <p>Sıra Defne'de: kalbi hızlı atıyor. Doğru nefesle onu sakinleştir!</p></div>
+    <div class="card" style="padding:10px 13px">
       <div class="ringwrap"><svg viewBox="0 0 160 160"><circle cx="80" cy="80" r="66" class="trk"/><circle cx="80" cy="80" r="74" class="trk2" id="trOk" stroke="rgba(255,255,255,.06)"/>
         <circle id="trArc" cx="80" cy="80" r="66" class="arc" stroke="#35eefc" transform="rotate(-90 80 80)" stroke-dasharray="414.7" stroke-dashoffset="414.7"/></svg>
-        <div class="rc"><b id="trSec">3</b><span id="trLbl" style="color:#8fa8c4">HAZIR MISIN?</span></div></div>
+        <button class="rc" id="trStart" aria-label="Antrenmanı başlat"><i class="go">${ZD.I.play}</i><span id="trLbl" style="color:#3ff0a8">BAŞLAT</span></button></div>
       <div class="trsub" id="trSub">3 döngü: burundan al → tut → yavaşça ver</div>
       <div class="trsteps"><span data-k="in">AL · 4 sn</span><span data-k="hold">TUT · 3-4 sn</span><span data-k="out">VER · 6 sn</span></div>
       <div class="uy"><span>Uyum</span><div class="zd-meter"><i id="trMeter"></i></div><b id="trUy">%0</b></div>
     </div>
     <div class="card trrow" style="padding:8px 12px"><div class="heart" id="trHeart">${HEART}</div>
-      <div class="bpm"><b id="trBpm">118</b> <span style="font-size:12px;color:var(--muted);font-weight:700">atım/dk</span><small id="trCalm" style="color:#ff8a98">Heyecan: yüksek</small></div>
-      <button class="zd-btn green sm" id="trStart">${ZD.I.play}Başlat</button></div>`;
-  $('#trStart').onclick=()=>{ZD.sfx('click');if(TR.run){TR.run=false;stopTimer();renderTrainer();return;}startTrainer();};
+      <div class="bpm"><b id="trBpm">118</b> <span style="font-size:12px;color:var(--muted);font-weight:700">atım/dk</span><small id="trCalm" style="color:#ff8a98">Heyecan: yüksek</small></div></div>`;
+  $('#trStart').onclick=()=>{ZD.sfx('click');if(TR.run){TR.run=false;stopTimer();renderTrainer();ZD.toast('Antrenman durduruldu','',1400);return;}startTrainer();};
   heartAnim();
 }
 function startTrainer(){
   Object.assign(TR,{run:true,cyc:0,pi:-1,pt:0,m:[0,0,0],tot:[0,0,0],bpm:118,bpmT:118,time:0,last:''});
-  $('#trStart').innerHTML=ZD.I.pause+'Durdur';$('#trStart').className='zd-btn ghost sm';
+  $('#trStart').innerHTML='<b id="trSec">3</b><span id="trLbl" style="color:#8fa8c4">HAZIRLAN</span>';$('#trStart').setAttribute('aria-label','Antrenmanı durdur');
   stopTimer();timer=new ZD.Timer(t=>{TR.time=t;ui.stat('s4',ZD.Timer.fmt(t));});timer.start();
   ZD.pointAt(holdBtn,{ms:2600});
 }
@@ -1132,13 +1154,13 @@ function trTick(dt){
     const c=$('#trCalm');if(c){c.textContent=b>104?'Heyecan: yüksek':b>90?'Heyecan: azalıyor':'Sakin ve hazır';c.style.color=b>104?'#ff8a98':b>90?'#ffbb3d':'#2fe39b';}}
 }
 function finishTrainer(){
-  TR.run=false;stopTimer();
+  TR.run=false;stopTimer();if(MOB)window.scrollTo({top:0,behavior:'smooth'});
   const sc=TR.m.map((m,i)=>TR.tot[i]?m/TR.tot[i]:0),avg=sc.reduce((a,b)=>a+b,0)/3,good=sc.filter(s=>s>=.7).length;
   TR.bpmT=Math.round(TR.bpmT);
   setTimeout(()=>ZD.result({title:avg>=.8?'Harika! Defne sakinleşti':avg>=.55?'Güzel! Defne rahatlıyor':'Biraz daha pratik',correct:good,total:3,score:Math.round(avg*100),time:TR.time,
     text:`Ortalama uyum: %${Math.round(avg*100)} · Nabız 118 → ${TR.bpmT} atım/dk.<br>Doğru nefes: göğüs yerine diyaframı hareket ettir; burundan alırken karnını şişir, 3-4 sn tut, verirken karnını yavaşça içe çek. Nefes vermeyi almaktan daha yavaş yap.`,
     onReplay:()=>{renderTrainer();startTrainer();}}),500);
-  const b=$('#trStart');if(b){b.innerHTML=ZD.I.restart+'Yeniden';b.className='zd-btn green sm';}
+  const b=$('#trStart');if(b){b.innerHTML=`<i class="go">${ZD.I.restart}</i><span style="color:#3ff0a8">TEKRAR</span>`;b.setAttribute('aria-label','Antrenmanı yeniden başlat');}
 }
 
 /* ---------- Görevler ---------- */
@@ -1182,7 +1204,7 @@ function taskTick(){
   if(T.act==='in'&&S.holding&&S.b>=.85)taskCorrect(null);
   if(T.act==='out'){if(S.b>=.6)G.armed=true;if(G.armed&&!S.holding&&S.b<=.15)taskCorrect(null);}
 }
-function finishTasks(){const t=timer?timer.t:0;stopTimer();$$('#tkDots i').forEach((d,i)=>d.className=G.res[i]?'ok':'late');
+function finishTasks(){if(MOB)window.scrollTo({top:0,behavior:'smooth'});const t=timer?timer.t:0;stopTimer();$$('#tkDots i').forEach((d,i)=>d.className=G.res[i]?'ok':'late');
   ZD.result({title:G.first>=7?'Solunum ustası!':G.first>=5?'Çok iyi!':'Görevler tamamlandı',correct:G.first,total:8,score:G.score,time:t,
     text:'Burun → yutak → gırtlak → soluk borusu → bronş → bronşçuk → alveol. Soluk alırken diyafram kasılıp düzleşir; soluk verirken gevşeyip kubbeleşir.',onReplay:()=>renderTasks()});}
 
@@ -1191,33 +1213,38 @@ const ICO={
   win:`<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="16" height="22" rx="2"/><path d="M13 5v22M5 16h16"/><path d="M24 11c3 0 4 2 4 3M24 17h5M24 22c3 0 4-2 4-3"/></svg>`,
   mask:`<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12c4-2 14-2 18 0v6c0 5-4 8-9 8s-9-3-9-8Z"/><path d="M7 14H3c0 4 2 6 5 6M25 14h4c0 4-2 6-5 6M11 17h10M12 21h8"/></svg>`,
   tree:`<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="12" r="8"/><path d="M16 20v9M12 29h8M16 16l-3-3M16 18l4-4"/></svg>`,
+  leaf:`<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 26C6 13 14 6 27 5c0 13-7 21-19 21Z"/><path d="M6 26 18 14"/></svg>`,
   nosmoke:`<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="13"/><rect x="7" y="15" width="18" height="5" rx="1"/><path d="M21 15v5M7 25 25 7"/></svg>`
 };
+const TIPS_H=[{ic:'win',tx:'Uzun süre kalınan kapalı mekânları belirli aralıklarla havalandır.'},{ic:'mask',tx:'Kirli ve tozlu ortamlardan uzak dur; tozlu ortamlarda maske kullan.'},
+  {ic:'tree',tx:'Açık ve temiz havada yürüyüş ya da egzersiz yap: akciğerler ve solunum kasları güçlenir.'},{ic:'nosmoke',tx:'Tütün ürünlerinden uzak dur: sadece solunum değil dolaşım sistemine de zarar verir.'},
+  {ic:'leaf',note:1,tx:'<b>Yeşilay</b> 5 Mart 1920\'de <i>Hilâl-i Ahdar</i> adıyla kuruldu. Sigarayı bırakmak isteyenler <b>ALO 171</b> Sigara Bırakma Danışma Hattı\'nı arayabilir.'}];
 function renderOrtam(restart){
   if(restart){S.trapped=0;S.reached=0;dust.length=0;stuck.length=0;dep.length=0;}
   setStats([['Hava',S.air==='clean'?'Temiz':'Kirli',S.air==='clean'?'green':''],['Yol',S.route==='nose'?'Burun':'Ağız'],['Tutulan',S.trapped,'green'],['Ulaşan',S.reached,'']]);
   mp.innerHTML=`<div class="card env">
-      <div class="opt"><span class="lbl-s">Hava</span><div class="zd-seg" id="airSeg"><button data-v="clean">Temiz hava</button><button data-v="dirty">Kirli hava</button></div></div>
-      <div class="opt"><span class="lbl-s">Nefes yolu</span><div class="zd-seg" id="routeSeg"><button data-v="nose">Burundan</button><button data-v="mouth">Ağızdan</button></div></div>
-      <div class="cnt"><div><b id="cTrap">${S.trapped}</b><span>Burunda / ağızda tutulan</span></div><div class="bad"><b id="cReach">${S.reached}</b><span>Akciğere ulaşan kirletici</span></div></div>
+      <div class="opt"><div class="zd-seg" id="airSeg" aria-label="Hava seçimi"><button data-v="clean">Temiz hava</button><button data-v="dirty">Kirli hava</button></div></div>
+      <div class="opt"><div class="zd-seg" id="routeSeg" aria-label="Nefes yolu seçimi"><button data-v="nose">Burundan</button><button data-v="mouth">Ağızdan</button></div></div>
+      <div class="cnt2"><div><i class="dg"></i><span>Burunda / ağızda tutulan</span><b id="cTrap">${S.trapped}</b></div><div class="bad"><i class="dr"></i><span>Akciğere ulaşan kirletici</span><b id="cReach">${S.reached}</b></div></div>
       <p class="envmsg" id="envMsg"></p></div>
-    <div class="tips">
-      <div class="tip">${ICO.win}<span>Uzun süre kalınan kapalı mekânları havalandır.</span></div>
-      <div class="tip">${ICO.mask}<span>Kirli, tozlu ortamlardan uzak dur; gerekirse maske kullan.</span></div>
-      <div class="tip">${ICO.tree}<span>Temiz havada yürüyüş ve egzersiz yap.</span></div>
-      <div class="tip">${ICO.nosmoke}<span>Tütün ürünlerinden uzak dur: solunuma da dolaşıma da zarar verir.</span></div></div>
-    <div class="note"><b>Yeşilay</b>, 5 Mart 1920'de Dr. Mazhar Osman Uzman ve arkadaşlarınca <i>Hilâl-i Ahdar</i> adıyla kuruldu. Sigarayı bırakmak isteyenler <b>ALO 171</b> Sigara Bırakma Danışma Hattı'nı arayabilir.</div>`;
+    <button class="tip card" id="tipBox" aria-label="Sağlık önerisi: sonrakini göster"></button>`;
   const segSync=()=>{$$('#airSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.air));$$('#routeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.route));};
   $$('#airSeg button').forEach(b=>b.onclick=()=>{ZD.sfx('click');S.air=b.dataset.v;segSync();envUpd();});
   $$('#routeSeg button').forEach(b=>b.onclick=()=>{ZD.sfx('click');S.route=b.dataset.v;segSync();envUpd();updMouth();});
   segSync();envUpd();updMouth();
+  $('#tipBox').onclick=()=>{ZD.sfx('click');showTip(tipI+1);};showTip(0);
 }
+let tipI=0,tipT=0;
+function showTip(i){tipI=(i+TIPS_H.length)%TIPS_H.length;const t=TIPS_H[tipI],bx=$('#tipBox');if(!bx)return;bx.className='tip'+(t.note?' note':'');
+  bx.innerHTML=`${ICO[t.ic]}<span><em class="tk">SAĞLIK ÖNERİSİ · ${tipI+1}/${TIPS_H.length}</em>${t.tx}</span>`;bx.classList.remove('zd-fade-in');void bx.offsetWidth;bx.classList.add('zd-fade-in');
+  tipT=0;}
+
 function updMouth(){E.mouthOpen.setAttribute('opacity',S.mode==='ortam'&&S.route==='mouth'?1:0);}
 function envUpd(){
   E.envDirty.setAttribute('opacity',S.air==='dirty'?1:0);E.envClean.setAttribute('opacity',S.air==='dirty'?0:1);
-  const m=$('#envMsg');if(m)m.innerHTML=S.air==='clean'?'Temiz havada toz ve is parçacığı çok azdır. <b>Kirli hava</b> (trafik, fabrika) seçerek farkı gözle.':
-    S.route==='nose'?'Burundan nefes: burundaki <b>kıllar</b> ve <b>mukus</b> toz parçacıklarının çoğunu tutar; hava ayrıca nemlenir ve ısınır.':
-    'Ağızdan nefes: kıllar ve mukus devreye girmez; kirleticiler akciğerlere <b>daha çok</b> ulaşır. Ağızdan değil, burundan nefes almalıyız.';
+  const m=$('#envMsg');if(m)m.innerHTML=S.air==='clean'?'Temiz havada toz ve is çok azdır. <b>Kirli hava</b> (trafik, fabrika) seçip farkı gözle.':
+    S.route==='nose'?'Burundaki <b>kıllar</b> ve <b>mukus</b> tozun çoğunu tutar; hava nemlenir ve ısınır.':
+    'Ağızda kıllar ve mukus yok: kirleticiler akciğerlere <b>daha çok</b> ulaşır. Burundan nefes al!';
   ortamStats();
 }
 function ortamStats(){if(S.mode!=='ortam')return;setStats([['Hava',S.air==='clean'?'Temiz':'Kirli',S.air==='clean'?'green':''],['Yol',S.route==='nose'?'Burun':'Ağız'],['Tutulan',S.trapped,'green'],['Ulaşan',S.reached,S.reached?'':'']]);
@@ -1232,7 +1259,7 @@ function onPart(part){
   const k=PART2INFO(part);
   if(!S.visited.has(part==='akciger-sol'?'akciger':k)){S.visited.add(part==='akciger-sol'?'akciger':k);
     if(S.mode==='kesif'){ui.stat('s4',S.visited.size+'/10',true);if(S.visited.size===10){setTimeout(()=>{ZD.sfx('win');ZD.confetti();ZD.toast('Tebrikler! Solunum sisteminin tüm yapılarını keşfettin.','good',3000);},400);}}}
-  if(S.mode==='kesif')showInfo(part);
+  if(S.mode==='kesif'){showInfo(part);if(MOB)ZD.toast(`<b>${PARTNAME(part)}</b> · ${INFO[k].short}`,'',2600);}
   else ZD.toast(`<b>${PARTNAME(part)}</b> · ${INFO[k].short}`,'',2800);
 }
 
@@ -1265,6 +1292,7 @@ function loop(now){
   /* vokal kordlar: nefeste açık */
   stepParticles(dt);drawParticles();drawSpiro(dt);stUpdate(now);
   trTick(dt);taskTick();
+  if(S.mode==='ortam'){tipT+=dt;if(tipT>6)showTip(tipI+1);}
   /* gösterge */
   $('#holdFill').style.width=(S.b*100).toFixed(1)+'%';
   const vol=Math.round(S.b*100);$('#volV').textContent='%'+vol;if(S.mode==='kesif')ui.stat('s2','%'+vol);
