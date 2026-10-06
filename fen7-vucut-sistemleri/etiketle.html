@@ -1,0 +1,959 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Organları Etiketle · Vücudumuzdaki Sistemler</title>
+<link rel="stylesheet" href="assets/zd.css">
+<style>
+/* ---------- Oyun yerleşimi ---------- */
+.eg{padding:4px 20px 20px;height:clamp(440px,calc(100vh - 176px),860px);display:grid;grid-template-columns:minmax(0,1fr) 262px;gap:18px}
+.eg-view{position:relative;overflow:hidden;border-radius:20px;touch-action:none;cursor:grab;
+  background:radial-gradient(70% 80% at 50% 45%,rgba(53,140,220,.10),transparent 70%)}
+.eg-view.panning{cursor:grabbing}
+.eg-view svg.art{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.eg-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.eg-lines line{stroke:rgba(178,204,232,.62);stroke-width:1.8}
+.eg-lines circle{fill:#d5e6f7;stroke:#0b1a2d;stroke-width:1.5}
+.eg-lines line.f{stroke:#35eefc;stroke-width:2.2}
+.eg-lines circle.f{fill:#35eefc}
+.eg-lines line.h{stroke:#c6a8ff;stroke-width:2.4}
+.eg-lines circle.h{fill:#c6a8ff}
+.eg-boxes{position:absolute;inset:0;pointer-events:none}
+
+/* numaralı etiket kutuları */
+.lbx{position:absolute;left:0;top:0;transform:translate(-50%,-50%);pointer-events:auto;font-size:var(--fs,15px);
+  font-family:inherit;color:inherit;padding:0;border:0;background:none;cursor:pointer;z-index:2}
+.lbx::after{content:"";position:absolute;inset:-7px}
+.lbi{display:block;padding:.5em .9em;min-width:4.9em;border-radius:.6em;white-space:nowrap;text-align:center;
+  font-weight:700;letter-spacing:.2px;line-height:1.15;color:#e3eefa;
+  background:linear-gradient(180deg,rgba(30,50,76,.94),rgba(15,29,47,.94));
+  border:1.5px solid rgba(150,190,232,.42);
+  box-shadow:0 6px 16px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.08);
+  transition:background .25s,border-color .25s,color .25s,box-shadow .25s}
+.lbi small{font-weight:500;font-size:.8em;opacity:.7}
+.lbx:hover .lbi,.lbx:focus-visible .lbi{border-color:rgba(53,238,252,.75)}
+.lbx:focus-visible{outline:none}
+.lbx.over .lbi{border-color:#35eefc;background:linear-gradient(180deg,#123a4e,#0c2638);box-shadow:0 0 0 3px rgba(53,238,252,.35),0 0 24px rgba(53,238,252,.55)}
+.lbx.filled .lbi{background:linear-gradient(180deg,#ffffff,#e6eef7);color:#0b1626;border-color:#fff;box-shadow:0 6px 16px rgba(0,0,0,.45),0 0 14px rgba(53,238,252,.25)}
+.lbx.sel .lbi{box-shadow:0 0 0 3px #35eefc,0 0 26px rgba(53,238,252,.7)}
+.lbx.justok .lbi{animation:egpop .6s var(--spring)}
+@keyframes egpop{0%{transform:scale(.7)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
+.lbx.bad .lbi{border-color:var(--red);background:linear-gradient(180deg,#5a1527,#3a0d19);color:#ffd5db;box-shadow:0 0 0 3px rgba(255,84,104,.35),0 0 20px rgba(255,84,104,.5)}
+.lbx.blink .lbi{animation:egblink .5s ease-in-out infinite alternate}
+@keyframes egblink{from{border-color:rgba(150,190,232,.4);box-shadow:0 0 0 0 rgba(185,147,255,0)}to{border-color:#e0d0ff;background:linear-gradient(180deg,#4b33a0,#2d1e66);box-shadow:0 0 0 5px rgba(185,147,255,.5),0 0 28px rgba(185,147,255,.85)}}
+.eg-view.cmp .lbi{min-width:0;padding:.3em .55em;border-radius:.5em}
+.eg-view.cmp .lbx::after{inset:-10px}
+
+/* yanlış ipucu balonu */
+.eg-bub{position:absolute;z-index:5;max-width:280px;padding:10px 13px;border-radius:12px;font-size:13.5px;line-height:1.45;font-weight:500;color:#ffe3e7;
+  background:linear-gradient(180deg,#3d1220,#2a0b16);border:1.5px solid rgba(255,84,104,.8);box-shadow:0 0 20px rgba(255,84,104,.35),0 12px 30px rgba(0,0,0,.5);
+  pointer-events:none;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .3s var(--ease)}
+.eg-bub.show{opacity:1;transform:none}
+.eg-bub b{color:#fff}
+
+/* görünüm ipucu + yakınlaştırma */
+.eg-zoom{position:absolute;left:12px;top:10px;z-index:3;display:flex;align-items:center;gap:8px;padding:6px 11px;border-radius:999px;
+  background:rgba(5,14,26,.62);border:1px solid var(--line);font-size:12px;color:var(--muted);pointer-events:none}
+.eg-zoom svg{width:15px;height:15px;color:var(--cyan)}
+.eg-zoom b{color:var(--text);font-weight:700;font-variant-numeric:tabular-nums}
+
+/* yan panel */
+.eg-side{display:flex;flex-direction:column;justify-content:center;gap:14px;min-width:0}
+.eg-seg{display:grid!important;grid-template-columns:1fr 1fr;border-radius:16px!important;padding:4px;gap:3px!important}
+.eg-seg button{border-radius:12px!important;padding:8px 6px!important;font-size:12.5px!important}
+.eg-cap{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:1.8px;color:var(--muted);font-weight:700;text-transform:uppercase}
+.eg-cap b{color:var(--cyan);letter-spacing:.5px}
+.eg-card{display:flex;align-items:center;gap:12px;padding:15px 16px;border-radius:16px;min-height:70px;
+  background:linear-gradient(180deg,#ffffff,#e8f0f8);color:#0b1626;font-weight:800;font-size:21px;line-height:1.15;
+  border:2.5px solid #35eefc;box-shadow:0 0 0 4px rgba(53,238,252,.16),0 0 26px rgba(53,238,252,.45),0 12px 26px rgba(0,0,0,.4);
+  cursor:grab;user-select:none;-webkit-user-select:none}
+.eg-card:active{cursor:grabbing}
+.eg-card .grip{width:14px;height:26px;flex:none;color:#8193a8}
+.eg-card .nm{display:flex;flex-direction:column;min-width:0}
+.eg-card .nm small{font-size:13px;font-weight:600;color:#5d6f86;margin-top:2px}
+.eg-card.in{animation:egcard .45s var(--spring)}
+@keyframes egcard{from{transform:translateX(26px) scale(.92);opacity:0}to{transform:none;opacity:1}}
+.eg-card.empty{justify-content:center;color:#5d6f86;font-size:15px;cursor:default;border-color:rgba(53,238,252,.4)}
+.eg-btns{display:grid;gap:11px}
+.eg-btns .zd-btn{width:100%;padding:13px 16px;font-size:16px}
+.eg-btns .zd-btn svg{width:19px;height:19px}
+.eg-park{display:flex;flex-wrap:wrap;gap:6px;align-items:center;min-height:0}
+.eg-park:empty{display:none}
+.eg-park span{font-size:11px;letter-spacing:1.4px;color:var(--muted);font-weight:700;text-transform:uppercase;width:100%}
+.eg-park button{padding:7px 11px;border-radius:999px;font-size:12.5px;font-weight:600;color:#dbe8f6;background:rgba(255,255,255,.06);border:1px dashed rgba(150,190,232,.45)}
+.eg-park button:hover{border-color:var(--cyan);color:#fff}
+.eg-info{padding:18px 18px 16px}
+.eg-info h3{font-size:20px}
+.eg-info h3 i{font-style:normal;font-size:13px;font-weight:800;color:#05262c;background:var(--cyan);border-radius:8px;padding:3px 8px}
+.eg-info p{margin-top:8px}
+.eg-legend{display:none}
+
+/* sonuç sonrası */
+.zd-howto li strong{color:#fff;font-weight:700}
+.eg-done{font-size:13.5px;color:var(--muted);line-height:1.5;text-align:center}
+
+/* ---------- Set seçici ---------- */
+.eg-pick{padding:6px 22px 26px}
+.eg-pick .lead{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:4px 2px 16px}
+.eg-pick .lead h2{font-size:22px;font-weight:800}
+.eg-pick .lead p{color:var(--muted);font-size:14px;margin-top:4px}
+.eg-pgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.eg-pc{text-align:left;padding:12px;display:flex;flex-direction:column;gap:10px;transition:transform .25s var(--ease),border-color .25s,box-shadow .25s}
+.eg-pc:hover,.eg-pc:focus-visible{transform:translateY(-4px);border-color:rgba(53,238,252,.6);box-shadow:0 0 0 1px rgba(53,238,252,.35),0 0 30px rgba(53,238,252,.25),0 18px 40px rgba(0,0,0,.4);outline:none}
+.eg-pc .th .lgd{display:none}
+.eg-pc .th{aspect-ratio:4/3;border-radius:14px;overflow:hidden;background:radial-gradient(80% 90% at 50% 45%,rgba(53,140,220,.16),rgba(4,12,22,.6));border:1px solid var(--line)}
+.eg-pc .th svg{width:100%;height:100%}
+.eg-pc h3{font-size:18px;font-weight:800}
+.eg-pc .mt{display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--muted)}
+.eg-pc .go{display:inline-flex;align-items:center;gap:6px;color:var(--cyan);font-weight:700}
+.eg-pc .go svg{width:16px;height:16px}
+
+/* ---------- Orta ekranlar ---------- */
+@media (max-width:1100px){ .eg{grid-template-columns:minmax(0,1fr) 230px;gap:14px} .eg-card{font-size:19px} }
+
+/* ---------- Telefon ---------- */
+@media (max-width:760px){
+  .eg{grid-template-columns:1fr;height:auto;padding:2px 10px 14px;gap:12px}
+  .eg-view{aspect-ratio:840/615;height:auto;border-radius:14px}
+  .eg-side{justify-content:flex-start;gap:10px}
+  .eg-seg{order:5;grid-template-columns:repeat(4,1fr)}
+  .eg-btns{grid-template-columns:1fr 1fr;gap:9px}
+  .eg-btns .zd-btn{padding:11px 10px;font-size:14px}
+  .eg-card{font-size:18px;min-height:58px;padding:11px 14px}
+  .eg-legend{display:grid;grid-template-columns:1fr 1fr;gap:6px;order:4}
+  .eg-legend button{display:flex;align-items:center;gap:8px;min-height:40px;padding:6px 10px;border-radius:12px;text-align:left;font-size:12.5px;font-weight:600;color:var(--muted);background:rgba(0,0,0,.25);border:1px solid var(--line)}
+  .eg-legend button b{flex:none;min-width:26px;height:24px;border-radius:7px;display:grid;place-items:center;font-size:12px;background:rgba(255,255,255,.08);color:#e3eefa}
+  .eg-legend button.filled{color:#fff;border-color:rgba(53,238,252,.45)}
+  .eg-legend button.filled b{background:#fff;color:#0b1626}
+  .eg-legend button.over{border-color:var(--cyan)}
+  .eg-legend button.blink{animation:egblink .5s ease-in-out infinite alternate}
+  .eg-zoom{display:none}
+  .eg-pick{padding:4px 12px 18px}
+}
+</style></head>
+<body><div id="app"></div><script src="assets/zd.js"></script><script>
+(function(){
+'use strict';
+const W = 1000, H = 600;
+const $ = ZD.$, $$ = ZD.$$, clamp = ZD.clamp;
+
+/* ======================================================================
+   Renk / SVG yardımcıları
+   ====================================================================== */
+function hx(c){ c = c.replace('#',''); return [0,2,4].map(i => parseInt(c.substr(i,2),16)); }
+function mix(a,b,t){ const A = hx(a), B = hx(b); return '#' + A.map((v,i) => Math.round(v + (B[i]-v)*t).toString(16).padStart(2,'0')).join(''); }
+
+function K(p){
+  const u = id => `url(#${p}${id})`;
+  const G = [];
+  const vol = (id, c1, c2, cx = .36, cy = .3) => {
+    G.push(`<radialGradient id="${p}${id}" cx="${cx}" cy="${cy}" r=".8" fx="${cx-.05}" fy="${cy-.07}"><stop offset="0" stop-color="${mix(c1,'#ffffff',.5)}"/><stop offset=".28" stop-color="${c1}"/><stop offset=".8" stop-color="${c2}"/><stop offset="1" stop-color="${mix(c2,'#000000',.42)}"/></radialGradient>`);
+    return u(id);
+  };
+  const raw = s => { G.push(s); };
+  const blob = (d, fill, edge, extra = '') =>
+    `<path d="${d}" fill="${fill}" stroke="${edge}" stroke-width="1.6" stroke-linejoin="round"/>${extra}<path d="${d}" fill="none" stroke="${u('rim')}" stroke-width="2.4" stroke-linejoin="round"/>`;
+  const spec = (cx, cy, rx, ry, rot = 0, o = .6) =>
+    `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${u('spec')}" opacity="${o}" transform="rotate(${rot} ${cx} ${cy})"/>`;
+  const tube = (d, w, c1, c2) => {
+    const dk = mix(c2,'#000000',.38), lt = mix(c1,'#ffffff',.6);
+    return `<path d="${d}" fill="none" stroke="${dk}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`+
+      `<path d="${d}" fill="none" stroke="${c2}" stroke-width="${(w*.8).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`+
+      `<path d="${d}" fill="none" stroke="${c1}" stroke-width="${(w*.48).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round" transform="translate(${(-w*.09).toFixed(2)} ${(-w*.09).toFixed(2)})"/>`+
+      `<path d="${d}" fill="none" stroke="${lt}" stroke-width="${Math.max(1,w*.15).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round" opacity=".8" transform="translate(${(-w*.2).toFixed(2)} ${(-w*.2).toFixed(2)})"/>`;
+  };
+  const body = (d, o = 1, top = false) =>
+    `<g opacity="${o}" mask="${u(top ? 'fm2' : 'fm')}"><path d="${d}" fill="${u('bodyF')}"/><path d="${d}" fill="${u('grid')}"/><path d="${d}" fill="${u('bodyG')}"/>`+
+    `<path d="${d}" fill="none" stroke="#35eefc" stroke-opacity=".32" stroke-width="8" filter="${u('blur')}"/><path d="${d}" fill="none" stroke="${u('bodyR')}" stroke-width="1.8"/></g>`;
+  const defs = () => `<defs>
+    <filter id="${p}ds" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000610" flood-opacity=".55"/></filter>
+    <filter id="${p}blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
+    <filter id="${p}gl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="${p}hl" x="-60%" y="-60%" width="220%" height="220%"><feMorphology in="SourceAlpha" operator="dilate" radius="2" result="d"/><feGaussianBlur in="d" stdDeviation="6" result="b"><animate attributeName="stdDeviation" values="3;11;3" dur="1.1s" repeatCount="indefinite"/></feGaussianBlur><feFlood flood-color="#c6a8ff"/><feComposite in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="${p}sel" x="-60%" y="-60%" width="220%" height="220%"><feMorphology in="SourceAlpha" operator="dilate" radius="2" result="d"/><feGaussianBlur in="d" stdDeviation="7" result="b"/><feFlood flood-color="#35eefc"/><feComposite in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="${p}ok" x="-60%" y="-60%" width="220%" height="220%"><feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/><feGaussianBlur in="d" stdDeviation="8" result="b"/><feFlood flood-color="#2fe39b"/><feComposite in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <radialGradient id="${p}spec"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".45" stop-color="#fff" stop-opacity=".3"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <linearGradient id="${p}rim" x1="0" y1="0" x2=".85" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".32" stop-color="#fff" stop-opacity=".2"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></linearGradient>
+    <linearGradient id="${p}bodyF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d4166" stop-opacity=".55"/><stop offset="1" stop-color="#0c2136" stop-opacity=".4"/></linearGradient>
+    <radialGradient id="${p}bodyG" cx=".5" cy=".42" r=".6"><stop offset="0" stop-color="#3d8fd6" stop-opacity=".2"/><stop offset="1" stop-color="#3d8fd6" stop-opacity="0"/></radialGradient>
+    <linearGradient id="${p}bodyR" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5ff4ff" stop-opacity=".95"/><stop offset=".5" stop-color="#35eefc" stop-opacity=".25"/><stop offset="1" stop-color="#5ff4ff" stop-opacity=".95"/></linearGradient>
+    <pattern id="${p}grid" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M16 0H0V16" fill="none" stroke="#7fd8ff" stroke-opacity=".08" stroke-width="1"/></pattern>
+    <linearGradient id="${p}fade" x1="0" y1="0" x2="0" y2="1"><stop offset=".86" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="${p}fade2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".1" stop-color="#fff"/><stop offset=".86" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <linearGradient id="${p}fadeT" gradientUnits="userSpaceOnUse" x1="0" y1="-12" x2="0" y2="40"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient>
+    <mask id="${p}ft" maskUnits="userSpaceOnUse" x="-20" y="-20" width="1040" height="640"><rect x="-20" y="-20" width="1040" height="640" fill="${u('fadeT')}"/></mask>
+    <mask id="${p}fm2" maskUnits="userSpaceOnUse" x="-20" y="-20" width="1040" height="640"><rect x="-20" y="-20" width="1040" height="640" fill="${u('fade2')}"/></mask>
+    <mask id="${p}fm" maskUnits="userSpaceOnUse" x="-20" y="-20" width="1040" height="640"><rect x="-20" y="-20" width="1040" height="640" fill="${u('fade')}"/></mask>
+    ${G.join('')}</defs>`;
+  return { p, u, vol, raw, blob, spec, tube, body, defs };
+}
+const og = (k, id, inner, shadow = true) => `<g data-org="${id}">${shadow ? `<g filter="${k.u('ds')}">${inner}</g>` : inner}</g>`;
+
+/* Profil baş + önden gövde silueti */
+const HB = 'M500,14 C536,12 556,36 554,72 C553,100 543,120 532,134 C526,144 526,162 532,180 C560,200 620,206 650,220 C668,230 676,250 674,276 L650,302 C656,350 642,410 640,452 C640,500 660,545 664,620 L336,620 C340,545 360,500 360,452 C358,410 344,350 350,302 L326,276 C324,250 332,232 350,224 C380,210 440,206 458,196 C466,188 468,176 468,162 C462,156 454,154 448,150 C442,146 440,140 443,134 C438,130 440,125 436,121 C433,118 433,114 436,111 L432,106 C424,105 417,99 421,92 C425,86 431,78 433,70 C434,62 434,54 437,48 C446,26 470,15 500,14 Z';
+const FACE = `<path d="M443,64 C448,60 455,60 459,64 C454,67 448,67 443,64Z" fill="#35eefc" opacity=".28"/><path d="M520,70 C531,66 537,80 533,92 C530,100 523,100 521,95" fill="none" stroke="#35eefc" stroke-opacity=".3" stroke-width="2" stroke-linecap="round"/>`;
+
+/* ======================================================================
+   SET 1 · SİNDİRİM
+   ====================================================================== */
+function serp(xa, xb, y0, rows, dy, amp){
+  let d = `M${xa},${y0}`, y = y0, a = xa, b = xb;
+  for (let r = 0; r < rows; r++){
+    const n = 4;
+    for (let i = 1; i <= n; i++){
+      const x = a + (b-a)*i/n, cx = a + (b-a)*(i-.5)/n, am = amp * (.65 + .35*Math.sin(i*1.7 + r*2.3));
+      d += ` Q${cx.toFixed(1)},${(y + ((i+r)%2 ? am : -am)).toFixed(1)} ${x.toFixed(1)},${y}`;
+    }
+    if (r < rows-1){
+      const yn = y + dy, s = Math.sign(b-a), bx = b + s*dy*.75;
+      d += ` C${bx.toFixed(1)},${y} ${bx.toFixed(1)},${yn} ${b},${yn}`;
+      y = yn; [a,b] = [b,a];
+    }
+  }
+  return d;
+}
+function artSindirim(p){
+  const k = K(p), { u, vol, blob, spec, tube } = k;
+  const gLv = vol('lv','#c2574e','#7d2420'), gSt = vol('st','#ff8a9a','#d94a66'), gGb = vol('gb','#8ee365','#3c9a2a',.4,.35),
+        gPn = vol('pn','#ffcf7a','#e5a23a'), gTg = vol('tg','#ff8a9a','#c9405a'), gLp = vol('lp','#ff8a98','#d84a60'),
+        gMs = vol('ms','#e98e84','#9b3f42',.5,.35), gAn = vol('an','#d0676a','#6e1f22'), gOc = vol('oc','#5a1426','#22050d',.4,.5);
+  const PH = 'M514,92 C524,98 526,118 522,136 C520,146 516,156 514,166';
+  const ES = 'M514,166 C512,200 508,236 508,262 C508,286 520,302 548,312';
+  const LV = 'M372,312 C396,292 470,288 522,296 C534,298 538,304 530,310 C508,326 478,350 452,366 C428,381 402,392 386,388 C371,384 365,362 365,342 C365,330 367,320 372,312 Z';
+  const GB = 'M448,358 C460,352 474,360 474,374 C474,390 466,398 458,397 C449,396 444,386 445,374 C445,366 446,361 448,358 Z';
+  const ST = 'M548,312 C560,296 596,292 618,306 C642,322 648,362 636,390 C624,414 590,426 556,424 C538,423 522,420 510,416 L508,402 C526,404 544,402 556,394 C572,382 576,356 566,338 C560,328 552,322 548,312 Z';
+  const PN = 'M490,430 C505,420 540,424 566,424 C592,423 612,414 628,418 C636,422 634,434 622,438 C600,444 572,442 548,444 C526,446 506,448 496,444 C489,440 488,434 490,430 Z';
+  const DU = 'M509,409 C496,410 486,420 487,436 C488,452 520,464 556,468 C568,470 578,476 576,486';
+  const SI = serp(576, 424, 486, 5, 15, 5.2) + ' L410,548';
+  const CO = 'M410,556 C398,553 395,538 397,518 L400,484 C401,468 412,462 432,462 L570,460 C592,460 604,468 604,486 L605,524 C606,546 594,558 570,561 C545,564 515,560 505,568 L501,582';
+  let s = k.body(HB) + FACE;
+  // yutak + yemek borusu
+  s += og(k,'yutak', tube(PH,14,'#ffb0bc','#e2566e'));
+  s += og(k,'yemek', tube(ES,12,'#ffa6b3','#e2566e') + `<path d="${ES}" fill="none" stroke="#7a1f33" stroke-opacity=".35" stroke-width="12" stroke-dasharray="1.5 7"/>`);
+  // pankreas (midenin arkasında)
+  s += og(k,'pankreas', blob(PN, gPn, '#a8661a', `<path d="M497,437 C540,433 590,429 625,426" fill="none" stroke="#b8741c" stroke-opacity=".5" stroke-width="8" stroke-dasharray="3 4" stroke-linecap="round"/>`) + spec(600,423,16,4,-8,.5));
+  // mide
+  s += og(k,'mide', blob(ST, gSt, '#9c2a45',
+    `<path d="M560,318 C590,312 620,326 628,352 M572,334 C600,334 618,350 622,372 M576,360 C598,368 610,384 606,400 M570,388 C584,398 590,408 584,416 M540,412 C552,410 562,404 566,398" fill="none" stroke="#9c2a45" stroke-opacity=".38" stroke-width="2.2" stroke-linecap="round"/>`) + spec(596,314,24,10,-12,.75) + spec(628,350,5,18,-10,.35));
+  // safra kesesi (karaciğerin altında)
+  s += og(k,'safra', blob(GB, gGb, '#2b7a1e') + `<path d="M462,392 C472,404 484,410 494,416" fill="none" stroke="#5fbf3a" stroke-width="3" stroke-linecap="round"/>` + spec(457,384,5,8,-20,.75));
+  // karaciğer
+  s += og(k,'karaciger', blob(LV, gLv, '#5a1612',
+    `<path d="M468,292 C466,318 460,342 452,364" fill="none" stroke="#ffd0c8" stroke-opacity=".22" stroke-width="2"/><path d="M380,330 C410,320 440,316 470,318" fill="none" stroke="#3e0c0a" stroke-opacity=".25" stroke-width="3" stroke-linecap="round"/>`) + spec(412,316,40,10,-8,.6) + spec(500,302,18,4,-4,.45));
+  // ince bağırsak
+  s += og(k,'ince', `<path d="M416,478 C440,470 562,468 588,478 C598,500 598,540 588,556 C560,563 440,563 416,556 C406,540 406,498 416,478 Z" fill="${gMs}" stroke="#6e2427" stroke-width="1.4"/>` +
+    tube(DU,12,'#ffc2b4','#e46d68') + tube(SI,12,'#ffc2b4','#e46d68') + spec(500,488,60,5,0,.35));
+  // kalın bağırsak
+  s += og(k,'kalin', tube(CO,25,'#f7a597','#b84d4a') + `<path d="${CO}" fill="none" stroke="#6a1e1c" stroke-opacity=".42" stroke-width="25" stroke-dasharray="2.4 12"/>` +
+    `<path d="${CO}" fill="none" stroke="#ffd9d2" stroke-opacity=".35" stroke-width="3" stroke-linecap="round" transform="translate(-5 -5)"/>`);
+  // anüs
+  s += og(k,'anus', `<ellipse cx="501" cy="587" rx="11" ry="6" fill="${gAn}" stroke="#4a0f12" stroke-width="1.5"/><ellipse cx="501" cy="588" rx="4.5" ry="2" fill="#250508"/><ellipse cx="497" cy="584.5" rx="4" ry="1.5" fill="#fff" opacity=".45"/>`);
+  // ağız
+  s += og(k,'agiz', `<path d="M441,110 C462,102 492,98 512,100 C522,101 526,110 524,122 L521,136 C505,140 480,140 462,136 C450,133 443,124 441,116 Z" fill="${gOc}" stroke="#ff9aa8" stroke-opacity=".5" stroke-width="1.2"/>` +
+    `<path d="M445,121 C452,110 485,108 508,114 C520,118 522,130 515,136 C495,140 466,137 452,131 C446,128 444,124 445,121 Z" fill="${gTg}" stroke="#8f2238" stroke-width="1.2"/>` + spec(474,116,16,3.5,-4,.6) +
+    `<rect x="439" y="106" width="7" height="5.5" rx="1.6" fill="#f6fbff"/><rect x="440" y="121" width="7" height="5.5" rx="1.6" fill="#e9f1fa"/>` +
+    `<ellipse cx="437" cy="110" rx="5.5" ry="3.3" fill="${gLp}"/><ellipse cx="437.5" cy="120" rx="5.5" ry="3.7" fill="${gLp}"/>`, true);
+  // lokma animasyonu
+  s += `<path id="${p}esp" d="${PH} ${ES.replace('M514,166','L514,166')}" fill="none"/><ellipse rx="6" ry="4.5" fill="#ffe1a8" stroke="#b07a32" stroke-width="1" opacity=".9"><animateMotion dur="6s" repeatCount="indefinite" rotate="auto"><mpath href="#${p}esp"/></animateMotion><animate attributeName="opacity" values="0;.95;.95;0" keyTimes="0;.08;.9;1" dur="6s" repeatCount="indefinite"/></ellipse>`;
+  return { defs: k.defs(), body: s };
+}
+
+/* ======================================================================
+   SET 2 · SOLUNUM
+   ====================================================================== */
+function tree(x, y, ang, len, w, depth, acc){
+  const r = ang*Math.PI/180, x2 = x + Math.cos(r)*len, y2 = y + Math.sin(r)*len;
+  acc.seg.push([x,y,x2,y2,w]);
+  if (depth <= 0){ acc.tips.push([x2,y2]); return; }
+  tree(x2,y2,ang-27,len*.74,w*.66,depth-1,acc);
+  tree(x2,y2,ang+25,len*.72,w*.66,depth-1,acc);
+}
+function artSolunum(p){
+  const k = K(p), { u, vol, blob, spec, tube, raw } = k;
+  const gL = vol('lg','#ffb0c4','#d9577e'), gLr = vol('lgr','#ffa6bc','#cf4d75',.6,.3), gDi = vol('di','#ff9a6c','#c4512a',.5,.2),
+        gNs = vol('ns','#ffb4c2','#c9405a',.4,.4), gLx = vol('lx','#f4f8ff','#8fa6c4'), gAl = vol('al','#ffc0d0','#d9577e',.35,.3),
+        gMg = vol('mg','#2a0f22','#0a0611',.5,.5);
+  raw(`<pattern id="${p}sp" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="3" fill="none" stroke="#8a2346" stroke-opacity=".22" stroke-width="1"/><circle cx="0" cy="0" r="2.2" fill="#fff" fill-opacity=".07"/></pattern>`);
+  const LL = 'M474,262 C452,248 420,254 400,280 C378,308 366,360 364,410 C362,445 366,470 380,478 C400,486 440,470 470,462 C484,458 490,446 490,430 L490,300 C490,282 486,270 474,262 Z';
+  const LR = 'M530,264 C550,252 580,258 598,284 C618,312 630,360 632,410 C634,440 628,462 614,468 C596,474 566,462 548,456 C556,440 560,424 552,412 C540,400 530,394 528,380 L528,300 C528,282 528,270 530,264 Z';
+  raw(`<clipPath id="${p}cl"><path d="${LL}"/><path d="${LR}"/></clipPath><clipPath id="${p}mag"><circle cx="820" cy="470" r="70"/></clipPath>`);
+  const PH = 'M510,84 C522,92 524,116 520,136 C518,148 515,154 514,160';
+  const TR = 'M514,190 L511,270';
+  const BL = 'M511,270 C500,276 488,286 470,300', BR = 'M511,270 C522,277 534,287 550,300';
+  const DI = 'M362,516 C370,484 405,470 440,476 C468,481 486,492 500,492 C514,492 532,482 562,476 C598,470 630,484 638,516 L638,530 C606,512 578,508 552,514 C530,518 514,524 500,524 C486,524 470,518 448,514 C420,508 390,512 362,530 Z';
+  let s = k.body(HB) + FACE;
+  // kaburgalar (arka planda)
+  let rib = '';
+  for (let i = 0; i < 6; i++){ const y = 262 + i*38;
+    rib += `<path d="M496,${y} C470,${y-8} 404,${y-6} 378,${y+22} C366,${y+34} 362,${y+48} 364,${y+60}" /><path d="M504,${y} C530,${y-8} 596,${y-6} 622,${y+22} C634,${y+34} 638,${y+48} 636,${y+60}" />`; }
+  s += `<g fill="none" stroke="#e9eef6" stroke-opacity=".13" stroke-width="9" stroke-linecap="round">${rib}</g>`;
+  // yemek borusu (silik, etiketsiz)
+  s += `<path d="M522,160 L520,300" stroke="#ff9aa8" stroke-opacity=".22" stroke-width="10" stroke-linecap="round" fill="none"/>`;
+  // ağız boşluğu silik
+  s += `<path d="M445,121 C452,110 485,108 508,114 C520,118 522,130 515,136 C495,140 466,137 452,131 C446,128 444,124 445,121 Z" fill="#ff8a9a" opacity=".22"/><ellipse cx="437" cy="110" rx="5.5" ry="3.3" fill="#ff7a8a" opacity=".5"/><ellipse cx="437.5" cy="120" rx="5.5" ry="3.7" fill="#ff7a8a" opacity=".5"/>`;
+  // burun
+  s += og(k,'burun', blob('M430,92 C446,82 480,77 506,81 C518,83 522,92 520,102 C504,105 470,105 444,103 C436,102 430,98 430,92 Z', gNs, '#8f2238',
+    `<path d="M448,88 C462,83 480,84 492,90 M450,97 C466,92 484,93 498,99" fill="none" stroke="#ffd6de" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>`) + spec(462,85,16,3,-4,.6));
+  // yutak
+  s += og(k,'yutak', tube(PH,15,'#ffb0bc','#e2566e'));
+  // akciğerler
+  s += og(k,'akciger', blob(LL, gL, '#8f2246', `<path d="${LL}" fill="${u('sp')}"/><path d="M392,340 C420,345 450,352 488,350 M372,420 C410,400 450,380 488,330" fill="none" stroke="#8f2246" stroke-opacity=".4" stroke-width="2"/>`) +
+    blob(LR, gLr, '#8f2246', `<path d="${LR}" fill="${u('sp')}"/><path d="M630,400 C600,380 570,340 532,300" fill="none" stroke="#8f2246" stroke-opacity=".4" stroke-width="2"/>`) +
+    spec(420,290,22,9,-35,.55) + spec(578,284,20,8,30,.5) + spec(380,400,5,30,4,.25));
+  // bronşçuklar (akciğer içinde)
+  const acc = { seg: [], tips: [] };
+  [[210,30,6],[160,36,6.4],[122,40,6.6],[96,46,6.6]].forEach(([a,l,w]) => tree(470,300,a,l,w,3,acc));
+  [[330,30,6],[20,34,6.2],[60,40,6.4],[84,44,6.4]].forEach(([a,l,w]) => tree(550,300,a,l,w,3,acc));
+  const hil = acc.seg.filter(q => q[4] > 2.5).map(([x1,y1,x2,y2,w]) => `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#fff" stroke-opacity=".8" stroke-width="${(w*.3).toFixed(1)}"/>`).join('');
+  const segs = (col, add, op = 1) => acc.seg.map(([x1,y1,x2,y2,w]) => `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${(w+add).toFixed(1)}" stroke-opacity="${op}"/>`).join('');
+  s += og(k,'bronscuk', `<g clip-path="${u('cl')}" stroke-linecap="round">${segs('#9a5a6e',2.4)}${segs('#fbe6ee',0)}<g transform="translate(-1 -1)">${hil}</g>` +
+    acc.tips.map(([x,y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.2" fill="${gAl}" stroke="#a63a60" stroke-width=".8"/>`).join('') + `</g>`, false);
+  // bronşlar
+  const ring = (d, w) => tube(d, w, '#f4f9ff', '#a9bdd6') + `<path d="${d}" fill="none" stroke="#6f86a6" stroke-opacity=".55" stroke-width="${w-1}" stroke-dasharray="1.6 3.6"/>`;
+  s += og(k,'brons', ring(BL,13) + ring(BR,12));
+  // soluk borusu
+  s += og(k,'soluk', ring(TR,19));
+  // gırtlak
+  s += og(k,'girtlak', blob('M499,157 L529,155 C534,166 532,178 526,190 L505,192 C499,182 496,169 499,157 Z', gLx, '#5d7391',
+    `<path d="M505,158 L514,171 L523,157 M503,178 L527,177" fill="none" stroke="#5d7391" stroke-opacity=".6" stroke-width="1.6"/>`) + spec(508,164,4,7,-10,.6));
+  // diyafram
+  let fib = ''; for (let i = 0; i <= 14; i++){ const x = 372 + i*18.5; fib += `M${x},${(500 - 22*Math.sin(Math.PI*i/14)).toFixed(1)} L${x+2},${(526 - 12*Math.sin(Math.PI*i/14)).toFixed(1)} `; }
+  s += og(k,'diyafram', blob(DI, gDi, '#7a2a10', `<path d="${fib}" fill="none" stroke="#7a2a10" stroke-opacity=".3" stroke-width="1.6"/>`) + spec(440,481,30,3.5,4,.5) + spec(566,480,30,3.5,-4,.5));
+  // hava akışı
+  s += `<path d="M432,94 C470,88 505,86 516,100 C524,122 520,148 515,176 L511,268 C500,276 488,286 470,300" fill="none" stroke="#bff8ff" stroke-opacity=".75" stroke-width="2.2" stroke-dasharray="3 10" stroke-linecap="round" class="eg-air"><animate attributeName="stroke-dashoffset" from="26" to="0" dur="1.2s" repeatCount="indefinite"/></path>`;
+  // büyüteç: alveol
+  s += `<circle cx="605" cy="430" r="12" fill="none" stroke="#35eefc" stroke-width="2" stroke-opacity=".9"/><path d="M613,421 L775,413 M612,440 L760,516" stroke="#35eefc" stroke-opacity=".38" stroke-width="1.4" fill="none"/>`;
+  const AL = [[812,462,14],[836,452,15],[858,468,14],[846,492,15],[820,490,14],[862,500,11],[832,515,13],[800,482,11],[804,506,10]];
+  let al = `<circle cx="820" cy="470" r="70" fill="${gMg}"/><g clip-path="${u('mag')}">` +
+    `<circle cx="820" cy="470" r="70" fill="#ff7aa0" opacity=".08"/>` + tube('M760,402 C780,420 795,440 812,462', 11, '#f8eaf0', '#c7a2b2') +
+    `<path d="M884,440 C862,446 868,470 850,476 C836,480 840,500 826,506 C812,512 812,528 800,536" fill="none" stroke="#ff3b55" stroke-width="3" stroke-linecap="round"/>` +
+    AL.map(([x,y,r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${gAl}" stroke="#a63a60" stroke-width="1.2"/><ellipse cx="${x-r*.35}" cy="${y-r*.4}" rx="${r*.38}" ry="${r*.22}" fill="#fff" opacity=".55"/>`).join('') +
+    `<path d="M768,520 C790,508 790,486 806,474 C822,462 826,440 846,434 C860,430 866,420 880,418" fill="none" stroke="#5b6cff" stroke-width="3" stroke-linecap="round"/>` +
+    `<path d="M770,450 C790,462 800,478 812,476 M868,520 C852,516 846,500 836,498" fill="none" stroke="#b25fe0" stroke-width="2" stroke-linecap="round" opacity=".85"/>` + `</g>`;
+  s += og(k,'alveol', al, false);
+  s += `<circle cx="820" cy="470" r="70" fill="none" stroke="#35eefc" stroke-width="3" filter="${u('gl')}"/><circle cx="820" cy="470" r="66" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="2"/><path d="M772,430 A60,60 0 0 1 840,412" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>`;
+  return { defs: k.defs(), body: s };
+}
+
+/* ======================================================================
+   SET 3 · BOŞALTIM
+   ====================================================================== */
+function artBosaltim(p){
+  const k = K(p), { u, vol, blob, spec, tube, raw } = k;
+  const gK = vol('kd','#d9636c','#7a1f2c'), gPv = vol('pv','#ffe2a0','#e0a63a'), gBl = vol('bl','#ffd47a','#e19a24',.4,.32);
+  raw(`<linearGradient id="${p}vfade" gradientUnits="userSpaceOnUse" x1="0" y1="430" x2="0" y2="500"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <mask id="${p}vm" maskUnits="userSpaceOnUse" x="0" y="-20" width="1000" height="640"><rect x="0" y="-20" width="1000" height="640" fill="${u('vfade')}"/></mask>
+    <linearGradient id="${p}tfade" gradientUnits="userSpaceOnUse" x1="0" y1="-10" x2="0" y2="40"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient>`);
+  const TB = 'M292,-10 L708,-10 C704,80 668,180 664,250 C662,320 686,380 690,440 C694,500 684,560 680,620 L320,620 C316,560 306,500 310,440 C314,380 338,320 336,250 C332,180 296,80 292,-10 Z';
+  const KB = 'M0,-60 C30,-62 42,-30 36,-14 C33,-8 22,-8 20,0 C22,8 33,8 36,14 C42,30 30,62 0,60 C-28,58 -40,30 -40,0 C-40,-30 -28,-58 0,-60 Z';
+  let s = k.body(TB, 1, true);
+  // omurga, kaburga, kalça kemiği (silik)
+  let sp = ''; for (let y = -6; y < 420; y += 27) sp += `<rect x="484" y="${y}" width="32" height="21" rx="8"/>`;
+  s += `<g fill="#e9eef6" opacity=".07">${sp}</g>`;
+  s += `<g fill="none" stroke="#e9eef6" stroke-opacity=".1" stroke-width="9" stroke-linecap="round"><path d="M490,30 C440,26 380,40 352,80"/><path d="M510,30 C560,26 620,40 648,80"/><path d="M490,70 C446,70 392,86 372,128"/><path d="M510,70 C554,70 608,86 628,128"/></g>`;
+  s += `<g fill="#e9eef6" opacity=".07"><path d="M470,410 C430,380 360,372 344,420 C336,450 360,500 420,520 C440,500 452,460 470,440 Z"/><path d="M530,410 C570,380 640,372 656,420 C664,450 640,500 580,520 C560,500 548,460 530,440 Z"/></g>`;
+  // damarlar
+  const vein = (d,w) => tube(d,w,'#8a97ff','#3b49d6'), art = (d,w) => tube(d,w,'#ff7085','#d8213d');
+  const IVC = 'M482,-10 L482,392', AO = 'M520,-10 L520,380';
+  const IVl = 'M482,392 C470,414 418,430 406,466 L398,520', IVr = 'M482,392 C496,420 600,428 606,470 L612,520';
+  const AOl = 'M520,380 C506,404 440,420 424,460 L414,520', AOr = 'M520,380 C534,404 578,420 588,460 L596,520';
+  const RVl = 'M482,228 C460,232 436,238 410,244', RVr = 'M482,218 C520,216 560,224 590,228';
+  const RAl = 'M520,214 C490,218 448,226 410,234', RAr = 'M520,206 C548,206 570,212 590,218';
+  s += `<g mask="${u('vm')}">${vein(IVl,12)}${vein(IVr,12)}${art(AOl,11)}${art(AOr,11)}</g>`;
+  s += `<g mask="${u('ft')}">` + og(k,'toplar', vein(IVC,20) + vein(RVl,9) + vein(RVr,9), false);
+  s += og(k,'atar', art(AO,17) + art(RAl,7) + art(RAr,7), false) + `</g>`;
+  // kan akışı
+  s += `<path id="${p}ao" d="${AO}" fill="none"/><path id="${p}ivc" d="${IVC}" fill="none"/>`;
+  for (let i = 0; i < 4; i++){
+    s += `<ellipse rx="3.6" ry="2.4" fill="#ffd3da" opacity=".9"><animateMotion dur="5s" begin="-${i*1.25}s" repeatCount="indefinite" rotate="auto"><mpath href="#${p}ao"/></animateMotion></ellipse>`;
+    s += `<ellipse rx="3.6" ry="2.4" fill="#cfd5ff" opacity=".9"><animateMotion dur="6s" begin="-${i*1.5}s" repeatCount="indefinite" rotate="auto" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#${p}ivc"/></animateMotion></ellipse>`;
+  }
+  // böbrekler
+  const kid = (tx,ty,sx) => `<g transform="translate(${tx} ${ty}) scale(${sx} ${Math.abs(sx)})">` + blob(KB, gK, '#4e0f18',
+    `<path d="M-30,-40 L-14,-44 L6,-12 Z M-38,-12 L-34,4 L-2,-2 Z M-36,16 L-26,34 L2,8 Z M-24,42 L-8,46 L8,14 Z" fill="#5a0d1c" fill-opacity=".45" stroke="#ff9aa8" stroke-opacity=".2" stroke-width="1"/>` +
+    `<path d="M24,-14 C10,-18 -2,-12 -6,-4 C-8,4 -2,12 10,16 C16,17 22,15 24,14 Z" fill="${gPv}" stroke="#b9801f" stroke-width="1"/><circle cx="-8" cy="-14" r="4" fill="${gPv}"/><circle cx="-12" cy="2" r="4" fill="${gPv}"/><circle cx="-6" cy="16" r="4" fill="${gPv}"/>`) +
+    spec(-14,-38,12,7,-25,.6) + `</g>`;
+  s += og(k,'bobrek', kid(388,238,1.06) + kid(612,222,-1.06));
+  // üreterler
+  const UL = 'M410,252 C424,300 440,390 472,470', UR = 'M590,236 C578,300 562,390 528,470';
+  s += og(k,'ureter', tube(UL,7.5,'#ffe7ad','#f2b84a') + tube(UR,7.5,'#ffe7ad','#f2b84a'));
+  s += `<path id="${p}ul" d="${UL}" fill="none"/><path id="${p}ur" d="${UR}" fill="none"/>`;
+  for (let i = 0; i < 3; i++) ['ul','ur'].forEach((id,j) => { s += `<ellipse rx="2.6" ry="1.8" fill="#fff4b0"><animateMotion dur="3.6s" begin="-${i*1.2 + j*.6}s" repeatCount="indefinite" rotate="auto"><mpath href="#${p}${id}"/></animateMotion></ellipse>`; });
+  // mesane
+  const BLD = 'M500,448 C540,446 562,470 560,500 C558,530 532,546 500,546 C468,546 442,530 440,500 C438,470 460,446 500,448 Z';
+  s += og(k,'mesane', blob(BLD, gBl, '#9a5f08',
+    `<path d="M449,508 C468,500 486,512 502,506 C518,500 536,510 551,503 C548,528 528,542 500,542 C472,542 452,528 449,508 Z" fill="#ffe06a" fill-opacity=".6"/>` +
+    `<path d="M452,478 C470,470 486,476 500,472 M548,478 C530,470 514,476 500,472 M446,500 C470,492 530,492 554,500" fill="none" stroke="#a8650a" stroke-opacity=".3" stroke-width="1.6"/>`) + spec(478,464,20,8,-20,.75));
+  // üretra
+  s += og(k,'uretra', tube('M500,544 L500,588', 7.5, '#ffe7ad', '#f2b84a'));
+  return { defs: k.defs(), body: s };
+}
+
+/* ======================================================================
+   SET 4 · DOLAŞIM (çift dolaşım şeması)
+   ====================================================================== */
+function artDolasim(p){
+  const k = K(p), { u, vol, blob, spec, tube, raw } = k;
+  const gL = vol('lg','#ffb0c4','#d9577e'), gH = vol('ht','#ff5a70','#a3122e',.38,.25), gBb = vol('bb','#8a96ff','#2a35b8',.4,.3),
+        gRb = vol('rb','#ff7488','#b0102c',.4,.3), gC = vol('cl','#f8d3b6','#c98b6c',.38,.3), gN = vol('nu','#c08ae0','#6c3aa0');
+  raw(`<linearGradient id="${p}lc" gradientUnits="userSpaceOnUse" x1="374" y1="0" x2="626" y2="0"><stop offset="0" stop-color="#5b6cff"/><stop offset=".5" stop-color="#b04cc8"/><stop offset="1" stop-color="#ff3b55"/></linearGradient>
+    <linearGradient id="${p}bc" gradientUnits="userSpaceOnUse" x1="690" y1="0" x2="310" y2="0"><stop offset="0" stop-color="#ff3b55"/><stop offset=".5" stop-color="#b04cc8"/><stop offset="1" stop-color="#5b6cff"/></linearGradient>`);
+  const LL = 'M470,48 C448,36 414,44 398,66 C380,92 372,130 374,160 C376,174 390,178 408,172 C432,166 458,160 474,156 C482,154 486,146 486,136 L486,64 C486,56 480,52 470,48 Z';
+  const LR = 'M530,48 C552,36 586,44 602,66 C620,92 628,130 626,160 C624,174 610,178 592,172 C568,166 542,160 526,156 C518,154 514,146 514,136 L514,64 C514,56 520,52 530,48 Z';
+  raw(`<clipPath id="${p}lcp"><path d="${LL}"/><path d="${LR}"/></clipPath>`);
+  const BODY = 'M465,-12 L535,-12 L537,14 C580,26 660,30 700,52 C716,62 722,84 720,110 L712,300 C708,400 714,500 716,620 L284,620 C286,500 292,400 288,300 L280,110 C278,84 284,62 300,52 C340,30 420,26 463,14 Z';
+  const PA = 'M484,248 C482,222 470,196 452,170', PV = 'M548,170 C532,196 520,222 518,248';
+  const AO = 'M536,252 C548,212 598,200 680,202 C745,204 770,236 770,290 L770,440 C770,488 740,505 690,506';
+  const VC = 'M310,506 C260,505 230,488 230,440 L230,290 C230,236 262,206 330,204 C400,202 440,226 458,256';
+  const C1 = 'M690,506 C660,480 620,474 584,488 S504,476 462,492 S384,484 310,506',
+        C2 = 'M690,506 C646,508 604,516 562,506 S482,500 440,512 S356,514 310,506',
+        C3 = 'M690,506 C660,532 614,540 576,526 S494,540 452,528 S362,532 310,506';
+  let s = k.body(BODY, .75, true);
+  // akciğerler + kılcal ağ
+  const ca = { seg: [], tips: [] };
+  [[-95,30,4.2],[-128,28,3.8],[-62,26,3.6],[-160,22,3.2]].forEach(([a,l,w]) => tree(452,170,a,l,w,3,ca));
+  [[-85,30,4.2],[-52,28,3.8],[-118,26,3.6],[-20,22,3.2]].forEach(([a,l,w]) => tree(548,170,a,l,w,3,ca));
+  const net = ca.seg.map(([x1,y1,x2,y2,w]) => `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke-width="${w.toFixed(1)}"/>`).join('');
+  let mesh = '';
+  for (let y = 52; y <= 176; y += 11) for (let x = 378; x <= 626; x += 13){ const o = ((x*7 + y*13) % 9) - 4; mesh += `M${x},${y+o*.6} q4,-4 8,${o*.5} `; }
+  s += og(k,'akciger', blob(LL, gL, '#8f2246') + blob(LR, gL, '#8f2246') +
+    `<g clip-path="${u('lcp')}"><path d="${mesh}" fill="none" stroke="${u('lc')}" stroke-width="1.3" stroke-opacity=".55" stroke-linecap="round"/><g stroke="#3a0c2a" stroke-opacity=".45" stroke-linecap="round" transform="translate(.8 1)">${net}</g><g stroke="${u('lc')}" stroke-linecap="round">${net}</g>` +
+    ca.tips.map(([x,y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2" fill="${u('lc')}"/>`).join('') + `</g>` + spec(420,72,20,8,-35,.6) + spec(580,72,20,8,35,.6));
+  // damarlar
+  const oxy = (d,w) => tube(d,w,'#ff7085','#d8213d'), dox = (d,w) => tube(d,w,'#8a97ff','#3b49d6');
+  s += og(k,'toplar', dox(VC,17) + dox(PA,13), false);
+  s += og(k,'atar', oxy(AO,17) + oxy(PV,13), false);
+  // vücut hücreleri
+  let cells = '';
+  const cell = (x,y,r) => `<g><path d="M${x-r},${y} C${x-r},${y-r*.9} ${x-r*.5},${y-r} ${x},${y-r} C${x+r*.7},${y-r} ${x+r},${y-r*.6} ${x+r},${y} C${x+r},${y+r*.8} ${x+r*.6},${y+r} ${x},${y+r} C${x-r*.7},${y+r} ${x-r},${y+r*.7} ${x-r},${y} Z" fill="${gC}" stroke="#9c6248" stroke-width="1.3"/><circle cx="${x+2}" cy="${y+2}" r="${r*.32}" fill="${gN}"/><ellipse cx="${x-r*.38}" cy="${y-r*.45}" rx="${r*.35}" ry="${r*.18}" fill="#fff" opacity=".5"/></g>`;
+  for (let i = 0; i < 7; i++) cells += cell(350 + i*50, 462 + (i%2)*4, 19);
+  for (let i = 0; i < 6; i++) cells += cell(375 + i*50, 552 - (i%2)*4, 19);
+  s += og(k,'hucre', cells);
+  // kılcal damarlar
+  const cap = d => `<path d="${d}" fill="none" stroke="#1a0a24" stroke-opacity=".6" stroke-width="7" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${u('bc')}" stroke-width="5" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.4" transform="translate(-1 -1.5)"/>`;
+  s += og(k,'kilcal', cap(C1) + cap(C2) + cap(C3));
+  // kalp
+  const HT = 'M-50,-42 C-58,-72 -18,-80 0,-60 C18,-80 60,-72 56,-38 C54,-2 38,40 6,74 C1,79 -5,79 -10,73 C-42,40 -56,-6 -50,-42 Z';
+  const SAG = 'M-40,-30 C-42,-50 -16,-54 -8,-38 L-6,30 C-6,44 -14,50 -22,40 C-34,24 -40,-4 -40,-30 Z';
+  const SOL = 'M7,-38 C14,-54 44,-50 43,-28 C42,0 32,30 12,52 C6,56 4,48 4,36 Z';
+  s += `<g data-org="kalp"><g filter="${u('ds')}" transform="translate(500 308)">` + blob(HT, gH, '#5e0716',
+    `<path d="M-4,-58 C-2,-20 -2,20 -2,70" fill="none" stroke="#5e0716" stroke-opacity=".35" stroke-width="2"/>`) +
+    `<g data-org="sag"><path d="${SAG}" fill="${gBb}" stroke="#3a0612" stroke-width="2.4"/><path d="${SAG}" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1" transform="translate(-1 -1)"/>${spec(-28,-30,6,10,10,.5)}</g>` +
+    `<g data-org="sol"><path d="${SOL}" fill="${gRb}" stroke="#3a0612" stroke-width="2.4"/><path d="${SOL}" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1" transform="translate(-1 -1)"/>${spec(24,-30,7,10,-10,.5)}</g>` +
+    spec(-30,-56,16,6,-25,.7) + spec(34,-56,14,5,25,.55) + `</g></g>`;
+  // yön okları
+  const chev = (x,y,r,c='#fff') => `<path d="M-6,-4 L0,3 L6,-4" transform="translate(${x} ${y}) rotate(${r})" stroke="${c}" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>`;
+  s += chev(770,330,0) + chev(770,410,0) + chev(230,410,180) + chev(230,330,180) + chev(470,206,150) + chev(530,206,210) + chev(612,204,-90) + chev(370,206,90);
+  // akan kan hücreleri
+  const paths = { pa: PA, pv: PV, ao: AO, vc: VC, c1: C1, c2: C2, c3: C3 };
+  for (const id in paths) s += `<path id="${p}${id}" d="${paths[id]}" fill="none"/>`;
+  const mov = (id, n, dur, fill, anim = '') => { let o = ''; for (let i = 0; i < n; i++) o += `<ellipse rx="4" ry="2.8" fill="${fill}" stroke="#000" stroke-opacity=".25" stroke-width=".6">${anim.replace(/BEGIN/g, -(i*dur/n).toFixed(2)+'s')}<animateMotion dur="${dur}s" begin="-${(i*dur/n).toFixed(2)}s" repeatCount="indefinite" rotate="auto"><mpath href="#${p}${id}"/></animateMotion></ellipse>`; return o; };
+  s += mov('ao',7,7,'#ffd0d7') + mov('vc',7,7,'#d2d7ff') + mov('pa',2,2.4,'#d2d7ff') + mov('pv',2,2.4,'#ffd0d7');
+  ['c1','c2','c3'].forEach((c,j) => { s += mov(c,3,4.5+j*.4,'#ff8a9a',`<animate attributeName="fill" values="#ffb3be;#d8a6ff;#b8c0ff" dur="${4.5+j*.4}s" begin="BEGIN" repeatCount="indefinite"/>`); });
+  // açıklama
+  s += `<g class="lgd" font-family="Lexend,system-ui,sans-serif" font-size="13" font-weight="600" fill="#cfe0f2"><rect x="752" y="22" width="222" height="68" rx="14" fill="#06121f" fill-opacity=".55" stroke="#35eefc" stroke-opacity=".25"/>` +
+       `<rect x="768" y="38" width="26" height="9" rx="4.5" fill="#ff3b55"/><text x="804" y="47">Oksijen oranı yüksek kan</text>` +
+       `<rect x="768" y="64" width="26" height="9" rx="4.5" fill="#5b6cff"/><text x="804" y="73">Oksijen oranı düşük kan</text></g>`;
+  return { defs: k.defs(), body: s };
+}
+
+/* ======================================================================
+   SET VERİLERİ (ders kitabıyla birebir)
+   a: yapı üzerindeki çapa noktası · b: etiket kutusunun merkezi (tasarım koordinatı 1000×600)
+   ====================================================================== */
+const SETS = {
+  sindirim: { title: 'Sindirim Sistemi', short: 'Sindirim', art: artSindirim, items: [
+    { id:'agiz', name:'Ağız', a:[455,124], b:[215,120], hint:'Besinlerin vücuda alındığı ilk organdır; çiğneme ve karbohidratların kimyasal sindirimi burada başlar.',
+      info:'Besinlerin vücuda alındığı ilk organdır. Çiğneme hareketleriyle besinlerin fiziksel sindirimi, tükürük salgısındaki enzimler yardımıyla karbohidratların kimyasal sindirimi gerçekleşir. Bu nedenle fiziksel ve kimyasal sindirim ağızda başlar.' },
+    { id:'yutak', name:'Yutak', a:[521,128], b:[790,100], hint:'Besinleri ağızdan yemek borusuna iletir; burada sindirim gerçekleşmez.',
+      info:'Besinlerin ağızdan yemek borusuna iletilmesini sağlar. Yutakta sindirim gerçekleşmez.' },
+    { id:'yemek', name:'Yemek borusu', a:[509,240], b:[215,225], hint:'Besinleri kas hareketleriyle mideye iletir; burada sindirim gerçekleşmez.',
+      info:'Besinlerin yutaktan mideye kas hareketleriyle iletilmesini sağlar. Yemek borusunda sindirim gerçekleşmez.' },
+    { id:'mide', name:'Mide', a:[612,352], b:[800,300], hint:'Proteinlerin kimyasal sindirimi burada başlar; besinler bulamaç hâline gelir.',
+      info:'Yemek borusundan gelen besinler, kasların kasılıp gevşemesiyle fiziksel sindirime uğrar. Mide öz suyundaki enzimlerle proteinlerin kimyasal sindirimi başlar. Bulamaç hâline gelen besinler buradan ince bağırsağa gönderilir.' },
+    { id:'karaciger', name:'Karaciğer', a:[410,350], b:[205,320], hint:'Salgıladığı sıvı ince bağırsağa gönderilir ve yağların fiziksel sindirimine yardımcı olur.',
+      info:'Sindirime yardımcı bir organdır. Salgıladığı safra sıvısı ince bağırsağa gönderilir ve yağların fiziksel sindirimine yardımcı olur.' },
+    { id:'safra', name:'Safra kesesi', a:[459,394], b:[205,420], hint:'Karaciğerin salgıladığı sıvı burada toplanır, sonra bir kanalla ince bağırsağa gönderilir.',
+      info:'Karaciğerin salgıladığı safra sıvısı, karaciğerin altında bulunan safra kesesinde toplanır ve buradan bir kanal yardımıyla ince bağırsağa gönderilir.' },
+    { id:'pankreas', name:'Pankreas', a:[624,428], b:[805,440], hint:'Ürettiği öz suyu bir kanalla ince bağırsağa gönderir; kimyasal sindirime yardımcı olur.',
+      info:'Sindirime yardımcı bir organdır. Ürettiği pankreas öz suyunu bir kanal yardımıyla ince bağırsağa gönderir. Pankreas öz suyu protein, karbohidrat ve yağların kimyasal sindirimine yardımcı olur.' },
+    { id:'ince', name:'İnce bağırsak', a:[470,516], b:[215,500], hint:'Besinlerin emilerek kana geçtiği yerdir; fiziksel ve kimyasal sindirim burada tamamlanır.',
+      info:'Besinlerin fiziksel ve kimyasal sindirimi burada tamamlanır. Sindirimi tamamlanan besinler, iç yüzeydeki villuslar sayesinde emilerek kana geçer. Villuslar iç yüzeyi genişleterek emilimin hızlı olmasını sağlar.' },
+    { id:'kalin', name:'Kalın bağırsak', a:[605,522], b:[805,522], hint:'Sindirilmeyen besinlerden geriye kalan su, bazı mineral ve vitaminler burada emilir.',
+      info:'İnce bağırsaktan gelen ve sindirilmeyen besinlerin bir süre depolandıktan sonra anüse gönderildiği yerdir. Geriye kalan suyun, bazı mineral ve vitaminlerin emilimi burada gerçekleşir.' },
+    { id:'anus', name:'Anüs', a:[501,588], b:[790,585], hint:'Sindirim sisteminin son kısmıdır; sindirilmeyen besinler buradan uzaklaştırılır.',
+      info:'Sindirim sisteminin son kısmıdır. Sindirilmeyen besinlerin vücuttan uzaklaştırılmasında görevlidir.' }
+  ]},
+  solunum: { title: 'Solunum Sistemi', short: 'Solunum', art: artSolunum, items: [
+    { id:'burun', name:'Burun', a:[456,92], b:[215,80], hint:'Solunum burada başlar; mukus havayı nemlendirir, kıllar toz ve mikropları tutar.',
+      info:'Solunum sistemi burunla başlar. İç yüzeydeki mukus sıvısı kuru havayı nemlendirir, kılcal damarlar havayı ısıtır, kıllar havadaki toz ve mikropları tutarak havayı temizlemeye yardımcı olur.' },
+    { id:'yutak', name:'Yutak', a:[521,118], b:[790,100], hint:'Burun ve ağız boşluklarının arkasındadır; burundan gelen hava buradan gırtlağa geçer.',
+      info:'Burun ve ağız boşluklarının arkasında yer alan, soluk borusu ile yemek borusunu birleştiren esnek bir yapıdır. Burundan gelen hava buradan gırtlağa geçer.' },
+    { id:'girtlak', name:'Gırtlak', a:[520,174], b:[790,180], hint:'Esnek ve kıkırdak yapıdadır; içindeki ses telleri sesin oluşmasını sağlar.',
+      info:'Yutak ile soluk borusu arasında bulunur. Esnek ve kıkırdak yapıdadır. Yapısındaki ses telleri sesin oluşmasını sağlar.' },
+    { id:'soluk', name:'Soluk borusu', a:[512,232], b:[215,215], hint:'Kıkırdak yapıdaki bu boru, alınan havanın akciğerlere ulaşmasını sağlar.',
+      info:'Alınan havanın akciğerlere ulaşmasını sağlayan yapıdır. Kıkırdak yapıdadır ve gırtlak ile akciğerler arasında bulunur.' },
+    { id:'brons', name:'Bronş', a:[533,287], b:[790,262], hint:'Soluk borusunun iki kola ayrılmasıyla oluşur; her iki akciğere hava taşır.',
+      info:'Soluk borusunun akciğerlere doğru iki kola ayrılmasıyla oluşur. Her iki akciğere hava taşır.' },
+    { id:'bronscuk', name:'Bronşçuk', a:[0,0], b:[205,335], hint:'Akciğerlerin içinde dallanan küçük hava kanallarıdır; havayı hava keselerine iletir.',
+      info:'Bronşların akciğerlerin içine doğru dallara ayrılmasıyla oluşan küçük hava kanallarıdır. Havanın alveollere iletilmesini sağlar.' },
+    { id:'alveol', name:'Alveol', a:[832,500], b:[820,578], hint:'Etrafı kılcal damarlarla çevrili hava keseleridir; havadaki oksijen burada kana geçer.',
+      info:'Etrafı kılcal damarlarla çevrili hava keseleridir ve bronşçukların uçlarında bulunur. Havadaki oksijen kana, kandaki karbon dioksit havaya burada geçer.' },
+    { id:'akciger', name:'Akciğer', a:[384,446], b:[205,450], hint:'Göğüs kafesinin içindeki süngerimsi organdır; sağdaki parçası soldakinden büyüktür.',
+      info:'Göğüs kafesinin içinde yer alan, sağ ve sol olmak üzere iki parçadan oluşan süngerimsi yapıdaki organdır. Sağ akciğer sol akciğere göre daha büyüktür.' },
+    { id:'diyafram', name:'Diyafram', a:[410,498], b:[205,545], hint:'Göğüs boşluğu ile karın boşluğunu birbirinden ayıran kaslı yapıdır.',
+      info:'Göğüs boşluğu ile karın boşluğunu birbirinden ayıran kaslı yapıdır. Kaburgalar arasındaki kaslarla birlikte kasılıp gevşeyerek akciğerlerin genişleyip daralmasına yardımcı olur.' }
+  ]},
+  bosaltim: { title: 'Boşaltım Sistemi', short: 'Boşaltım', art: artBosaltim, items: [
+    { id:'bobrek', name:'Böbrek', a:[648,230], b:[840,240], hint:'Kanı süzerek atık maddeleri ve fazla suyu ayırır; süzülen atıklar idrarı oluşturur.',
+      info:'Böbrekler kanı süzerek (filtreleyerek) yararlı maddelerin tekrar kana geçmesini sağlar; fazla su, tuz, vitamin, hormon, üre gibi atık maddeleri kandan uzaklaştırır. Kandan süzülen bu atık maddeler idrarı oluşturur.' },
+    { id:'ureter', name:'Üreter', sub:'idrar borusu', a:[434,350], b:[190,340], hint:'Böbreklerde oluşan idrarı idrar kesesine ileten boru şeklindeki yapılardır.',
+      info:'Böbreklerde oluşan idrarı idrar kesesine (mesane) ileten boru şeklindeki yapılardır.' },
+    { id:'mesane', name:'Mesane', sub:'idrar kesesi', a:[452,512], b:[195,525], hint:'İdrar vücut dışına atılıncaya kadar burada depolanır; kaslı bir yapıdır.',
+      info:'İdrarın vücut dışına atılıncaya kadar depolandığı yerdir. Kaslı bir yapıya sahip olan idrar kesesi belirli bir doluluğa ulaşınca boşaltım ihtiyacı oluşur.' },
+    { id:'uretra', name:'Üretra', sub:'idrar kanalı', a:[500,576], b:[800,575], hint:'İdrar kesesinde biriken idrar bu kanal yardımıyla vücuttan uzaklaştırılır.',
+      info:'İdrar kesesinde biriktirilen idrar, bu kanal yardımıyla vücuttan uzaklaştırılır.' },
+    { id:'atar', name:'Atardamar', sub:'böbreğe gelen kan', a:[520,95], b:[810,95], hint:'Kalpten çıkan kanı taşıyan damardır; süzülecek kan böbreğe bu damarla gelir.',
+      info:'Kalpten çıkan kanı vücuda taşıyan damardır. Atık maddeleri içeren kan böbreğe atardamarla gelir ve böbrekte süzülür.' },
+    { id:'toplar', name:'Toplardamar', sub:'böbrekten dönen kan', a:[482,150], b:[190,150], hint:'Kanı toplayarak kalbe geri getiren damardır; böbrekte süzülen kan bu damarla döner.',
+      info:'Vücuda dağılan kanı toplayarak tekrar kalbe getiren damardır. Böbrekte süzülerek atıklarından arındırılan kan toplardamarla böbrekten ayrılır.' }
+  ]},
+  dolasim: { title: 'Dolaşım Sistemi', short: 'Dolaşım', art: artDolasim, items: [
+    { id:'kalp', name:'Kalp', a:[532,352], b:[640,405], hint:'Kasılıp gevşeyerek kanın damarlarda dolaşmasını sağlayan, özel kas dokusundan oluşan organdır.',
+      info:'Kasılıp gevşeme hareketiyle kanın damarlar içerisinde dolaşmasını sağlayan, özel kas dokusundan oluşan organdır.' },
+    { id:'akciger', name:'Akciğerler', a:[384,112], b:[200,95], hint:'Küçük kan dolaşımında kanın oksijen oranı burada artar, karbon dioksit oranı azalır.',
+      info:'Küçük kan dolaşımında kalpten gelen kanın oksijen oranı akciğerlerde artar, karbon dioksit oranı azalır. Oksijenlenmiş kan toplardamarla kalbin sol tarafına döner.' },
+    { id:'atar', name:'Atardamar', a:[770,375], b:[882,375], hint:'Kalpten çıkan kanı vücuda taşıyan damardır.',
+      info:'Kalpten çıkan kanı vücuda taşır. Kalpten akciğerlere giden atardamar hariç atardamarların tamamı oksijen oranı zengin kanı taşır.' },
+    { id:'toplar', name:'Toplardamar', a:[230,375], b:[118,375], hint:'Vücuda dağılan kanı toplayarak tekrar kalbe getiren damardır.',
+      info:'Vücuda dağılan kanı toplayarak tekrar kalbe getiren damardır. Akciğerlerden kalbe gelen toplardamar hariç toplardamarların tamamı oksijen oranı düşük kanı taşır.' },
+    { id:'kilcal', name:'Kılcal damarlar', a:[656,524], b:[862,574], hint:'Atar ve toplardamarları birbirine bağlayan ince damarlardır; kan ile hücreler arasında madde alışverişi sağlar.',
+      info:'Atardamarlarla toplardamarları birbirine bağlayan, bu damarlara göre daha ince yapıdaki damarlardır. Kan ile hücreler arasında madde alışverişini sağlar.' },
+    { id:'sag', name:'Kalbin sağ tarafı', a:[476,300], b:[340,300], hint:'Vücuttan dönen, oksijen oranı düşük kan buraya gelir ve buradan akciğerlere gönderilir.',
+      info:'Büyük kan dolaşımında vücuttan dönen, karbon dioksit oranı artmış kan toplardamarlarla kalbin sağ tarafına gelir. Bu kan kalbin sağ tarafındaki atardamarla akciğerlere gönderilir (küçük kan dolaşımı).' },
+    { id:'sol', name:'Kalbin sol tarafı', a:[524,300], b:[662,300], hint:'Akciğerlerden gelen oksijenli kan buraya gelir ve buradan tüm vücuda gönderilir.',
+      info:'Akciğerlerde oksijenlenen kan toplardamarla kalbin sol tarafına gelir. Oksijen oranı yüksek bu kan kalbin sol tarafındaki atardamarla tüm vücuda gönderilir (büyük kan dolaşımı).' },
+    { id:'hucre', name:'Vücut hücreleri', a:[372,556], b:[150,560], hint:'Kanın getirdiği oksijen burada kullanılır; kanın karbon dioksit oranı burada artar.',
+      info:'Kan, hücrelere oksijen ve besin maddeleri taşır. Hücrelerde kullanılan kanın oksijen oranı azalırken karbon dioksit oranı artar; bu kan toplardamarlarla kalbe döner.' }
+  ]}
+};
+// bronşçuk çapası: sol akciğerdeki yan dalın ortası (ağaç ile aynı geometri)
+(function(){ const r = 160*Math.PI/180; const x = 470 + Math.cos(r)*36, y = 300 + Math.sin(r)*36; const r2 = (160+25)*Math.PI/180;
+  SETS.solunum.items.find(i => i.id === 'bronscuk').a = [ +(x + Math.cos(r2)*14).toFixed(1), +(y + Math.sin(r2)*14).toFixed(1) ]; })();
+
+/* ======================================================================
+   İkonlar
+   ====================================================================== */
+const IC = {
+  grip: '<svg class="grip" viewBox="0 0 14 26" fill="currentColor"><circle cx="3.5" cy="4" r="2.3"/><circle cx="10.5" cy="4" r="2.3"/><circle cx="3.5" cy="13" r="2.3"/><circle cx="10.5" cy="13" r="2.3"/><circle cx="3.5" cy="22" r="2.3"/><circle cx="10.5" cy="22" r="2.3"/></svg>',
+  skip: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5l7 7-7 7M13 5l7 7-7 7"/></svg>',
+  park: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="7" width="16" height="12" rx="3"/><path d="M8 7V5h8v2M9 13h6"/></svg>',
+  fit: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/><circle cx="12" cy="12" r="2.4"/></svg>',
+  zoom: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M20 20l-4.8-4.8M10.5 7.5v6M7.5 10.5h6"/></svg>'
+};
+const nameHTML = it => it.sub ? `${it.name} <small>(${it.sub})</small>` : it.name;
+const nameTxt = it => it.sub ? `${it.name} (${it.sub})` : it.name;
+
+/* ======================================================================
+   Sayfa iskeleti
+   ====================================================================== */
+const ui = ZD.mount({
+  kicker: 'ETİKETLEME OYUNU', title: 'Organları Etiketle',
+  crumb: ['7. Sınıf Fen Bilimleri','3. Ünite','Organları Etiketle'],
+  stats: [{id:'time',label:'Süre',value:'0:00.0'},{id:'score',label:'Puan',value:0,cls:'cyan'},{id:'lbl',label:'Etiket',value:'0 / 0'},{id:'streak',label:'Seri',value:0,cls:'green'}],
+  onHelp(){ if (!G) return; showHelp(true); },
+  onRestart(){ if (G) startSet(G.key, false); }
+});
+const kickerEl = $('.zd-title small'), crumbEl = $('.zd-crumb b');
+const fmtT = t => { t = Math.max(0,t); const m = Math.floor(t/60), s = Math.floor(t%60), d = Math.floor((t*10)%10); return `${m}:${String(s).padStart(2,'0')}.${d}`; };
+const timer = new ZD.Timer(t => ui.stat('time', fmtT(t)));
+let G = null, introShown = false;
+
+/* ---------- Set seçici ---------- */
+function showPicker(){
+  G = null; timer.reset();
+  ['score','streak'].forEach(id => ui.stat(id, '–')); ui.stat('lbl','– / –');
+  kickerEl.textContent = 'ETİKETLEME OYUNU'; crumbEl.textContent = 'Organları Etiketle';
+  ui.body.innerHTML = `<div class="eg-pick zd-fade-in"><div class="lead"><div><h2>Bir sistem seç</h2><p>Çizimdeki numaralı kutulara doğru etiketleri sürükle. Her sistem ayrı bir etiketleme turudur.</p></div><span class="zd-chip">4 SİSTEM · 33 ETİKET</span></div>
+    <div class="eg-pgrid">${Object.keys(SETS).map(key => { const S = SETS[key], a = S.art('t' + key + '-');
+      return `<button class="zd-card eg-pc" data-set="${key}" aria-label="${S.title} etiketleme oyununu başlat"><div class="th"><svg viewBox="110 -6 780 612" preserveAspectRatio="xMidYMid meet">${a.defs}${a.body}</svg></div>
+        <h3>${S.title}</h3><div class="mt"><span>${S.items.length} etiket</span><span class="go">Başla ${ZD.I.arrowR}</span></div></button>`; }).join('')}</div></div>`;
+  $$('.eg-pc', ui.body).forEach(b => b.onclick = () => { ZD.sfx('click'); startSet(b.dataset.set, true); });
+}
+
+/* ---------- Oyun ---------- */
+function startSet(key, fromPicker){
+  const S = SETS[key];
+  try { history.replaceState(null, '', location.pathname + '?set=' + key); } catch(e){}
+  ZD.hideHand(); timer.reset();
+  kickerEl.textContent = 'ETİKETLEME · ' + S.title.toLocaleUpperCase('tr-TR'); crumbEl.textContent = S.title;
+  const p = 'g' + key + '-', art = S.art(p);
+  const nums = ZD.shuffle(S.items.map((_,i) => i+1));
+  G = { key, S, p, items: S.items.map((it,i) => ({ ...it, n: nums[i] })), queue: ZD.shuffle(S.items.map(i => i.id)), parked: [], placed: new Set(),
+        miss: {}, hinted: {}, score: 0, streak: 0, best: 0, pas: 3, ipucu: 2, done: false, review: false, sel: null };
+  G.byId = Object.fromEntries(G.items.map(i => [i.id, i]));
+  ui.body.innerHTML = `<div class="eg">
+    <div class="eg-view" id="egView" aria-label="${S.title} çizimi">
+      <svg class="art" id="egArt" aria-hidden="true">${art.defs}<g id="egWorld">${art.body}</g></svg>
+      <svg class="eg-lines" id="egLines" aria-hidden="true"></svg>
+      <div class="eg-boxes" id="egBoxes"></div>
+      <div class="eg-bub" id="egBub"></div>
+      <div class="eg-zoom">${IC.zoom}<span>Tekerlek / iki parmak: yakınlaştır</span><b id="egZm">100%</b></div>
+    </div>
+    <aside class="eg-side" id="egSide">
+      <div class="zd-seg eg-seg" role="tablist" aria-label="Sistem seç">${Object.keys(SETS).map(k2 => `<button role="tab" data-set="${k2}" class="${k2 === key ? 'on' : ''}" aria-selected="${k2 === key}">${SETS[k2].short}</button>`).join('')}</div>
+      <div id="egPlay" style="display:contents">
+        <div class="eg-cap"><span>Etiket kartı</span><b id="egLeft"></b></div>
+        <div id="egCardWrap"></div>
+        <div class="eg-btns">
+          <button class="zd-btn green" id="bPas" aria-label="Pas: etiketi sona at">${IC.skip}<span>Pas (3)</span></button>
+          <button class="zd-btn purple" id="bIp" aria-label="İpucu: doğru kutuyu göster">${ZD.I.bulb}<span>İpucu (2)</span></button>
+          <button class="zd-btn ghost" id="bPark" aria-label="Etiketi şimdilik boşta bırak">${IC.park}<span>Boşta bırak</span></button>
+          <button class="zd-btn ghost" id="bFit" aria-label="Görünüme dön: yakınlaştırmayı sıfırla">${IC.fit}<span>Görünüme dön</span></button>
+        </div>
+        <div class="eg-park" id="egPark"></div>
+      </div>
+      <div class="eg-legend" id="egLegend"></div>
+    </aside></div>`;
+  G.view = $('#egView'); G.world = $('#egWorld'); G.lines = $('#egLines'); G.boxesEl = $('#egBoxes'); G.bub = $('#egBub');
+  // kutular
+  G.items.forEach(it => {
+    const b = ZD.h('button', { class: 'lbx', 'data-slot': it.id, 'aria-label': `${it.n} numaralı kutu` }, `<span class="lbi">${it.n}.</span>`);
+    b.addEventListener('click', () => onBoxTap(it.id));
+    it.el = b; G.boxesEl.appendChild(b);
+  });
+  buildLegend();
+  // panel
+  $$('.eg-seg button', ui.body).forEach(b => b.onclick = () => { ZD.sfx('click'); if (b.dataset.set !== G.key) startSet(b.dataset.set, false); });
+  $('#bPas').onclick = doPas; $('#bIp').onclick = doHint; $('#bPark').onclick = doPark; $('#bFit').onclick = () => { ZD.sfx('click'); resetView(true); };
+  setupView();
+  renderCard(true); updateHud(); updateBtns();
+  if (!introShown){ introShown = true; showHelp(false); }
+  else timer.start();
+}
+
+function buildLegend(){
+  const L = $('#egLegend'); if (!L) return;
+  L.innerHTML = G.items.slice().sort((a,b) => a.n - b.n).map(it => `<button data-slot="${it.id}" class="${G.placed.has(it.id) ? 'filled' : ''}" aria-label="${it.n} numaralı kutu"><b>${it.n}.</b><span>${G.placed.has(it.id) ? nameTxt(it) : '—'}</span></button>`).join('');
+  $$('button', L).forEach(b => b.onclick = () => onBoxTap(b.dataset.slot));
+}
+
+function current(){ return G && G.queue.length ? G.byId[G.queue[0]] : null; }
+function remaining(){ return G.queue.length + G.parked.length; }
+
+function renderCard(animate){
+  const w = $('#egCardWrap'); if (!w) return;
+  const it = current();
+  if (!it){ w.innerHTML = `<div class="eg-card empty">Tüm etiketler yerleşti</div>`; return; }
+  w.innerHTML = `<div class="eg-card ${animate ? 'in' : ''}" id="egCard" role="button" tabindex="0" aria-label="Etiket kartı: ${nameTxt(it)}. Doğru numaralı kutuya sürükle.">${IC.grip}<span class="nm"><span>${it.name}</span>${it.sub ? `<small>(${it.sub})</small>` : ''}</span></div>`;
+  const card = $('#egCard');
+  let moved = 0, sx = 0, sy = 0;
+  card.addEventListener('pointerdown', e => { moved = 0; sx = e.clientX; sy = e.clientY; }, true);
+  ZD.drag(card, {
+    enabled: () => G && !G.done,
+    onStart(){ hideBub(); },
+    onMove(x, y){ moved = Math.max(moved, Math.hypot(x - sx, y - sy)); markOver(x, y); },
+    onDrop(x, y, tgt){
+      markOver(-1, -1);
+      const slot = tgt && tgt.closest && tgt.closest('[data-slot]');
+      if (!slot){ if (moved < 8) ZD.toast('Kartı tutup çizimdeki doğru numaralı kutuya sürükle ya da kutuya dokun.', '', 2600); return false; }
+      return attempt(slot.dataset.slot);
+    }
+  });
+  $('#egLeft').textContent = `${G.placed.size + 1} / ${G.items.length}`;
+}
+let overEl = null;
+function markOver(x, y){
+  let s = null;
+  if (x >= 0){ const e = document.elementFromPoint(x, y); s = e && e.closest && e.closest('[data-slot]'); }
+  if (s !== overEl){ overEl && overEl.classList.remove('over'); overEl = s; s && s.classList.add('over'); }
+}
+
+function onBoxTap(id){
+  if (!G) return;
+  if (G.review){ selectInfo(id); return; }
+  if (G.done) return;
+  if (!current()) return;
+  if (G.placed.has(id)){ selectInfo(id, true); return; }
+  ZD.sfx('tap');
+  const ok = attempt(id);
+  if (ok){ const c = $('#egCard'); c && c.classList.add('in'); }
+}
+
+function attempt(id){
+  const it = current(); if (!it || G.done) return false;
+  if (G.placed.has(id)){ ZD.toast('Bu kutu zaten dolu. Başka bir kutu seç.', '', 1800); return false; }
+  const box = G.byId[id];
+  hideBub(); stopHint();
+  if (id === it.id){
+    const clean = !G.miss[id] && !G.hinted[id];
+    const pts = clean ? 10 + Math.min(G.streak, 5) * 2 : 5;
+    G.score += pts;
+    if (clean){ G.streak++; G.best = Math.max(G.best, G.streak); } else G.streak = 0;
+    G.placed.add(id); G.queue.shift();
+    if (!G.queue.length && G.parked.length){ G.queue = G.parked; G.parked = []; ZD.toast('Boşta bıraktığın etiketler sıraya geri geldi.', '', 2200); }
+    else ZD.toast(`Doğru! <b>${nameTxt(it)}</b> +${pts}`, 'good', 1300);
+    ZD.sfx('good');
+    fillBox(box, true);
+    glow(id, 'ok', 1100);
+    updateHud(true); renderCard(true); renderPark(); updateBtns(); buildLegend();
+    if (G.placed.size === G.items.length) setTimeout(finish, 750);
+    return true;
+  }
+  // yanlış
+  G.miss[it.id] = (G.miss[it.id] || 0) + 1; G.streak = 0;
+  ZD.sfx('bad');
+  const lbi = $('.lbi', box.el); box.el.classList.add('bad'); lbi.classList.remove('zd-shake'); void lbi.offsetWidth; lbi.classList.add('zd-shake');
+  setTimeout(() => box.el.classList.remove('bad'), 900);
+  showBub(box, `<b>Bu kutu değil.</b> Bu kutudaki yapı: ${box.hint}`);
+  updateHud();
+  return false;
+}
+
+function fillBox(it, anim){
+  it.el.classList.add('filled');
+  $('.lbi', it.el).innerHTML = G.view.classList.contains('cmp') ? `${it.n}.` : nameHTML(it);
+  it.el.setAttribute('aria-label', `${it.n}. ${nameTxt(it)}`);
+  if (anim){ it.el.classList.remove('justok'); void it.el.offsetWidth; it.el.classList.add('justok'); }
+  layout();
+}
+
+function glow(id, type, ms){
+  const g = G.world.querySelector(`[data-org="${id}"]`); if (!g) return;
+  g.setAttribute('filter', `url(#${G.p}${type})`);
+  clearTimeout(g._t); if (ms) g._t = setTimeout(() => g.removeAttribute('filter'), ms);
+}
+function unglow(id){ const g = G && G.world.querySelector(`[data-org="${id}"]`); if (g){ clearTimeout(g._t); g.removeAttribute('filter'); } }
+
+function updateHud(bump){
+  ui.stat('score', G.score, bump); ui.stat('lbl', `${G.placed.size} / ${G.items.length}`, bump); ui.stat('streak', G.streak, bump);
+}
+function updateBtns(){
+  const pas = $('#bPas'), ip = $('#bIp'), pk = $('#bPark'); if (!pas) return;
+  pas.querySelector('span').textContent = `Pas (${G.pas})`; ip.querySelector('span').textContent = `İpucu (${G.ipucu})`;
+  const has = !!current();
+  pas.disabled = !has || G.pas <= 0 || remaining() < 2;
+  ip.disabled = !has || G.ipucu <= 0;
+  pk.disabled = !has || remaining() < 2;
+}
+function renderPark(){
+  const el = $('#egPark'); if (!el) return;
+  if (!G.parked.length){ el.innerHTML = ''; return; }
+  el.innerHTML = `<span>Boşta bekleyen (${G.parked.length})</span>` + G.parked.map(id => `<button data-id="${id}" aria-label="${nameTxt(G.byId[id])} etiketini geri al">${G.byId[id].name}</button>`).join('');
+  $$('button', el).forEach(b => b.onclick = () => {
+    ZD.sfx('click'); stopHint(); hideBub();
+    const id = b.dataset.id; G.parked.splice(G.parked.indexOf(id), 1);
+    const cur = G.queue.shift(); if (cur) G.parked.push(cur);
+    G.queue.unshift(id); renderCard(true); renderPark(); updateBtns();
+  });
+}
+
+function doPas(){
+  if (!current() || G.pas <= 0 || remaining() < 2) return;
+  ZD.sfx('whoosh'); stopHint(); hideBub();
+  G.pas--; G.queue.push(G.queue.shift());
+  if (G.queue.length === 1 && G.parked.length){ /* sıra bitti, bekleyenler arkada */ }
+  renderCard(true); updateBtns();
+}
+function doPark(){
+  if (!current() || remaining() < 2) return;
+  ZD.sfx('click'); stopHint(); hideBub();
+  G.parked.push(G.queue.shift());
+  if (!G.queue.length){ G.queue.push(G.parked.shift()); }
+  renderCard(true); renderPark(); updateBtns();
+}
+let hintT = 0, hintId = null;
+function doHint(){
+  const it = current(); if (!it || G.ipucu <= 0) return;
+  G.ipucu--; G.hinted[it.id] = true; updateBtns();
+  ZD.sfx('level'); hideBub();
+  // kutu görünmüyorsa görünümü sıfırla
+  const [x, y] = toScr(it.b); if (x < 0 || y < 0 || x > G.view.clientWidth || y > G.view.clientHeight) resetView(false);
+  stopHint(); hintId = it.id;
+  it.el.classList.add('blink'); legendEl(it.id)?.classList.add('blink');
+  glow(it.id, 'hl'); layout();
+  hintT = setTimeout(stopHint, 3200);
+}
+function stopHint(){
+  clearTimeout(hintT); if (!hintId || !G) return;
+  const it = G.byId[hintId]; it && it.el.classList.remove('blink'); legendEl(hintId)?.classList.remove('blink');
+  if (!G.review) unglow(hintId); hintId = null; layout();
+}
+const legendEl = id => $(`#egLegend [data-slot="${id}"]`);
+
+/* ---------- Yanlış balonu ---------- */
+let bubT = 0;
+function showBub(it, html){
+  const b = G.bub; b.innerHTML = html; b.classList.add('show');
+  const vw = G.view.clientWidth, vh = G.view.clientHeight;
+  const r = it.el.getBoundingClientRect(), vr = G.view.getBoundingClientRect();
+  b.style.maxWidth = Math.min(280, vw - 16) + 'px';
+  const bw = b.offsetWidth, bh = b.offsetHeight;
+  let x = r.left - vr.left + r.width/2 - bw/2, y = r.bottom - vr.top + 10;
+  if (y + bh > vh - 6) y = r.top - vr.top - bh - 10;
+  b.style.left = clamp(x, 8, vw - bw - 8) + 'px'; b.style.top = clamp(y, 6, vh - bh - 6) + 'px';
+  clearTimeout(bubT); bubT = setTimeout(hideBub, 4200);
+}
+function hideBub(){ if (G && G.bub) G.bub.classList.remove('show'); }
+
+/* ======================================================================
+   Görünüm: sığdırma, yakınlaştırma, kaydırma, kılavuz çizgileri
+   ====================================================================== */
+const V = { s0: 1, k: 1, S: 1, tx: 0, ty: 0, cw: W, ox: 0 };
+let rafL = 0;
+function toScr([x, y]){ return [V.tx + x*V.S, V.ty + y*V.S]; }
+function fitBase(){
+  const vw = G.view.clientWidth, vh = G.view.clientHeight;
+  V.cw = vw < 600 ? 840 : W; V.ox = vw < 600 ? 80 : 0;   // telefonda kenar boşlukları kırpılır
+  V.s0 = Math.min(vw / V.cw, vh / H) * .985;
+}
+function resetView(anim){
+  fitBase();
+  const vw = G.view.clientWidth, vh = G.view.clientHeight;
+  const to = { k: 1, S: V.s0, tx: (vw - V.cw*V.s0)/2 - V.ox*V.s0, ty: (vh - H*V.s0)/2 };
+  if (!anim){ Object.assign(V, to); layout(); return; }
+  const from = { k: V.k, S: V.S, tx: V.tx, ty: V.ty }, t0 = performance.now();
+  (function step(n){ const t = Math.min(1, (n - t0)/380), e = 1 - Math.pow(1-t, 3);
+    for (const key in to) V[key] = from[key] + (to[key] - from[key]) * e;
+    layout(); if (t < 1) requestAnimationFrame(step); })(t0);
+}
+function clampPan(){
+  const vw = G.view.clientWidth, vh = G.view.clientHeight, cw = W*V.S, ch = H*V.S;
+  V.tx = cw <= vw ? (vw - cw)/2 : clamp(V.tx, vw - cw, 0);
+  V.ty = ch <= vh ? (vh - ch)/2 : clamp(V.ty, vh - ch, 0);
+}
+function zoomAt(cx, cy, f){
+  const nk = clamp(V.k * f, 1, 3.2), S2 = V.s0 * nk;
+  const wx = (cx - V.tx)/V.S, wy = (cy - V.ty)/V.S;
+  V.k = nk; V.S = S2; V.tx = cx - wx*S2; V.ty = cy - wy*S2; clampPan(); reqLayout();
+}
+function reqLayout(){ if (!rafL) rafL = requestAnimationFrame(() => { rafL = 0; layout(); }); }
+
+function layout(){
+  if (!G || !G.view) return;
+  const cmp = G.view.clientWidth < 600;
+  if (cmp !== G.view.classList.contains('cmp')){
+    G.view.classList.toggle('cmp', cmp);
+    G.items.forEach(it => { $('.lbi', it.el).innerHTML = (G.placed.has(it.id) && !cmp) ? nameHTML(it) : `${it.n}.`; });
+  }
+  G.world.setAttribute('transform', `translate(${V.tx.toFixed(2)} ${V.ty.toFixed(2)}) scale(${V.S.toFixed(4)})`);
+  const fs = cmp ? 11.5 : clamp(15.5 * V.S, 11.5, 17);
+  G.view.style.setProperty('--fs', fs.toFixed(2) + 'px');
+  const zm = $('#egZm'); if (zm) zm.textContent = Math.round(V.k * 100) + '%';
+  let svg = '';
+  G.items.forEach(it => {
+    const [bx, by] = toScr(it.b), [ax, ay] = toScr(it.a);
+    it.el.style.left = bx + 'px'; it.el.style.top = by + 'px';
+    const hw = it.el.offsetWidth/2 + 1, hh = it.el.offsetHeight/2 + 1;
+    const dx = ax - bx, dy = ay - by;
+    const t = Math.min(dx ? hw/Math.abs(dx) : Infinity, dy ? hh/Math.abs(dy) : Infinity);
+    if (t >= 1) return;
+    const sx = bx + dx*t, sy = by + dy*t;
+    const c = it.el.classList.contains('blink') ? 'h' : G.placed.has(it.id) ? 'f' : '';
+    svg += `<line class="${c}" x1="${sx.toFixed(1)}" y1="${sy.toFixed(1)}" x2="${ax.toFixed(1)}" y2="${ay.toFixed(1)}" ${c ? `filter="url(#eglg)"` : ''}/><circle class="${c}" cx="${ax.toFixed(1)}" cy="${ay.toFixed(1)}" r="${cmp ? 3.2 : 4.4}"/>`;
+  });
+  G.lines.innerHTML = `<defs><filter id="eglg" filterUnits="userSpaceOnUse" x="-2000" y="-2000" width="6000" height="6000"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>` + svg;
+}
+
+function setupView(){
+  const v = G.view;
+  resetView(false);
+  if (G.ro) G.ro.disconnect();
+  G.ro = new ResizeObserver(() => { if (G && G.view === v){ resetView(false); } });
+  G.ro.observe(v);
+  v.addEventListener('wheel', e => { e.preventDefault(); const r = v.getBoundingClientRect(); hideBub(); zoomAt(e.clientX - r.left, e.clientY - r.top, Math.exp(-e.deltaY * .0016)); }, { passive: false });
+  const pts = new Map(); let pinch = null, pan = null, downT = null, downXY = null;
+  const rel = e => { const r = v.getBoundingClientRect(); return { x: e.clientX - r.left, y: e.clientY - r.top }; };
+  v.addEventListener('pointerdown', e => {
+    if (e.target.closest('.lbx')) return;
+    downT = e.target; downXY = { x: e.clientX, y: e.clientY };
+    try { v.setPointerCapture(e.pointerId); } catch(_){}
+    pts.set(e.pointerId, rel(e));
+    if (pts.size === 2){ const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x-b.x, a.y-b.y) || 1, k: V.k }; pan = null; }
+    else if (pts.size === 1){ pan = { x: e.clientX, y: e.clientY, tx: V.tx, ty: V.ty }; v.classList.add('panning'); }
+  });
+  v.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId)) return;
+    pts.set(e.pointerId, rel(e));
+    if (pinch && pts.size >= 2){
+      const [a, b] = [...pts.values()], d = Math.hypot(a.x-b.x, a.y-b.y);
+      zoomAt((a.x+b.x)/2, (a.y+b.y)/2, (pinch.k * d / pinch.d) / V.k);
+    } else if (pan){
+      V.tx = pan.tx + (e.clientX - pan.x); V.ty = pan.ty + (e.clientY - pan.y); clampPan(); reqLayout();
+    }
+  });
+  const up = e => {
+    if (!pts.has(e.pointerId)) return;
+    pts.delete(e.pointerId);
+    if (pts.size < 2) pinch = null;
+    if (pts.size === 1){ const q = [...pts.values()][0]; const r = v.getBoundingClientRect(); pan = { x: q.x + r.left, y: q.y + r.top, tx: V.tx, ty: V.ty }; }
+    if (pts.size === 0){
+      pan = null; v.classList.remove('panning');
+      if (downXY && Math.hypot(e.clientX - downXY.x, e.clientY - downXY.y) < 6 && G && G.review){
+        const o = downT && downT.closest && downT.closest('[data-org]');
+        if (o){ const id = o.dataset.org; if (G.byId[id]) selectInfo(id); else { const par = o.parentElement && o.parentElement.closest('[data-org]'); par && G.byId[par.dataset.org] && selectInfo(par.dataset.org); } }
+      }
+    }
+  };
+  v.addEventListener('pointerup', up); v.addEventListener('pointercancel', up);
+}
+
+/* ======================================================================
+   Yardım, bitiş, inceleme
+   ====================================================================== */
+function showHelp(fromBtn){
+  const wasRun = timer.run; timer.stop();
+  ZD.intro({
+    kicker: 'ETİKETLEME · ' + G.S.title.toLocaleUpperCase('tr-TR'), title: 'Organları Etiketle',
+    text: `${G.S.title} çizimindeki ${G.items.length} numaralı kutuyu doğru etiketlerle doldur.`,
+    steps: [
+      'Sağdaki etiket kartını <strong>tutma noktalarından</strong> tutup çizimdeki doğru numaralı kutuya sürükle. İstersen kutuya <strong>dokunarak</strong> da yerleştirebilirsin.',
+      'Yanlış kutuya bırakırsan o kutudaki yapının <strong>görevi</strong> ipucu olarak görünür.',
+      '<strong>İpucu (2)</strong> doğru kutuyu yanıp söndürür, <strong>Pas (3)</strong> etiketi sona atar, <strong>Boşta bırak</strong> etiketi şimdilik kenara koyar.',
+      'Çizimi fare tekerleği ya da iki parmakla yakınlaştırıp sürükleyebilirsin; <strong>Görünüme dön</strong> ile sıfırla.'
+    ],
+    start: fromBtn ? 'Devam et' : 'Başla',
+    onStart(){ if (!G) return; if (!G.done) timer.start(); else if (wasRun) timer.start();
+      const c = $('#egCard'); if (c && !G.done) setTimeout(() => ZD.pointAt(c, { ms: 2400 }), 420); }
+  });
+}
+
+function finish(){
+  if (!G || G.done) return;
+  G.done = true; timer.stop(); stopHint(); hideBub();
+  const first = G.items.filter(it => !G.miss[it.id] && !G.hinted[it.id]).length;
+  const m = ZD.result({
+    title: first === G.items.length ? 'Kusursuz etiketleme!' : 'Diyagram tamamlandı!',
+    correct: first, total: G.items.length, score: G.score, time: timer.t,
+    text: `${G.items.length} etiketin <b>${first}</b> tanesini ilk denemede ve ipucusuz yerleştirdin. En uzun seri: <b>${G.best}</b>.`,
+    extra: `<div style="margin-top:16px"><button class="zd-btn green" id="egRev">${ZD.I.info}Diyagramı incele</button></div>`,
+    onReplay(){ startSet(G.key, false); }
+  });
+  const rb = m.box.querySelector('#egRev'); if (rb) rb.onclick = () => { ZD.sfx('click'); m.close(); review(); };
+}
+
+function review(){
+  G.review = true; resetView(true);
+  $('#egPlay').innerHTML = `<div class="eg-cap"><span>Tamamlanan diyagram</span><b>${G.items.length} / ${G.items.length}</b></div>
+    <div class="zd-card eg-info zd-info" id="egInfo"><h3>Bir etikete dokun</h3><p>Her etiket ya da organ, ders kitabındaki görevini gösteren bir kart açar.</p></div>
+    <div class="eg-btns"><button class="zd-btn" id="bAgain">${ZD.I.restart}<span>Tekrar oyna</span></button><button class="zd-btn ghost" id="bFit2">${IC.fit}<span>Görünüme dön</span></button></div>`;
+  $('#bAgain').onclick = () => { ZD.sfx('click'); startSet(G.key, false); };
+  $('#bFit2').onclick = () => { ZD.sfx('click'); resetView(true); };
+  const first = G.items.slice().sort((a,b) => a.n - b.n)[0];
+  setTimeout(() => G && G.review && ZD.pointAt(first.el, { ms: 2200 }), 500);
+}
+
+function selectInfo(id, quiet){
+  const it = G.byId[id]; if (!it) return;
+  if (G.sel && G.sel !== id){ unglow(G.sel); G.byId[G.sel].el.classList.remove('sel'); }
+  G.sel = id; it.el.classList.add('sel'); glow(id, 'sel', quiet ? 1400 : 0);
+  if (quiet) setTimeout(() => it.el.classList.remove('sel'), 1400);
+  ZD.sfx('pop');
+  const box = $('#egInfo');
+  if (box){ box.innerHTML = `<h3><i>${it.n}.</i>${nameTxt(it)}</h3><p>${it.info}</p><div class="src">Kaynak: Fen Bilimleri 7, 3. Ünite</div>`; box.classList.remove('zd-fade-in'); void box.offsetWidth; box.classList.add('zd-fade-in'); }
+  else ZD.toast(`<b>${nameTxt(it)}:</b> ${it.info}`, '', 3600);
+}
+
+/* ---------- Başlat ---------- */
+const qs = new URLSearchParams(location.search).get('set');
+if (qs && SETS[qs]) startSet(qs, false); else showPicker();
+window.__eg = { get G(){ return G; }, attempt: id => attempt(id), finish: () => finish(), SETS };
+})();
+</script></body></html>

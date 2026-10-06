@@ -1,0 +1,949 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sırala ve Yerleştir · Kategori Oyunu</title><link rel="stylesheet" href="assets/zd.css">
+<style>
+/* ================= Kategori sıralama oyunu ================= */
+.zd-body{position:relative;padding:4px 22px 20px}
+.game{display:flex;flex-direction:column;gap:12px}
+
+/* --- Kategori sütunları --- */
+.cols{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.col{
+  --c:#ffbb3d;position:relative;border-radius:16px;padding:12px 12px 12px;
+  background:linear-gradient(180deg,rgba(22,42,68,.85),rgba(12,26,44,.85));
+  border:1.5px solid rgba(140,200,255,.16);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 12px 28px rgba(0,0,0,.3);
+  transition:border-color .2s,box-shadow .25s,transform .25s var(--spring);cursor:pointer;
+}
+.col::before{content:"";position:absolute;left:10px;right:10px;top:-1.5px;height:5px;border-radius:0 0 6px 6px;background:var(--c);box-shadow:0 0 14px var(--c),0 2px 10px var(--c)}
+.col h3{text-align:center;font-size:clamp(15px,1.45vw,19px);font-weight:800;line-height:1.15;margin-top:4px}
+.col .sub{text-align:center;font-size:12.5px;color:var(--muted);margin-top:2px;line-height:1.25;min-height:16px}
+.col .cnt{position:absolute;right:12px;top:10px;font-size:15px;font-weight:800;color:#c9d8ea;min-width:14px;text-align:right}
+.col .cnt.bump{animation:zd-bump .45s var(--spring)}
+.slots{display:grid;grid-template-columns:repeat(var(--sc,2),1fr);gap:8px;margin-top:10px}
+.slot{height:clamp(40px,7.2vh,66px);border-radius:12px;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);box-shadow:inset 0 2px 6px rgba(0,0,0,.35);display:grid;place-items:center;overflow:hidden}
+.slot svg{width:92%;height:92%;filter:drop-shadow(0 3px 4px rgba(0,0,0,.45))}
+.slot.fill{background:radial-gradient(circle at 50% 42%,rgba(255,255,255,.26),rgba(255,255,255,.06) 72%);border-color:color-mix(in srgb,var(--c) 45%,transparent)}
+.slot.fill svg{animation:slotIn .6s var(--spring) both}
+@keyframes slotIn{0%{transform:scale(1.8);opacity:0}100%{transform:none;opacity:1}}
+.col.over,.col.sel-target:hover{border-color:var(--c);box-shadow:0 0 0 1px var(--c),0 0 26px color-mix(in srgb,var(--c) 55%,transparent),inset 0 0 30px color-mix(in srgb,var(--c) 14%,transparent);transform:translateY(-3px)}
+.col.good{animation:colGood .8s var(--ease)}
+@keyframes colGood{0%{box-shadow:0 0 0 0 rgba(47,227,155,.9),0 0 30px rgba(47,227,155,.6)}100%{box-shadow:0 0 0 18px rgba(47,227,155,0),0 0 0 rgba(47,227,155,0)}}
+.col.bad{border-color:var(--red);box-shadow:0 0 26px rgba(255,84,104,.55)}
+
+/* --- Seçili öğe bilgisi --- */
+.info{min-height:62px;text-align:center;display:flex;flex-direction:column;justify-content:center;gap:2px;padding:0 10px}
+.info .nm{font-size:clamp(20px,2.2vw,28px);font-weight:800;color:#b993ff;text-shadow:0 0 18px rgba(168,121,255,.45);line-height:1.15}
+.info .tx{font-size:clamp(14px,1.3vw,17px);color:#dbe7f5;line-height:1.35}
+.info.hint .nm{color:var(--muted);text-shadow:none;font-size:clamp(17px,1.8vw,22px)}
+.info.swap{animation:zd-fi .35s var(--ease)}
+
+/* --- Öğe kartları --- */
+.items{display:flex;flex-wrap:wrap;justify-content:center;gap:12px;max-width:1120px;margin:0 auto;width:100%}
+.item{
+  position:relative;width:calc((100% - 36px)/4);height:clamp(96px,17.8vh,172px);
+  border-radius:16px;background:linear-gradient(180deg,#ffffff 0%,#f2f6fb 100%);
+  box-shadow:0 2px 0 #fff inset,0 6px 0 rgba(0,0,0,.22),0 12px 26px rgba(0,0,0,.35);
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:6px 8px 9px;
+  cursor:grab;user-select:none;-webkit-user-select:none;
+  transition:transform .3s var(--spring),box-shadow .2s,opacity .35s var(--ease);
+  animation:itemIn .6s var(--spring) both;animation-delay:var(--d,0s)
+}
+@keyframes itemIn{0%{transform:translateY(40px) scale(.6);opacity:0}100%{transform:none;opacity:1}}
+.item:hover{transform:translateY(-4px)}
+.item .art{flex:1;width:100%;min-height:0;display:grid;place-items:center}
+.item .art svg{height:100%;width:auto;max-width:100%}
+.item .lb{font-size:clamp(13px,1.35vw,18px);font-weight:600;color:#17263a;text-align:center;line-height:1.15;letter-spacing:.1px}
+.item.sel{box-shadow:0 0 0 3px var(--cyan),0 0 26px rgba(53,238,252,.6),0 6px 0 rgba(0,0,0,.22),0 12px 26px rgba(0,0,0,.35);transform:translateY(-4px)}
+.item.gone{opacity:1!important;transform:none!important;pointer-events:none;background:rgba(255,255,255,.025);border:2px dashed rgba(140,200,255,.16);box-shadow:inset 0 2px 10px rgba(0,0,0,.3);animation:none}
+.item.gone>*{opacity:0;transform:scale(.5);transition:.35s var(--ease)}
+.item>*{transition:.35s var(--ease)}
+.item.miss{animation:zd-shake .45s}
+.item .x{position:absolute;right:8px;top:8px;width:22px;height:22px;border-radius:50%;background:#ff5468;color:#fff;display:none;place-items:center;box-shadow:0 0 10px rgba(255,84,104,.6)}
+.item .x svg{width:13px;height:13px}
+.item.tried .x{display:grid}
+.zd-ghost{box-shadow:0 0 0 3px var(--cyan),0 24px 40px rgba(0,0,0,.5)!important;animation:none!important}
+.pts{position:absolute;z-index:40;font-size:24px;font-weight:900;color:var(--green);text-shadow:0 0 14px rgba(47,227,155,.7),0 3px 0 rgba(0,0,0,.35);pointer-events:none;transform:translate(-50%,-50%);animation:pts .95s var(--ease) forwards;white-space:nowrap}
+@keyframes pts{0%{opacity:0;transform:translate(-50%,-30%) scale(.6)}25%{opacity:1;transform:translate(-50%,-70%) scale(1.15)}100%{opacity:0;transform:translate(-50%,-160%) scale(1)}}
+.wave{position:absolute;left:50%;top:50%;z-index:45;transform:translate(-50%,-50%);padding:12px 26px;border-radius:16px;font-size:22px;font-weight:900;letter-spacing:1px;color:#fff;background:linear-gradient(180deg,#7c4dff,#5a2fd6);box-shadow:0 0 30px rgba(168,121,255,.6),0 14px 30px rgba(0,0,0,.4);animation:wave 1.3s var(--ease) forwards;pointer-events:none}
+@keyframes wave{0%{opacity:0;transform:translate(-50%,-50%) scale(.6)}20%,75%{opacity:1;transform:translate(-50%,-50%) scale(1)}100%{opacity:0;transform:translate(-50%,-60%) scale(1)}}
+
+/* --- Set seçici --- */
+.picker{padding:10px 0 8px}
+.picker h2{text-align:center;font-size:clamp(20px,2.4vw,28px);font-weight:800;margin-bottom:4px}
+.picker>p{text-align:center;color:var(--muted);font-size:15px;margin-bottom:20px}
+.sets{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;max-width:1060px;margin:0 auto}
+.set{display:flex;flex-direction:column;align-items:center;gap:10px;padding:16px 16px 18px;border-radius:20px;background:linear-gradient(170deg,#173252,#0d1f35);border:1.5px solid rgba(140,200,255,.18);box-shadow:0 14px 34px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.06);transition:transform .3s var(--spring),border-color .2s,box-shadow .2s;text-align:center}
+.set:hover,.set:focus-visible{transform:translateY(-5px);border-color:rgba(53,238,252,.7);box-shadow:0 0 24px rgba(53,238,252,.3),0 18px 40px rgba(0,0,0,.45);outline:none}
+.set .thumbs{display:flex;gap:8px}
+.set .thumbs span{width:76px;height:66px;border-radius:12px;background:linear-gradient(180deg,#fff,#eef3f9);display:grid;place-items:center;box-shadow:0 4px 0 rgba(0,0,0,.2)}
+.set .thumbs svg{width:92%;height:92%}
+.set h3{font-size:18px;font-weight:800}
+.set .cats{display:flex;flex-wrap:wrap;justify-content:center;gap:6px}
+.set .cats i{font-style:normal;font-size:11.5px;font-weight:700;padding:4px 9px;border-radius:999px;border:1.5px solid var(--c);color:#e8f1fb;background:color-mix(in srgb,var(--c) 14%,transparent)}
+.set small{font-size:12px;color:var(--dim);font-weight:600}
+
+/* --- Sonuç --- */
+.rv{margin-top:14px;text-align:left}
+.rv .hd{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.rv h4{font-size:12px;letter-spacing:1.6px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.rv ul{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:7px;max-height:clamp(70px,calc(100vh - 600px),240px);overflow:auto;padding-right:4px}
+.rv li{display:flex;align-items:center;gap:8px;padding:6px 10px 6px 6px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--line);font-size:13px;line-height:1.25;color:#d6e4f3}
+.rv li .th{flex:none;width:42px;height:36px;border-radius:8px;background:#fff;display:grid;place-items:center}
+.rv li .th svg{width:94%;height:94%}
+.rv li b{display:block;color:#fff;font-weight:700}
+.rv li span i{font-style:normal;color:var(--c);font-weight:700}
+.rv .ok{padding:12px;border-radius:12px;background:rgba(47,227,155,.08);border:1px solid rgba(47,227,155,.35);color:#bff5dc;font-size:14px;text-align:center}
+.zd-stat .v.seri{color:var(--green);text-shadow:0 0 18px rgba(47,227,155,.4)}
+
+/* --- Duyarlı --- */
+@media (max-width:860px){
+  .zd-body{padding:2px 10px 12px}
+  .zd-crumb{display:none}
+  .zd-stat{padding:0 9px}
+  .zd-stat .l{font-size:10px;letter-spacing:1.1px}
+  .game{gap:8px}
+  .cols{grid-template-columns:1fr 1fr;gap:8px}
+  .col{padding:8px 7px 7px;border-radius:13px}
+  .col::before{left:8px;right:8px;height:4px}
+  .col h3{font-size:13.5px;margin-top:2px;padding:0 14px}
+  .col .sub{font-size:10.5px;min-height:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .col .cnt{font-size:12px;right:8px;top:6px}
+  .slots{gap:5px;margin-top:6px}
+  .slot{height:38px;border-radius:9px}
+  .info{min-height:50px}
+  .info .nm{font-size:18px}
+  .info .tx{font-size:12.5px}
+  .info.hint .nm{font-size:15px}
+  .items{gap:7px}
+  .item{width:calc((100% - 21px)/4);height:96px;padding:3px 3px 6px;border-radius:12px;box-shadow:0 4px 0 rgba(0,0,0,.22),0 8px 16px rgba(0,0,0,.3)}
+  .item .lb{font-size:10.5px;font-weight:700;line-height:1.1;min-height:23px;display:flex;align-items:center}
+  .item .x{width:18px;height:18px;right:4px;top:4px}
+  .sets{grid-template-columns:1fr;gap:10px}
+  .set{padding:12px;gap:7px}
+  .set .thumbs span{width:62px;height:52px}
+  .picker>p{margin-bottom:12px;font-size:14px}
+  .zd-modal{padding:12px}
+  .zd-toast{width:calc(100% - 28px);font-size:14px;padding:10px 14px}
+  .zd-modal .box{padding:20px 16px 18px}
+  .zd-modal h2{font-size:22px;margin:6px 0}
+  .zd-modal p{font-size:14px}
+  .zd-stars svg{width:40px;height:40px}
+  .zd-stars svg:nth-child(2){width:52px;height:52px;margin-top:-6px}
+  .rv ul{grid-template-columns:1fr;max-height:150px}
+  .zd-modal .acts{margin-top:16px;gap:8px}
+  .zd-modal .acts .zd-btn{padding:11px 16px;font-size:14px}
+}
+</style></head>
+<body><div id="app"></div><script src="assets/zd.js"></script><script>
+(function(){
+'use strict';
+
+/* ==================================================================
+   SVG İLLÜSTRASYON KİTİ — gradyan hacim, specular parlama, rim ışığı,
+   yumuşak gölge. Her çizim benzersiz id önekiyle üretilir.
+   ================================================================== */
+let UID = 0;
+function svg(draw, vb = '0 0 120 100') {
+  const p = 'k' + (UID++) + '_'; let n = 0; const D = [];
+  const stops = s => s.map((c, i) => Array.isArray(c)
+    ? `<stop offset="${c[0]}" stop-color="${c[1]}"${c[2] != null ? ` stop-opacity="${c[2]}"` : ''}/>`
+    : `<stop offset="${s.length > 1 ? i / (s.length - 1) : 0}" stop-color="${c}"/>`).join('');
+  const k = {
+    lg(s, x1 = 0, y1 = 0, x2 = 0, y2 = 1) { const id = p + (n++); D.push(`<linearGradient id="${id}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}">${stops(s)}</linearGradient>`); return `url(#${id})`; },
+    rg(s, cx = .38, cy = .32, r = .78) { const id = p + (n++); D.push(`<radialGradient id="${id}" cx="${cx}" cy="${cy}" r="${r}">${stops(s)}</radialGradient>`); return `url(#${id})`; },
+    sh: `filter="url(#${p}sh)"`, soft: `filter="url(#${p}sf)"`, glow: `filter="url(#${p}gl)"`,
+    pat(color = '#fff', op = .2, sz = 5, r = 1.1) { const id = p + (n++); D.push(`<pattern id="${id}" patternUnits="userSpaceOnUse" width="${sz}" height="${sz}"><circle cx="${sz / 2}" cy="${sz / 2}" r="${r}" fill="${color}" fill-opacity="${op}"/><circle cx="0" cy="0" r="${r * .8}" fill="${color}" fill-opacity="${op * .7}"/><circle cx="${sz}" cy="${sz}" r="${r * .8}" fill="${color}" fill-opacity="${op * .7}"/></pattern>`); return `url(#${id})`; },
+    clip(d) { const id = p + (n++); D.push(`<clipPath id="${id}"><path d="${d}"/></clipPath>`); return `clip-path="url(#${id})"`; },
+    ground(cx = 60, cy = 91, rx = 34, ry = 4.5) { return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${k.rg([[0, '#0b1626', .38], [1, '#0b1626', 0]], .5, .5, .5)}"/>`; },
+    hl(cx, cy, rx, ry, rot = 0, op = .85) { return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" transform="rotate(${rot} ${cx} ${cy})" fill="${k.rg([[0, '#fff', op], [1, '#fff', 0]], .5, .5, .5)}"/>`; },
+    ball(cx, cy, r, c1, c2, c3) {
+      return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${k.rg([[0, c1], [.6, c2], [1, c3 || c2]], .36, .3, .78)}"/>` +
+        `<circle cx="${cx}" cy="${cy}" r="${r - .5}" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1"/>` +
+        k.hl(cx - r * .32, cy - r * .4, r * .42, r * .26, -32, .95);
+    },
+    stick(x1, y1, x2, y2, w = 4, c = '#c9d3e0') { return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${c}" stroke-width="${w}" stroke-linecap="round"/><line x1="${x1}" y1="${y1 - w * .18}" x2="${x2}" y2="${y2 - w * .18}" stroke="#fff" stroke-opacity=".55" stroke-width="${w * .28}" stroke-linecap="round"/>`; },
+    dropPath(cx, cy, s) { return `M${cx},${cy - 2.1 * s} C${cx + .3 * s},${cy - 1.4 * s} ${cx + s},${cy - .8 * s} ${cx + s},${cy} A${s},${s} 0 1 1 ${cx - s},${cy} C${cx - s},${cy - .8 * s} ${cx - .3 * s},${cy - 1.4 * s} ${cx},${cy - 2.1 * s} Z`; },
+    drop(cx, cy, s, c1, c2, op = 1) {
+      return `<path d="${k.dropPath(cx, cy, s)}" fill="${k.rg([[0, c1], [1, c2]], .42, .62, .75)}" fill-opacity="${op}" stroke="${c2}" stroke-opacity=".5" stroke-width="1"/>` +
+        k.hl(cx - s * .38, cy - s * .35, s * .22, s * .42, 18, .95) +
+        `<path d="M${cx + s * .55},${cy + s * .35} A${s * .7},${s * .7} 0 0 1 ${cx + s * .05},${cy + s * .8}" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="${s * .1}" stroke-linecap="round"/>`;
+    },
+    cube(x, y, s, top = '#ffffff', left = '#dfe8f3', right = '#b9c8db') {
+      const a = s * .87;
+      return `<g ${k.sh}><path d="M${x},${y} L${x + a},${y + s / 2} L${x},${y + s} L${x - a},${y + s / 2}Z" fill="${top}"/>` +
+        `<path d="M${x - a},${y + s / 2} L${x},${y + s} L${x},${y + 2 * s} L${x - a},${y + 1.5 * s}Z" fill="${left}"/>` +
+        `<path d="M${x},${y + s} L${x + a},${y + s / 2} L${x + a},${y + 1.5 * s} L${x},${y + 2 * s}Z" fill="${right}"/>` +
+        `<path d="M${x - a},${y + s / 2} L${x},${y} L${x + a},${y + s / 2}" fill="none" stroke="#fff" stroke-width=".8" stroke-opacity=".9"/></g>`;
+    },
+    /* kan hücreleri */
+    rbc(cx, cy, r, rot = 0, dark = false) {
+      const c1 = dark ? '#e0566a' : '#ff6f80', c2 = dark ? '#a3122e' : '#d81c3c', c3 = dark ? '#6e0a1e' : '#9c0d26';
+      return `<g transform="rotate(${rot} ${cx} ${cy})" ${k.sh}><ellipse cx="${cx}" cy="${cy}" rx="${r}" ry="${r * .78}" fill="${k.rg([[0, c1], [.7, c2], [1, c3]], .4, .3, .8)}"/>` +
+        `<ellipse cx="${cx + r * .04}" cy="${cy + r * .04}" rx="${r * .5}" ry="${r * .36}" fill="${k.rg([[0, c3, .9], [1, c2, .2]], .5, .55, .6)}"/>` +
+        `<ellipse cx="${cx}" cy="${cy}" rx="${r * .62}" ry="${r * .47}" fill="none" stroke="#ff9aa6" stroke-opacity=".55" stroke-width="${r * .08}"/>` +
+        k.hl(cx - r * .45, cy - r * .42, r * .3, r * .14, -20, .8) + `</g>`;
+    },
+    wbc(cx, cy, r) {
+      const N = 9, pt = (a, rr) => (cx + Math.cos(a) * rr).toFixed(1) + ',' + (cy + Math.sin(a) * rr).toFixed(1);
+      let d = 'M' + pt(0, r * .94);
+      for (let i = 0; i < N; i++) { const a0 = i / N * Math.PI * 2, a1 = (i + 1) / N * Math.PI * 2, am = (a0 + a1) / 2; d += ' Q' + pt(am, r * (1.14 + (i % 3) * .03)) + ' ' + pt(a1, r * .94); }
+      return `<g ${k.sh}><path d="${d}Z" stroke-linejoin="round" fill="${k.rg([[0, '#ffffff'], [.65, '#eef1fb'], [1, '#c6cde3']], .38, .32, .8)}" stroke="#aeb9d6" stroke-width="1.2"/>` +
+        `<g fill="${k.rg([[0, '#c9a6ff'], [.6, '#8b5cf6'], [1, '#5b2bbf']], .35, .3, .8)}"><circle cx="${cx - r * .32}" cy="${cy - r * .05}" r="${r * .3}"/><circle cx="${cx + r * .08}" cy="${cy - r * .3}" r="${r * .28}"/><circle cx="${cx + r * .3}" cy="${cy + r * .14}" r="${r * .29}"/><circle cx="${cx - r * .02}" cy="${cy + r * .32}" r="${r * .24}"/></g>` +
+        k.hl(cx - r * .42, cy - r * .48, r * .32, r * .18, -30, .95) + `</g>`;
+    },
+    plt(cx, cy, s, rot = 0) {
+      return `<g transform="rotate(${rot} ${cx} ${cy})"><path d="M${cx - s},${cy} C${cx - s},${cy - s * .8} ${cx - s * .2},${cy - s * .9} ${cx + s * .3},${cy - s * .6} C${cx + s},${cy - s * .3} ${cx + s * 1.1},${cy + s * .4} ${cx + s * .4},${cy + s * .7} C${cx - s * .2},${cy + s} ${cx - s},${cy + s * .6} ${cx - s},${cy}Z" fill="${k.rg([[0, '#f6d9ff'], [.6, '#d39cf0'], [1, '#9a59c8']], .35, .3, .8)}" stroke="#8a4cb8" stroke-opacity=".5" stroke-width=".8"/>` +
+        `<circle cx="${cx}" cy="${cy}" r="${s * .18}" fill="#8a4cb8" fill-opacity=".5"/><circle cx="${cx + s * .35}" cy="${cy + s * .2}" r="${s * .13}" fill="#8a4cb8" fill-opacity=".45"/>` + k.hl(cx - s * .45, cy - s * .35, s * .3, s * .15, -20, .8) + `</g>`;
+    },
+    germ(cx, cy, r) {
+      let sp = '';
+      for (let i = 0; i < 10; i++) { const a = i / 10 * Math.PI * 2 + .2, x1 = cx + Math.cos(a) * r * .9, y1 = cy + Math.sin(a) * r * .9, x2 = cx + Math.cos(a) * r * 1.45, y2 = cy + Math.sin(a) * r * 1.45; sp += `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#3a9a2a" stroke-width="${r * .14}" stroke-linecap="round"/><circle cx="${x2}" cy="${y2}" r="${r * .17}" fill="#7ed957"/>`; }
+      return `<g ${k.sh}>${sp}<circle cx="${cx}" cy="${cy}" r="${r}" fill="${k.rg([[0, '#d6ff9e'], [.6, '#7ed957'], [1, '#2f8a22']], .36, .3, .8)}"/>` +
+        `<circle cx="${cx - r * .2}" cy="${cy + r * .25}" r="${r * .16}" fill="#2f8a22" fill-opacity=".5"/><circle cx="${cx + r * .35}" cy="${cy - r * .05}" r="${r * .12}" fill="#2f8a22" fill-opacity=".5"/>` + k.hl(cx - r * .35, cy - r * .4, r * .35, r * .2, -30, .9) + `</g>`;
+    }
+  };
+  const body = draw(k);
+  return `<svg viewBox="${vb}" aria-hidden="true" focusable="false"><defs>${D.join('')}` +
+    `<filter id="${p}sh" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="2.2" stdDeviation="1.8" flood-color="#0b1626" flood-opacity=".32"/></filter>` +
+    `<filter id="${p}sf" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="2.2"/></filter>` +
+    `<filter id="${p}gl" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="2.6" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>` +
+    `</defs>${body}</svg>`;
+}
+
+/* ---------- ortak organ şekilleri (bağlam/silüet çizimleri için) ---------- */
+const KIDNEY = (x, y, s, flip) => { // böbrek fasulyesi, merkez (x,y)
+  const f = flip ? -1 : 1, P = (a, b) => `${(x + a * s * f).toFixed(1)},${(y + b * s).toFixed(1)}`;
+  return `M${P(0, -1)} C${P(.75, -1.08)} ${P(1.05, -.4)} ${P(.98, .15)} C${P(.9, .8)} ${P(.35, 1.1)} ${P(-.12, .98)} C${P(-.5, .9)} ${P(-.52, .55)} ${P(-.28, .3)} C${P(-.12, .14)} ${P(-.12, -.14)} ${P(-.3, -.3)} C${P(-.55, -.55)} ${P(-.45, -.95)} ${P(0, -1)}Z`;
+};
+const BLADDER = (x, y, s) => `M${x},${y - s} C${x + s * 1.15},${y - s} ${x + s * 1.25},${y + s * .2} ${x + s * .95},${y + s * .62} C${x + s * .7},${y + s * .95} ${x + s * .25},${y + s * 1.02} ${x + s * .14},${y + s * 1.1} L${x - s * .14},${y + s * 1.1} C${x - s * .25},${y + s * 1.02} ${x - s * .7},${y + s * .95} ${x - s * .95},${y + s * .62} C${x - s * 1.25},${y + s * .2} ${x - s * 1.15},${y - s} ${x},${y - s}Z`;
+const LUNG_L = 'M50,26 C40,20 26,30 21,48 C17,64 19,82 30,86 C40,90 50,84 52,74 L53,34 C53,30 52,27 50,26Z';
+const LUNG_R = 'M70,26 C80,20 94,30 98,48 C101,64 99,80 90,84 C81,88 70,83 68,74 L67,34 C67,30 68,27 70,26Z';
+
+/* ==================================================================
+   ÇİZİMLER
+   ================================================================== */
+const A = {
+/* ---------------------- BOŞALTIM: ATIKLAR ---------------------- */
+ure: () => svg(k => k.ground(60, 90, 38) +
+  k.stick(60, 46, 60, 22, 5) + k.stick(55, 46, 55, 24, 3) + k.stick(60, 50, 36, 64, 5) + k.stick(60, 50, 84, 64, 5) +
+  k.stick(36, 64, 22, 56, 4) + k.stick(36, 64, 32, 82, 4) + k.stick(84, 64, 98, 56, 4) + k.stick(84, 64, 88, 82, 4) +
+  `<g ${k.sh}>` + k.ball(60, 20, 11, '#ffb3b3', '#ff3b4e', '#b0122a') +
+  k.ball(36, 64, 10.5, '#b9c8ff', '#4c6dff', '#22359e') + k.ball(84, 64, 10.5, '#b9c8ff', '#4c6dff', '#22359e') +
+  k.ball(22, 55, 6.5, '#ffffff', '#e6ecf5', '#aebbd0') + k.ball(32, 83, 6.5, '#ffffff', '#e6ecf5', '#aebbd0') +
+  k.ball(98, 55, 6.5, '#ffffff', '#e6ecf5', '#aebbd0') + k.ball(88, 83, 6.5, '#ffffff', '#e6ecf5', '#aebbd0') +
+  k.ball(60, 48, 11, '#8a96a8', '#3d4757', '#1a212c') + `</g>`),
+
+idrar: () => svg(k => k.ground(60, 91, 30) +
+  `<path d="M38,30 L82,30 L79,84 C79,88 76,90 72,90 L48,90 C44,90 41,88 41,84 Z" fill="${k.lg(['#eef6ff', '#ffffff', '#dfeaf7'], 0, 0, 1, 0)}" fill-opacity=".75" stroke="#b7c9de" stroke-width="1.3" ${k.sh}/>` +
+  `<path d="M40,52 Q60,56 80.5,52 L79,84 C79,88 76,90 72,90 L48,90 C44,90 41,88 41,84 Z" fill="${k.lg(['#fff0a0', '#ffd84a', '#f2a900'])}"/>` +
+  `<ellipse cx="60.2" cy="52.5" rx="20.2" ry="3" fill="#fff6c4" fill-opacity=".9"/>` +
+  [60, 68, 76].map(y => `<line x1="72" y1="${y}" x2="78" y2="${y}" stroke="#9b7a14" stroke-opacity=".5" stroke-width="1.2"/>`).join('') +
+  `<rect x="44" y="34" width="5" height="52" rx="2.5" fill="#fff" fill-opacity=".7"/>` +
+  `<path d="M34,22 L86,22 L85,30 L35,30 Z" fill="${k.lg(['#bfe9ff', '#4fb3e8', '#1d6fa6'])}" ${k.sh}/>` +
+  `<rect x="34" y="18" width="52" height="6" rx="3" fill="${k.lg(['#e8f8ff', '#8fd3f4'])}"/>` +
+  [40, 47, 54, 61, 68, 75, 82].map(x => `<line x1="${x}" y1="24" x2="${x}" y2="29.5" stroke="#145c8a" stroke-opacity=".35" stroke-width="1.2"/>`).join('')),
+
+tuz: () => svg(k => k.ground(60, 91, 36) +
+  `<g opacity=".95">${k.drop(84, 62, 13, '#fff6c0', '#f2b400', .85)}</g>` +
+  k.cube(42, 36, 13) + k.cube(62, 50, 10.5) + k.cube(30, 58, 9.5) + k.cube(52, 68, 7.5, '#fff', '#e3ebf5', '#c0cee0') +
+  `<circle cx="74" cy="34" r="2" fill="#dfe8f3"/><circle cx="20" cy="50" r="1.6" fill="#dfe8f3"/>`),
+
+vitamin: () => svg(k => k.ground(60, 91, 36) +
+  `<g transform="rotate(-32 52 52)" ${k.sh}>` +
+  `<path d="M30,42 L52,42 L52,62 L30,62 A10,10 0 0 1 30,42Z" fill="${k.lg(['#ffd3a1', '#ff8c2a', '#c75400'])}"/>` +
+  `<path d="M52,42 L74,42 A10,10 0 0 1 74,62 L52,62Z" fill="${k.lg(['#ffffff', '#eef2f8', '#bfc9d8'])}"/>` +
+  `<line x1="52" y1="42" x2="52" y2="62" stroke="#a3acbb" stroke-width="1"/>` +
+  `<rect x="26" y="45" width="50" height="3.5" rx="1.75" fill="#fff" fill-opacity=".7"/></g>` +
+  `<g ${k.sh}><ellipse cx="82" cy="74" rx="13" ry="7" fill="${k.lg(['#fff9d6', '#ffe266', '#e0a800'])}"/><ellipse cx="82" cy="71.5" rx="12" ry="5.5" fill="${k.rg(['#fffbe6', '#ffe680'], .4, .3, .8)}"/><line x1="76" y1="71.5" x2="88" y2="71.5" stroke="#c99400" stroke-opacity=".5" stroke-width="1"/></g>` +
+  k.drop(92, 38, 7, '#fff6c0', '#f2b400')),
+
+fazlasu: () => svg(k => k.ground(60, 91, 30) +
+  `<path d="${KIDNEY(36, 60, 18)}" fill="${k.rg(['#e07a83', '#c8505a', '#7a1f2c'])}" opacity=".35"/>` +
+  k.drop(64, 58, 20, '#d9f3ff', '#1e88e5') +
+  `<path d="M54,62 Q64,56 74,62" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/>` +
+  k.drop(94, 74, 6, '#fff6c0', '#f2b400')),
+
+ter: () => svg(k =>
+  `<path d="M8,64 C24,48 48,40 64,40 C82,40 100,46 114,58 L114,92 L8,92 Z" fill="${k.lg(['#f8d5ba', '#f3c7a6', '#d9a07f'])}" ${k.sh}/>` +
+  `<path d="M8,64 C24,48 48,40 64,40 C82,40 100,46 114,58" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="2"/>` +
+  `<rect x="8" y="40" width="106" height="52" fill="${k.pat('#b5785a', .35, 6, .7)}" ${k.clip('M8,64 C24,48 48,40 64,40 C82,40 100,46 114,58 L114,92 L8,92 Z')}/>` +
+  `<g ${k.sh}>${k.drop(38, 62, 7.5, '#eefaff', '#58b8ee', .95)}${k.drop(66, 54, 9.5, '#eefaff', '#58b8ee', .95)}${k.drop(90, 64, 6.5, '#eefaff', '#58b8ee', .95)}${k.drop(54, 80, 5, '#eefaff', '#58b8ee', .95)}${k.drop(80, 82, 4.2, '#eefaff', '#58b8ee', .95)}</g>`),
+
+tertuz: () => svg(k =>
+  `<path d="M6,26 L114,26 L114,10 L6,10 Z" fill="${k.lg(['#d9a07f', '#f3c7a6'])}"/>` +
+  `<path d="M6,26 C30,30 90,30 114,26" fill="none" stroke="#c48b6a" stroke-width="1.5"/>` +
+  `<g ${k.sh}>${k.drop(56, 62, 20, '#f2fbff', '#64bdf0', .85)}</g>` +
+  k.cube(52, 52, 6) + k.cube(64, 60, 4.5) + k.cube(48, 68, 4) +
+  k.ground(56, 92, 24, 3.5) + k.cube(88, 78, 5.5) + k.cube(98, 82, 4)),
+
+tersu: () => svg(k =>
+  `<path d="M4,8 L116,8 L116,30 C96,34 80,30 64,32 C46,34 26,30 4,34 Z" fill="${k.lg(['#d9a07f', '#f3c7a6', '#e9b493'])}" ${k.sh}/>` +
+  `<path d="M4,34 C26,30 46,34 64,32 C80,30 96,34 116,30" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="1.6"/>` +
+  `<g ${k.sh}>${k.drop(62, 50, 9, '#f2fbff', '#3ea6e6')}${k.drop(34, 44, 5, '#f2fbff', '#3ea6e6')}${k.drop(90, 46, 6, '#f2fbff', '#3ea6e6')}</g>` +
+  `<ellipse cx="62" cy="86" rx="24" ry="5" fill="${k.rg(['#bfe6ff', '#3ea6e6'], .5, .4, .6)}" fill-opacity=".8"/>` +
+  `<ellipse cx="62" cy="85" rx="14" ry="2.4" fill="#fff" fill-opacity=".6"/>` +
+  `<g fill="#3ea6e6">${k.drop(44, 76, 2.2, '#f2fbff', '#3ea6e6')}${k.drop(82, 74, 2.6, '#f2fbff', '#3ea6e6')}${k.drop(72, 70, 1.8, '#f2fbff', '#3ea6e6')}</g>`),
+
+co2: () => svg(k => k.ground(60, 82, 44, 5) +
+  k.stick(30, 47, 90, 47, 4.2) + k.stick(30, 54, 90, 54, 4.2) +
+  `<g ${k.sh}>` + k.ball(28, 50, 16, '#ffb3b3', '#ff3b4e', '#a30e24') + k.ball(92, 50, 16, '#ffb3b3', '#ff3b4e', '#a30e24') +
+  k.ball(60, 50, 14, '#8a96a8', '#3d4757', '#161c26') + `</g>`),
+
+buhar: () => svg(k => {
+  const st = k.lg([[0, '#9cc7ef', 0], [.35, '#9cc7ef', .9], [1, '#d7ebff', 0]], 0, 1, 0, 0);
+  const st2 = k.lg([[0, '#6f9fd6', 0], [.4, '#6f9fd6', .8], [1, '#cfe6ff', 0]], 0, 1, 0, 0);
+  return `<g ${k.soft} opacity=".7"><path d="M40,92 C30,78 52,70 42,56 C34,44 50,34 44,18" fill="none" stroke="${st}" stroke-width="12" stroke-linecap="round"/>` +
+    `<path d="M66,92 C56,76 80,66 68,50 C58,38 74,26 70,10" fill="none" stroke="${st}" stroke-width="14" stroke-linecap="round"/>` +
+    `<path d="M90,92 C82,80 100,72 92,60 C86,50 96,42 94,30" fill="none" stroke="${st}" stroke-width="10" stroke-linecap="round"/></g>` +
+    `<path d="M40,92 C30,78 52,70 42,56 C34,44 50,34 44,18" fill="none" stroke="${st2}" stroke-width="3.5" stroke-linecap="round"/>` +
+    `<path d="M66,92 C56,76 80,66 68,50 C58,38 74,26 70,10" fill="none" stroke="${st2}" stroke-width="4" stroke-linecap="round"/>` +
+    `<path d="M90,92 C82,80 100,72 92,60 C86,50 96,42 94,30" fill="none" stroke="${st2}" stroke-width="3" stroke-linecap="round"/>` +
+    [[30, 40, 2.6], [56, 30, 2.2], [84, 22, 2.4], [78, 44, 1.8], [24, 66, 2]].map(([x, y, r]) => k.ball(x, y, r, '#ffffff', '#8cc4f2', '#3b82c9')).join('');
+}),
+
+ayna: () => svg(k => k.ground(60, 93, 26, 3.5) +
+  `<rect x="54" y="78" width="12" height="12" rx="2" fill="${k.lg(['#d8e2ee', '#8796ab'], 0, 0, 1, 0)}"/>` +
+  `<circle cx="60" cy="44" r="36" fill="${k.lg(['#f4f7fb', '#a7b5c8', '#e7edf5', '#7d8ca3'], 0, 0, 1, 1)}" ${k.sh}/>` +
+  `<circle cx="60" cy="44" r="30" fill="${k.lg(['#cfe3f7', '#8fb3d9', '#b9d3ec', '#6f97c4'], 0, 0, 1, 1)}"/>` +
+  `<path d="M38,24 L52,16 L40,48 L32,52Z" fill="#fff" fill-opacity=".45"/>` +
+  `<ellipse cx="62" cy="52" rx="20" ry="14" fill="#ffffff" fill-opacity=".85" ${k.soft}/>` +
+  `<ellipse cx="62" cy="52" rx="13" ry="9" fill="#ffffff" fill-opacity=".7" ${k.soft}/>` +
+  [[54, 50, 1.3], [62, 56, 1.6], [70, 48, 1.2], [66, 60, 1], [56, 58, 1.1], [74, 55, 1.3]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#8fb3d9"/><circle cx="${x - r * .3}" cy="${y - r * .3}" r="${r * .4}" fill="#fff"/>`).join('') +
+  `<path d="M100,60 C108,56 112,50 110,44 M104,70 C114,66 118,58 116,50" fill="none" stroke="#9cc7ef" stroke-width="2.4" stroke-linecap="round" opacity=".8"/>`),
+
+posa: () => svg(k => k.ground(60, 90, 40) +
+  [[30, 70, 14, -20, '#c9935a', '#8a5a2b'], [52, 74, 15, 15, '#d6a46a', '#94622f'], [76, 70, 13, -10, '#c48a50', '#7d4f24'], [44, 58, 12, 40, '#d9ad78', '#9a6936'], [66, 56, 12, -35, '#cf9a5e', '#8a5a2b'], [90, 78, 10, 25, '#c9935a', '#8a5a2b']]
+    .map(([x, y, s, r, c1, c2]) => `<g transform="rotate(${r} ${x} ${y})" ${k.sh}><path d="M${x - s},${y} C${x - s * .6},${y - s * .7} ${x + s * .6},${y - s * .7} ${x + s},${y} C${x + s * .6},${y + s * .35} ${x - s * .6},${y + s * .35} ${x - s},${y}Z" fill="${k.lg([c1, c2])}"/><path d="M${x - s * .8},${y - .5} Q${x},${y - s * .35} ${x + s * .8},${y - .5}" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.2"/>${[-.4, 0, .4].map(t => `<line x1="${x + s * t}" y1="${y - s * .3}" x2="${x + s * t + 2}" y2="${y + s * .2}" stroke="${c2}" stroke-opacity=".7" stroke-width=".8"/>`).join('')}</g>`).join('') +
+  [[40, 82], [62, 86], [82, 60], [24, 82], [100, 70]].map(([x, y]) => `<g ${k.sh}><path d="M${x - 5},${y + 3} C${x - 5},${y - 4} ${x - 2},${y - 6} ${x},${y - 6} C${x + 2},${y - 6} ${x + 5},${y - 4} ${x + 5},${y + 3} Q${x},${y + 5} ${x - 5},${y + 3}Z" fill="${k.rg(['#fff3a8', '#ffcf3a', '#d99a00'], .35, .3, .8)}"/></g>`).join('')),
+
+kalinsu: () => svg(k => {
+  const d = 'M22,80 C10,80 10,62 18,58 C10,48 16,30 30,30 C40,22 54,22 62,28 C70,20 90,20 98,30 C110,32 112,50 104,56 C112,64 108,82 96,80';
+  return k.ground(60, 92, 44) +
+    `<path d="${d}" fill="none" stroke="#8f3532" stroke-width="17" stroke-linecap="round"/>` +
+    `<path d="${d}" fill="none" stroke="${k.lg(['#ffb0a0', '#f08d7e', '#b84d4a'])}" stroke-width="13.5" stroke-linecap="round"/>` +
+    `<path d="${d}" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round" transform="translate(-1.5 -3)"/>` +
+    [[18, 58], [30, 30], [62, 28], [98, 30], [104, 56]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="3" fill="#b84d4a" fill-opacity=".35"/>`).join('') +
+    `<g ${k.sh}>${k.drop(60, 62, 14, '#d9f3ff', '#1e88e5')}</g>`;
+}),
+
+/* ---------------------- KAN BİLEŞENLERİ ---------------------- */
+tup: () => svg(k => k.ground(60, 93, 18, 3) +
+  `<g transform="rotate(12 60 52)">` +
+  `<path d="M48,8 L72,8 L72,82 A12,12 0 0 1 48,82 Z" fill="${k.lg(['#eef6ff', '#ffffff', '#d4e2f2'], 0, 0, 1, 0)}" fill-opacity=".7" stroke="#aabdd4" stroke-width="1.3" ${k.sh}/>` +
+  `<path d="M49.5,24 L70.5,24 L70.5,52 L49.5,52Z" fill="${k.lg(['#fff3b0', '#ffd95a', '#f0b429'], 0, 0, 1, 0)}"/>` +
+  `<ellipse cx="60" cy="24" rx="10.5" ry="2.2" fill="#fff8d0"/>` +
+  `<rect x="49.5" y="52" width="21" height="3" fill="#f6f2ea"/>` +
+  `<path d="M49.5,55 L70.5,55 L70.5,82 A10.5,10.5 0 0 1 49.5,82 Z" fill="${k.lg(['#ff5a6e', '#d4142f', '#8e0a1f'], 0, 0, 1, 0)}"/>` +
+  `<rect x="52" y="12" width="4" height="74" rx="2" fill="#fff" fill-opacity=".7"/>` +
+  `<rect x="45" y="4" width="30" height="7" rx="3.5" fill="${k.lg(['#e8f8ff', '#7cc8f0', '#2b7fb5'])}" ${k.sh}/></g>` +
+  ''),
+
+su: () => svg(k => k.ground(60, 92, 28) +
+  k.drop(56, 58, 22, '#e3f7ff', '#1677d2') +
+  `<path d="M42,66 Q50,60 58,66 T74,66" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2.4" stroke-linecap="round"/>` +
+  k.drop(92, 46, 8, '#e3f7ff', '#1677d2') + k.drop(24, 40, 5.5, '#e3f7ff', '#1677d2')),
+
+tasir: () => svg(k => {
+  const band = 'M4,40 C30,30 50,50 76,40 C92,34 106,36 116,40 L116,68 C104,64 92,62 76,68 C50,78 30,58 4,68 Z';
+  return `<path d="${band}" fill="${k.lg(['#fff4c2', '#ffd95a', '#efb21f'])}" fill-opacity=".9" ${k.sh}/>` +
+    `<path d="M4,44 C30,34 50,54 76,44 C92,38 106,40 116,44" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2.5"/>` +
+    k.ball(24, 52, 7, '#d6ffb0', '#56c43c', '#2a7a1d') +
+    `<g ${k.sh}><path d="M52,47 l6,-3.5 6,3.5 v7 l-6,3.5 -6,-3.5z" fill="${k.lg(['#ffd8a8', '#ff8c2a', '#c75400'])}"/><path d="M52,47 l6,-3.5 6,3.5" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="1"/></g>` +
+    `<g transform="rotate(-20 88 54)" ${k.sh}><rect x="79" y="49" width="18" height="9" rx="4.5" fill="${k.lg(['#e7d4ff', '#a879ff', '#6a3fd0'])}"/><rect x="81" y="50.5" width="12" height="2" rx="1" fill="#fff" fill-opacity=".7"/></g>` +
+    `<path d="M100,82 l10,0 m-4,-4 l4,4 -4,4" stroke="#c48a00" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<path d="M10,82 l70,0" stroke="#efb21f" stroke-opacity=".5" stroke-width="2" stroke-dasharray="2 5" stroke-linecap="round"/>`;
+}),
+
+atik: () => svg(k => {
+  const band = 'M4,30 C30,22 52,40 80,32 C92,28 100,28 104,30 L104,58 C96,56 88,56 80,60 C52,70 30,52 4,58 Z';
+  return `<path d="${band}" fill="${k.lg(['#fff4c2', '#ffd95a', '#efb21f'])}" fill-opacity=".9" ${k.sh}/>` +
+    `<path d="M4,34 C30,26 52,44 80,36 C92,32 100,32 104,34" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2.5"/>` +
+    [[20, 44, 5], [38, 48, 4], [56, 46, 5.5], [72, 44, 4], [90, 42, 4.5]].map(([x, y, s], i) => k.cube(x, y - s, s, '#c9ced6', '#8d96a3', '#5f6875')).join('') +
+    `<path d="${KIDNEY(100, 76, 13, true)}" fill="${k.rg(['#e07a83', '#c8505a', '#7a1f2c'])}" ${k.sh}/>` + k.hl(104, 70, 4, 2.5, -30, .7) +
+    `<path d="M70,78 l14,0 m-5,-5 l5,5 -5,5" stroke="#8d96a3" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+}),
+
+oksijen: () => svg(k => k.ground(52, 90, 34) +
+  k.rbc(50, 58, 30, -12) +
+  k.stick(88, 22, 104, 30, 4.5, '#bfe9f5') +
+  `<g ${k.sh}>${k.ball(86, 22, 9.5, '#e2fbff', '#35d0ec', '#0d7f99')}${k.ball(105, 31, 9.5, '#e2fbff', '#35d0ec', '#0d7f99')}</g>` +
+  `<path d="M80,38 Q74,44 70,44" fill="none" stroke="#35d0ec" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="3 4"/>`),
+
+kirmizi: () => svg(k => k.ground(60, 92, 32) +
+  `<g ${k.sh}>${k.drop(62, 56, 24, '#ff8a98', '#b30f2b')}</g>` +
+  k.rbc(32, 74, 15, -15) + k.rbc(92, 78, 11, 20)),
+
+coksayi: () => svg(k => k.ground(60, 91, 46) +
+  [[28, 38, 13, -20], [56, 30, 13, 10], [86, 36, 13, -5], [18, 62, 12, 15], [44, 58, 14, -10], [72, 58, 14, 18], [100, 62, 12, -18], [32, 80, 11, 5], [60, 80, 12, -12], [88, 82, 11, 10]]
+    .map(([x, y, r, a]) => k.rbc(x, y, r, a)).join('')),
+
+co2tasir: () => svg(k => k.ground(52, 90, 34) +
+  k.rbc(46, 60, 30, 10, true) +
+  k.stick(84, 26, 108, 26, 3.5) +
+  `<g ${k.sh}>${k.ball(82, 26, 7.5, '#ffb3b3', '#ff3b4e', '#a30e24')}${k.ball(110, 26, 7.5, '#ffb3b3', '#ff3b4e', '#a30e24')}${k.ball(96, 26, 7, '#8a96a8', '#3d4757', '#161c26')}</g>` +
+  `<path d="M86,40 Q80,48 74,48" fill="none" stroke="#5b6cff" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="3 4"/>`),
+
+savas: () => svg(k => k.ground(58, 91, 40) +
+  k.germ(88, 34, 11) + k.germ(100, 64, 7) +
+  k.wbc(50, 58, 30) +
+  `<path d="M74,46 C82,44 84,52 80,56" fill="none" stroke="#aeb9d6" stroke-width="2" stroke-linecap="round"/>`),
+
+azsayi: () => svg(k => k.ground(60, 91, 46) +
+  `<g opacity=".55">` + [[22, 34, 11, -10], [48, 24, 10, 15], [94, 30, 11, 0], [16, 64, 10, 20], [100, 62, 11, -15], [30, 84, 9, 5], [84, 84, 10, 12], [58, 86, 9, -8]].map(([x, y, r, a]) => k.rbc(x, y, r, a)).join('') + `</g>` +
+  `<circle cx="60" cy="56" r="26" fill="${k.rg([[0, '#a879ff', .35], [1, '#a879ff', 0]], .5, .5, .5)}"/>` +
+  k.wbc(60, 56, 18)),
+
+beyaz: () => svg(k => k.ground(60, 92, 32) + k.wbc(60, 52, 34)),
+
+hastalik: () => svg(k => k.ground(60, 92, 44) +
+  `<g ${k.sh}><rect x="16" y="10" width="14" height="66" rx="7" fill="${k.lg(['#ffffff', '#e8eef6', '#c3cfde'], 0, 0, 1, 0)}" stroke="#aebbd0" stroke-width="1.2"/>` +
+  `<rect x="20.5" y="22" width="5" height="54" rx="2.5" fill="${k.lg(['#ff8a98', '#e0213f'])}"/>` +
+  `<circle cx="23" cy="80" r="10" fill="${k.rg(['#ff9aa6', '#e0213f', '#9c0d26'])}"/>` + k.hl(20, 77, 3, 2, -30, .9) +
+  [26, 36, 46, 56, 66].map(y => `<line x1="30" y1="${y}" x2="26" y2="${y}" stroke="#7d8ca3" stroke-width="1.2"/>`).join('') + `</g>` +
+  k.wbc(62, 66, 14) + k.wbc(92, 70, 12) + k.wbc(80, 38, 13) +
+  `<path d="M104,46 L104,22 M97,29 L104,22 111,29" fill="none" stroke="#2fb87a" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" ${k.sh}/>`),
+
+pihti: () => svg(k => k.ground(60, 92, 44) +
+  k.rbc(40, 44, 14, -10) + k.rbc(74, 40, 13, 20) + k.rbc(58, 66, 14, 5) + k.rbc(88, 66, 11, -15) + k.rbc(26, 68, 11, 15) +
+  `<g fill="none" stroke="${k.lg(['#fff3c4', '#e8c35a'])}" stroke-width="2" stroke-linecap="round" opacity=".95">` +
+  `<path d="M8,30 C30,46 50,30 70,52 S104,48 114,80"/><path d="M10,80 C30,60 44,74 64,50 S94,26 112,30"/><path d="M30,12 C40,40 56,56 52,92"/><path d="M90,10 C80,34 74,60 82,92"/><path d="M6,54 C40,58 80,40 116,56"/></g>` +
+  k.plt(50, 50, 6, 20) + k.plt(70, 28, 5, -30) + k.plt(98, 50, 5.5, 10) + k.plt(30, 30, 5, 40)),
+
+yara: () => svg(k => {
+  const skin = 'M4,44 C30,36 90,36 116,44 L116,94 L4,94 Z';
+  return `<path d="${skin}" fill="${k.lg(['#f8d5ba', '#f3c7a6', '#d9a07f'])}" ${k.sh}/>` +
+    `<rect x="4" y="38" width="112" height="56" fill="${k.pat('#b5785a', .3, 6, .7)}" ${k.clip(skin)}/>` +
+    `<path d="M4,44 C30,36 90,36 116,44" fill="none" stroke="#fff" stroke-opacity=".55" stroke-width="2"/>` +
+    `<path d="M26,58 C44,50 70,64 94,54 C80,66 46,70 26,58Z" fill="${k.lg(['#7a0d1f', '#4e0612'])}"/>` +
+    `<path d="M30,58 C46,52 70,64 90,56 C76,63 46,66 30,58Z" fill="${k.rg(['#c23040', '#7a0d1f'], .4, .3, .8)}"/>` +
+    `<path d="M34,57 C48,53 66,61 84,56" fill="none" stroke="#ff8a98" stroke-opacity=".5" stroke-width="1.4"/>` +
+    k.plt(44, 26, 6, 10) + k.plt(64, 20, 5.5, -20) + k.plt(82, 28, 5, 30) +
+    `<path d="M50,32 L54,46 M66,28 L64,44 M80,34 L76,46" stroke="#a05ad6" stroke-width="1.6" stroke-dasharray="2 3" stroke-linecap="round"/>`;
+}),
+
+tikar: () => svg(k =>
+  `<path d="M4,30 L116,30 L116,70 L4,70 Z" fill="${k.lg(['#ff8a98', '#e0213f', '#a3122e', '#e0213f', '#ff6b7d'])}" ${k.sh}/>` +
+  `<rect x="4" y="34" width="112" height="5" fill="#fff" fill-opacity=".35"/>` +
+  `<path d="M4,30 L116,30 M4,70 L116,70" stroke="#7a0a1e" stroke-width="1.5"/>` +
+  `<path d="M44,30 L50,22 L56,30 L62,20 L68,30 L74,24 L78,30" fill="#fff" stroke="#7a0a1e" stroke-width="1.2" stroke-linejoin="round"/>` +
+  `<path d="M42,30 C48,42 72,44 80,30" fill="#7a0a1e" fill-opacity=".55"/>` +
+  k.plt(52, 30, 7, 15) + k.plt(64, 26, 7.5, -20) + k.plt(74, 31, 6.5, 30) + k.plt(58, 38, 5.5, 0) +
+  k.rbc(24, 52, 10, 10) + k.rbc(94, 54, 10, -15) +
+  `<g opacity=".7">${k.plt(34, 58, 4, 0)}${k.plt(108, 46, 3.5, 30)}</g>` +
+  k.ground(60, 88, 50, 4)),
+
+/* ---------------------- ORGANLAR ---------------------- */
+mide: () => svg(k => {
+  const d = 'M74,22 C68,10 46,10 37,22 C28,34 27,58 37,74 C47,89 72,91 88,81 C94,77 98,71 106,68 L106,58 C99,60 93,58 85,63 C75,69 63,65 59,55 C56,46 61,35 71,28 Z';
+  return k.ground(66, 92, 34) +
+    `<path d="M64,0 L78,0 L76,28 L66,28 Z" fill="${k.lg(['#c9405c', '#ffb3be', '#e2566e'], 0, 0, 1, 0)}"/>` + `<g fill="none" stroke="#a52a48" stroke-opacity=".35" stroke-width="1">${[5, 11, 17].map(y => `<path d="M65,${y} Q71,${y + 2} 77,${y}"/>`).join('')}</g>` +
+    `<path d="${d}" fill="${k.rg(['#ffb3be', '#ff8a9a', '#d94a66', '#a52a48'], .4, .3, .85)}" ${k.sh}/>` +
+    `<path d="${d}" fill="none" stroke="#ffd0d8" stroke-opacity=".6" stroke-width="1.4"/>` +
+    `<path d="M104,63 C110,63 114,66 114,74" fill="none" stroke="#c4555a" stroke-width="11" stroke-linecap="round"/><path d="M104,63 C110,63 114,66 114,74" fill="none" stroke="#ffb0a0" stroke-width="8" stroke-linecap="round"/>` +
+    `<g fill="none" stroke="#a52a48" stroke-opacity=".35" stroke-width="1.6" stroke-linecap="round"><path d="M40,40 C46,48 44,60 50,70"/><path d="M48,30 C54,42 50,56 58,72"/><path d="M66,74 C74,76 82,74 90,70"/></g>` +
+    k.hl(44, 28, 9, 5, -40, .75) + k.hl(80, 80, 6, 2.5, -20, .4);
+}),
+
+kalp: () => svg(k => {
+  const body = 'M60,36 C48,24 26,30 26,50 C26,68 46,82 64,94 C82,80 98,66 96,48 C95,32 80,26 68,34 Z';
+  return k.ground(62, 95, 30, 3.5) +
+    `<path d="M40,6 L40,40" stroke="${k.lg(['#8a97ff', '#5b6cff', '#3a46c9'], 0, 0, 1, 0)}" stroke-width="10" stroke-linecap="round"/>` +
+    `<path d="M50,36 C50,22 52,12 64,8 C76,4 86,10 86,22" fill="none" stroke="#a3122e" stroke-width="12" stroke-linecap="round"/>` +
+    `<path d="M50,36 C50,22 52,12 64,8 C76,4 86,10 86,22" fill="none" stroke="${k.lg(['#ff8a98', '#ff4d64', '#c81d3a'])}" stroke-width="9" stroke-linecap="round"/>` +
+    `<path d="M54,22 C56,14 62,10 70,9" fill="none" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/>` +
+    `<path d="M66,10 L66,2 M74,9 L76,2" stroke="#e0213f" stroke-width="4" stroke-linecap="round"/>` +
+    `<path d="M66,36 C68,26 74,20 84,18 L96,16" fill="none" stroke="#2c37a8" stroke-width="10" stroke-linecap="round"/><path d="M66,36 C68,26 74,20 84,18 L96,16" fill="none" stroke="${k.lg(['#a3adff', '#5b6cff', '#3a46c9'])}" stroke-width="7.5" stroke-linecap="round"/>` +
+    `<path d="${body}" fill="${k.rg(['#ff8a98', '#ff4d64', '#c81d3a', '#7d0d22'], .38, .3, .85)}" ${k.sh}/>` +
+    `<path d="${body}" fill="none" stroke="#ffc2ca" stroke-opacity=".55" stroke-width="1.3"/>` +
+    `<path d="M62,40 C58,56 62,72 66,90" fill="none" stroke="#7d0d22" stroke-opacity=".45" stroke-width="2.2" stroke-linecap="round"/>` +
+    `<path d="M62,52 C70,54 78,52 86,46 M60,64 C52,64 44,60 36,54" fill="none" stroke="#ffd166" stroke-opacity=".55" stroke-width="1.6" stroke-linecap="round"/>` +
+    k.hl(40, 44, 9, 5, -40, .8);
+}),
+
+akciger: () => svg(k => {
+  const fill = k.rg(['#ffd0dc', '#ff9fb8', '#e46f92', '#b5446a'], .4, .3, .9);
+  const tex = k.pat('#fff', .22, 5, 1.1);
+  return k.ground(60, 93, 40) +
+    `<g ${k.sh}><path d="${LUNG_L}" fill="${fill}"/><path d="${LUNG_R}" fill="${fill}"/></g>` +
+    `<path d="${LUNG_L}" fill="${tex}"/><path d="${LUNG_R}" fill="${tex}"/>` +
+    `<path d="${LUNG_L}" fill="none" stroke="#ffd6e0" stroke-opacity=".7" stroke-width="1.2"/><path d="${LUNG_R}" fill="none" stroke="#ffd6e0" stroke-opacity=".7" stroke-width="1.2"/>` +
+    `<path d="M30,60 L50,52 M70,56 L90,62" stroke="#b5446a" stroke-opacity=".45" stroke-width="1.4"/>` +
+    `<rect x="55" y="4" width="10" height="34" rx="4" fill="${k.lg(['#c9d9ee', '#ffffff', '#a9bdd8'], 0, 0, 1, 0)}"/>` +
+    [8, 13, 18, 23, 28, 33].map(y => `<rect x="54" y="${y}" width="12" height="2.6" rx="1.3" fill="#e8f2ff" stroke="#9fb3cf" stroke-width=".5"/>`).join('') +
+    `<path d="M60,36 L46,46 L38,58 M46,46 L44,62 M60,36 L74,46 L82,58 M74,46 L76,62" fill="none" stroke="#e8f2ff" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<path d="M60,36 L46,46 L38,58 M46,46 L44,62 M60,36 L74,46 L82,58 M74,46 L76,62" fill="none" stroke="#9fb3cf" stroke-width="1.2" stroke-linecap="round" stroke-opacity=".7"/>` +
+    k.hl(32, 40, 6, 9, 20, .75) + k.hl(88, 40, 5, 8, -20, .6);
+}),
+
+bobrek: () => svg(k => {
+  const d = KIDNEY(62, 48, 38);
+  return k.ground(62, 93, 30) +
+    `<path d="M50,54 C40,58 30,62 14,62" stroke="${k.lg(['#ff8a98', '#e0213f'], 0, 0, 1, 0)}" stroke-width="7" fill="none" stroke-linecap="round"/>` +
+    `<path d="M50,46 C40,44 30,42 14,44" stroke="${k.lg(['#8a97ff', '#5b6cff'], 0, 0, 1, 0)}" stroke-width="7" fill="none" stroke-linecap="round"/>` +
+    `<path d="M52,58 C46,68 48,80 46,98" stroke="#d9a520" stroke-width="7.5" fill="none" stroke-linecap="round"/>` +
+    `<path d="M52,58 C46,68 48,80 46,98" stroke="#ffd27a" stroke-width="5" fill="none" stroke-linecap="round"/>` +
+    `<path d="${d}" fill="${k.rg(['#e9808a', '#c8505a', '#9a2b38', '#6a1824'], .55, .3, .85)}" ${k.sh}/>` +
+    `<path d="${d}" fill="none" stroke="#ffb3bb" stroke-opacity=".55" stroke-width="1.3"/>` +
+    `<g fill="#7a1f2c" fill-opacity=".35">${[[70, 26, -40], [84, 44, -5], [80, 64, 35], [64, 74, 70]].map(([x, y, a]) => `<path d="M${x - 6},${y} L${x + 6},${y - 3} L${x + 6},${y + 3} Z" transform="rotate(${a} ${x} ${y})"/>`).join('')}</g>` +
+    k.hl(76, 24, 10, 5, 30, .7);
+}),
+
+girtlak: () => svg(k => {
+  const ring = (y, w, o = 1) => `<rect x="${60 - w / 2}" y="${y}" width="${w}" height="6" rx="3" fill="${k.lg(['#ffffff', '#dce8f6', '#a9bdd8'])}" stroke="#93a8c5" stroke-width=".8" opacity="${o}"/>`;
+  return k.ground(60, 95, 22, 3) +
+    `<rect x="50" y="58" width="20" height="38" fill="${k.lg(['#c9d9ee', '#eef5ff', '#a9bdd8'], 0, 0, 1, 0)}" opacity=".6"/>` +
+    [62, 70, 78, 86].map(y => ring(y, 24, .55)).join('') +
+    `<path d="M54,6 C50,12 52,20 58,22 L62,22 C68,20 70,12 66,6 C64,3 56,3 54,6Z" fill="${k.lg(['#ffe3c8', '#f0b98c'])}" opacity=".9"/>` +
+    `<path d="M38,20 L82,20 L78,44 C74,50 66,54 60,56 C54,54 46,50 42,44 Z" fill="${k.lg(['#ffffff', '#e8f2ff', '#b9cbe2', '#8ea6c6'], 0, 0, 1, 1)}" stroke="#7f98bb" stroke-width="1.2" ${k.sh}/>` +
+    `<path d="M54,20 L60,30 L66,20" fill="none" stroke="#7f98bb" stroke-width="1.6" stroke-linejoin="round"/>` +
+    `<path d="M60,30 L60,54" stroke="#7f98bb" stroke-opacity=".5" stroke-width="1.2"/>` +
+    `<rect x="44" y="52" width="32" height="8" rx="4" fill="${k.lg(['#ffffff', '#d4e2f2', '#9fb4d1'])}" stroke="#7f98bb" stroke-width="1" ${k.sh}/>` +
+    k.hl(48, 28, 6, 3.5, -20, .9) +
+    `<g fill="none" stroke="#a879ff" stroke-width="2.6" stroke-linecap="round" ${k.glow}><path d="M90,30 Q96,36 90,42"/><path d="M96,24 Q106,36 96,48"/><path d="M102,18 Q116,36 102,54"/></g>`;
+}),
+
+pankreas: () => svg(k => {
+  const d = 'M22,60 C16,46 30,40 40,46 C52,52 62,38 80,36 C94,34 108,38 108,46 C108,54 96,56 84,58 C68,60 58,70 44,74 C30,78 24,70 22,60 Z';
+  return k.ground(62, 88, 44) +
+    `<path d="M30,44 C14,46 10,66 18,78 C24,86 36,86 42,80" fill="none" stroke="${k.lg(['#ffc4b8', '#e46d68'])}" stroke-width="9" stroke-linecap="round" opacity=".55"/>` +
+    `<path d="${d}" fill="${k.rg(['#ffe7b0', '#ffcf7a', '#e5a23a', '#b9771c'], .4, .3, .85)}" ${k.sh}/>` +
+    `<path d="${d}" fill="${k.pat('#b9771c', .35, 5.5, 1.3)}"/>` +
+    `<path d="${d}" fill="none" stroke="#fff1cf" stroke-opacity=".75" stroke-width="1.3"/>` +
+    `<path d="M30,62 C44,60 60,52 76,46 C88,43 98,44 104,46" fill="none" stroke="#fff6dd" stroke-opacity=".9" stroke-width="1.8" stroke-linecap="round"/>` +
+    k.hl(84, 40, 12, 3.5, -8, .8) + k.hl(32, 50, 5, 3, -30, .7);
+}),
+
+mesane: () => svg(k => {
+  const d = BLADDER(60, 48, 30);
+  return k.ground(60, 94, 26) +
+    `<path d="M20,4 C24,20 30,30 38,36" fill="none" stroke="#d9a520" stroke-width="6" stroke-linecap="round"/><path d="M20,4 C24,20 30,30 38,36" fill="none" stroke="#ffd27a" stroke-width="3.6" stroke-linecap="round"/>` +
+    `<path d="M100,4 C96,20 90,30 82,36" fill="none" stroke="#d9a520" stroke-width="6" stroke-linecap="round"/><path d="M100,4 C96,20 90,30 82,36" fill="none" stroke="#ffd27a" stroke-width="3.6" stroke-linecap="round"/>` +
+    `<path d="M56,80 L56,96 L64,96 L64,80" fill="${k.lg(['#e6b04a', '#ffd27a', '#e6b04a'], 0, 0, 1, 0)}"/>` +
+    `<path d="${d}" fill="${k.rg(['#ffe6a8', '#ffcf6b', '#e19a24', '#a96a0c'], .4, .3, .85)}" ${k.sh}/>` +
+    `<g fill="none" stroke="#a96a0c" stroke-opacity=".3" stroke-width="1.4"><path d="M36,40 C46,48 46,64 40,72"/><path d="M84,40 C74,48 74,64 80,72"/><path d="M50,24 C56,40 56,60 54,76"/></g>` +
+    `<path d="${d}" fill="none" stroke="#fff3cf" stroke-opacity=".75" stroke-width="1.3"/>` +
+    k.hl(46, 32, 10, 6, -30, .85);
+}),
+
+atardamar: () => svg(k => `<g transform="rotate(-18 60 50)">` + k.ground(60, 78, 46, 4) +
+  `<path d="M12,36 L94,36 L94,64 L12,64 Z" fill="${k.lg(['#ff8a98', '#ff4d64', '#c81d3a', '#8e0a22', '#c81d3a'])}" ${k.sh}/>` +
+  `<ellipse cx="12" cy="50" rx="6" ry="14" fill="${k.lg(['#c81d3a', '#7d0d22'])}"/>` +
+  `<rect x="14" y="40" width="78" height="4" rx="2" fill="#fff" fill-opacity=".45"/>` +
+  `<ellipse cx="94" cy="50" rx="8" ry="14" fill="${k.lg(['#ffc2ca', '#ff8a98', '#e0566a'])}" stroke="#a3122e" stroke-width="1"/>` +
+  `<ellipse cx="95" cy="50" rx="4.5" ry="8.5" fill="${k.rg(['#ff3b55', '#a3122e', '#5c0614'], .5, .5, .6)}"/>` +
+  `<ellipse cx="94.5" cy="47" rx="1.8" ry="2.6" fill="#ff8a98"/><ellipse cx="96" cy="53" rx="1.6" ry="2.2" fill="#ff6b7d"/>` +
+  `<g fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M34,46 l6,4 -6,4"/><path d="M50,46 l6,4 -6,4"/><path d="M66,46 l6,4 -6,4"/></g></g>` +
+  ''),
+
+kilcal: () => svg(k => {
+  const g = k.lg(['#ff3b55', '#c54bd0', '#5b6cff'], 0, 0, 1, 0);
+  const lines = ['M30,44 C44,30 58,30 70,40 S84,46 92,42', 'M30,48 C44,46 54,56 66,52 S82,44 92,46', 'M30,52 C40,64 56,70 70,64 S86,52 92,50', 'M30,46 C38,36 46,22 58,24 S78,30 92,44', 'M30,54 C36,74 52,82 68,78 S88,62 92,52', 'M48,32 C52,44 50,56 56,68', 'M74,28 C70,40 74,54 70,72'];
+  return `<rect x="4" y="8" width="112" height="86" rx="14" fill="${k.rg([[0, '#ffe2d6', .7], [1, '#ffe2d6', 0]], .5, .5, .55)}"/>` +
+    [[46, 50], [62, 42], [60, 60], [80, 58], [50, 70], [78, 34]].map(([x, y]) => `<ellipse cx="${x}" cy="${y}" rx="5" ry="3.5" fill="#ffc9b8" fill-opacity=".6"/>`).join('') +
+    `<path d="M4,46 C14,46 22,48 30,48" stroke="#a3122e" stroke-width="13" fill="none" stroke-linecap="round"/><path d="M4,46 C14,46 22,48 30,48" stroke="${k.lg(['#ff8a98', '#ff3b55', '#c81d3a'])}" stroke-width="10" fill="none" stroke-linecap="round"/>` +
+    `<path d="M92,48 C100,48 108,46 116,46" stroke="#2c37a8" stroke-width="13" fill="none" stroke-linecap="round"/><path d="M92,48 C100,48 108,46 116,46" stroke="${k.lg(['#a3adff', '#5b6cff', '#3a46c9'])}" stroke-width="10" fill="none" stroke-linecap="round"/>` +
+    lines.map(d => `<path d="${d}" fill="none" stroke="${g}" stroke-width="3" stroke-linecap="round"/>`).join('') +
+    lines.slice(0, 5).map(d => `<path d="${d}" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width=".9" stroke-linecap="round" transform="translate(0 -.8)"/>`).join('') +
+    `<path d="M8,42 L26,44" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/><path d="M96,44 L112,42" stroke="#fff" stroke-opacity=".5" stroke-width="2" stroke-linecap="round"/>`;
+}),
+
+karaciger: () => svg(k => {
+  const d = 'M12,42 C16,26 44,18 72,20 C96,22 112,26 110,36 C108,46 94,52 80,60 C66,68 52,80 38,80 C22,80 10,66 12,42 Z';
+  return k.ground(58, 90, 44) +
+    `<path d="M60,70 C58,82 66,88 72,84 C78,80 74,70 68,64 Z" fill="${k.rg(['#c8f5a8', '#7ed957', '#3c9a2a'])}" ${k.sh}/>` + k.hl(64, 76, 2.5, 4, 10, .8) +
+    `<path d="${d}" fill="${k.rg(['#d26a60', '#b5473f', '#8f3029', '#5e1915'], .35, .28, .9)}" ${k.sh}/>` +
+    `<path d="${d}" fill="none" stroke="#f0a59c" stroke-opacity=".55" stroke-width="1.3"/>` +
+    `<path d="M70,21 C66,36 60,48 54,72" fill="none" stroke="#5e1915" stroke-opacity=".45" stroke-width="2" stroke-linecap="round"/>` +
+    k.hl(34, 34, 14, 5.5, -18, .7) + k.hl(88, 30, 9, 3, -5, .5);
+}),
+
+diyafram: () => svg(k => {
+  const d = 'M8,76 C14,44 40,30 60,32 C80,30 106,44 112,76 C100,68 82,62 60,62 C38,62 20,68 8,76 Z';
+  return `<g opacity=".28"><path d="${LUNG_L}" fill="#ff9fb8" transform="translate(0 -10) scale(1 .78)"/><path d="${LUNG_R}" fill="#ff9fb8" transform="translate(0 -10) scale(1 .78)"/></g>` +
+    `<g fill="none" stroke="#c3cfde" stroke-opacity=".7" stroke-width="3" stroke-linecap="round"><path d="M14,30 C30,14 90,14 106,30"/><path d="M10,44 C28,26 92,26 110,44"/><path d="M8,58 C24,42 96,42 112,58"/></g>` +
+    k.ground(60, 90, 50) +
+    `<path d="${d}" fill="${k.lg(['#ffb08a', '#ff8a5c', '#c4512a', '#8a3416'])}" ${k.sh}/>` +
+    `<g fill="none" stroke="#7a2d12" stroke-opacity=".35" stroke-width="1.2">${[-40, -26, -13, 0, 13, 26, 40].map(x => `<path d="M${60 + x},${33 + Math.abs(x) * .18} Q${60 + x * 1.15},${50} ${60 + x * 1.3},${62 + Math.abs(x) * .1}"/>`).join('')}</g>` +
+    `<path d="M14,70 C20,48 40,36 60,36 C80,36 100,48 106,70" fill="none" stroke="#ffd1bd" stroke-opacity=".7" stroke-width="1.6"/>` +
+    k.hl(42, 42, 12, 3.5, -20, .6) +
+    `<path d="M60,10 L60,26 M54,20 L60,26 66,20" fill="none" stroke="#2fb87a" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" opacity=".0"/>`;
+}),
+
+solukborusu: () => svg(k => {
+  const tube = k.lg(['#a9bdd8', '#ffffff', '#c9d9ee', '#8ea6c6'], 0, 0, 1, 0);
+  return `<g opacity=".25"><path d="${LUNG_L}" fill="#ff9fb8" transform="translate(0 4)"/><path d="${LUNG_R}" fill="#ff9fb8" transform="translate(0 4)"/></g>` +
+    k.ground(60, 95, 30, 3) +
+    `<g ${k.sh}><rect x="51" y="4" width="18" height="56" rx="6" fill="${tube}"/>` +
+    `<path d="M54,56 C46,64 38,72 30,90" fill="none" stroke="#8ea6c6" stroke-width="13" stroke-linecap="round"/><path d="M66,56 C74,64 82,72 90,90" fill="none" stroke="#8ea6c6" stroke-width="13" stroke-linecap="round"/>` +
+    `<path d="M54,56 C46,64 38,72 30,90" fill="none" stroke="#e8f2ff" stroke-width="10" stroke-linecap="round"/><path d="M66,56 C74,64 82,72 90,90" fill="none" stroke="#e8f2ff" stroke-width="10" stroke-linecap="round"/></g>` +
+    [8, 15, 22, 29, 36, 43, 50].map(y => `<rect x="49.5" y="${y}" width="21" height="4" rx="2" fill="${k.lg(['#ffffff', '#dfeafa', '#a9bdd8'])}" stroke="#8ea6c6" stroke-width=".7"/>`).join('') +
+    [[46, 66, -50], [40, 74, -55], [74, 66, 50], [80, 74, 55]].map(([x, y, a]) => `<rect x="${x - 8}" y="${y - 1.6}" width="16" height="3.2" rx="1.6" fill="#ffffff" stroke="#8ea6c6" stroke-width=".6" transform="rotate(${a} ${x} ${y})"/>`).join('') +
+    `<rect x="54" y="6" width="3" height="52" rx="1.5" fill="#fff" fill-opacity=".8"/>`;
+}),
+
+incebagirsak: () => svg(k => {
+  const d = 'M22,22 C36,12 48,30 62,22 C76,14 92,22 96,32 C100,44 86,46 76,46 C64,46 58,38 46,44 C34,50 20,46 20,58 C20,70 36,66 48,70 C60,74 68,64 80,66 C92,68 100,76 94,86 C88,94 72,88 60,90';
+  return k.ground(60, 93, 44) +
+    `<path d="M14,12 C10,30 8,60 14,84" fill="none" stroke="#b84d4a" stroke-width="10" stroke-linecap="round" opacity=".25"/><path d="M106,12 C110,30 112,60 106,84" fill="none" stroke="#b84d4a" stroke-width="10" stroke-linecap="round" opacity=".25"/>` +
+    `<g ${k.sh}><path d="${d}" fill="none" stroke="#a8433f" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/></g>` +
+    `<path d="${d}" fill="none" stroke="${k.lg(['#ffc4b8', '#ffb0a0', '#e46d68'])}" stroke-width="11.5" stroke-linecap="round" stroke-linejoin="round"/>` +
+    `<path d="${d}" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" transform="translate(-1 -2.5)"/>` +
+    `<path d="${d}" fill="none" stroke="#a8433f" stroke-opacity=".25" stroke-width="11" stroke-dasharray="1.2 5" stroke-linecap="butt"/>`;
+}),
+
+ureter: () => svg(k => {
+  const glow = `stroke="#ffd27a" stroke-width="5" fill="none" stroke-linecap="round"`;
+  return `<g opacity=".35"><path d="${KIDNEY(26, 26, 16, true)}" fill="#c8505a"/><path d="${KIDNEY(94, 26, 16)}" fill="#c8505a"/><path d="${BLADDER(60, 76, 14)}" fill="#e19a24"/></g>` +
+    `<g ${k.glow}><path d="M32,32 C38,48 44,58 52,70" stroke="#f2a900" stroke-width="8" fill="none" stroke-linecap="round" opacity=".55"/><path d="M88,32 C82,48 76,58 68,70" stroke="#f2a900" stroke-width="8" fill="none" stroke-linecap="round" opacity=".55"/></g>` +
+    `<path d="M32,32 C38,48 44,58 52,70" ${glow}/><path d="M88,32 C82,48 76,58 68,70" ${glow}/>` +
+    `<path d="M31,33 C37,47 42,56 49,66" stroke="#fff" stroke-opacity=".7" stroke-width="1.4" fill="none" stroke-linecap="round"/><path d="M87,33 C81,47 77,56 70,66" stroke="#fff" stroke-opacity=".7" stroke-width="1.4" fill="none" stroke-linecap="round"/>` +
+    k.drop(42, 50, 3, '#fff6c0', '#f2a900') + k.drop(78, 50, 3, '#fff6c0', '#f2a900');
+}),
+
+uretra: () => svg(k => {
+  return `<g opacity=".35"><path d="${BLADDER(60, 34, 26)}" fill="#e19a24"/><path d="M14,2 C20,10 26,16 36,22 M106,2 C100,10 94,16 84,22" stroke="#ffd27a" stroke-width="4" fill="none"/></g>` +
+    `<rect x="53" y="58" width="14" height="34" rx="7" fill="#f2a900" opacity=".45" ${k.soft}/>` +
+    `<path d="M50,56 C54,60 56,60 56,66 L56,88 A4,4 0 0 0 64,88 L64,66 C64,60 66,60 70,56 Z" fill="${k.lg(['#d9961a', '#ffe08a', '#ffd27a', '#d9961a'], 0, 0, 1, 0)}" stroke="#c48a00" stroke-width="1"/>` +
+    `<rect x="57.5" y="62" width="2" height="26" rx="1" fill="#fff" fill-opacity=".75"/>` +
+    k.drop(76, 88, 4, '#fff6c0', '#f2a900') +
+    `<path d="M70,68 l0,14 m-4,-4 l4,4 4,-4" fill="none" stroke="#c48a00" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>`;
+}),
+
+yemekborusu: () => svg(k => {
+  const d = 'M52,2 L68,2 C68,20 66,30 67,44 C70,50 70,58 66,64 C65,72 66,80 66,88 L54,88 C54,80 55,72 54,64 C50,58 50,50 53,44 C54,30 52,20 52,2 Z';
+  return `<g opacity=".3"><path d="M54,84 C40,84 30,90 34,100 L96,100 C100,90 90,84 70,84Z" fill="#ff8a9a"/></g>` +
+    `<path d="${d}" fill="${k.lg(['#c9405c', '#ff9aa8', '#ffc4cc', '#e2566e', '#b23250'], 0, 0, 1, 0)}" ${k.sh}/>` +
+    [8, 16, 24, 32, 40, 68, 76, 84].map(y => `<path d="M53,${y} Q60,${y + 2.4} 67,${y}" fill="none" stroke="#a52a48" stroke-opacity=".4" stroke-width="1.1"/>`).join('') +
+    `<ellipse cx="60" cy="54" rx="7.5" ry="8" fill="${k.rg(['#ffe2b0', '#e8b06a', '#a8722e'])}" opacity=".85"/>` +
+    `<path d="M56,4 L56,86" stroke="#fff" stroke-opacity=".45" stroke-width="2" stroke-linecap="round"/>` +
+    `<g fill="none" stroke="#e2566e" stroke-width="2.2" stroke-linecap="round" opacity=".8"><path d="M78,40 l0,14 m-4,-4 l4,4 4,-4"/><path d="M42,40 l0,14 m-4,-4 l4,4 4,-4"/></g>`;
+})
+};
+
+/* ==================================================================
+   SETLER (ders kitabı içeriği)
+   c: doğru kategori · i: bir cümlelik bilgi · w: (isteğe bağlı) yanlışa özel açıklama
+   ================================================================== */
+const SETS = {
+  atik: {
+    name: 'Hangi organ uzaklaştırır?', kicker: 'SIRALA VE YERLEŞTİR · BOŞALTIM', crumb: 'Boşaltım Sistemi',
+    intro: 'Vücuttaki atıkları, onları uzaklaştıran organa yerleştir.',
+    cats: [
+      { id: 'bobrek', name: 'Böbrekler', sub: 'kanı süzer, idrar oluşturur', c: '#ffbb3d' },
+      { id: 'deri', name: 'Deri', sub: 'terleme yoluyla', c: '#2fe39b' },
+      { id: 'akciger', name: 'Akciğerler', sub: 'soluk verme yoluyla', c: '#a879ff' },
+      { id: 'kalin', name: 'Kalın bağırsak', sub: 'anüs yoluyla atılır', c: '#4c8dff' }
+    ],
+    items: [
+      { n: 'Üre', a: 'ure', c: 'bobrek', i: 'Üre gibi atık maddeler böbreklerde kandan süzülür ve idrarla atılır.' },
+      { n: 'İdrar', a: 'idrar', c: 'bobrek', i: 'Böbreklerde süzülen atıklar idrarı oluşturur.' },
+      { n: 'Fazla tuz (idrarla)', a: 'tuz', c: 'bobrek', i: 'Böbrekler kandaki fazla tuzu idrarla uzaklaştırır.' },
+      { n: 'Fazla vitamin, hormon', a: 'vitamin', c: 'bobrek', i: 'Kandaki fazla vitamin ve hormonlar böbreklerde süzülüp idrarla atılır.' },
+      { n: 'Fazla su (idrarla)', a: 'fazlasu', c: 'bobrek', i: 'Böbrekler kandaki fazla suyu idrarla vücuttan atar.' },
+      { n: 'Ter', a: 'ter', c: 'deri', i: 'Terleme ile su ve tuzun bir kısmı deriden atılır; terleme vücut sıcaklığını da dengeler.' },
+      { n: 'Tuz (terle)', a: 'tertuz', c: 'deri', i: 'Vücuttaki tuzun bir kısmı terle deriden uzaklaştırılır.' },
+      { n: 'Su (terle)', a: 'tersu', c: 'deri', i: 'Çok terleyen kişide suyun bir kısmı deriden atılır.' },
+      { n: 'Karbon dioksit', a: 'co2', c: 'akciger', i: 'Solunum sonucu oluşan karbon dioksit akciğerlerden soluk vermeyle atılır.' },
+      { n: 'Su buharı', a: 'buhar', c: 'akciger', i: 'Su buharı soluk verirken akciğerlerden dışarı atılır.' },
+      { n: 'Buğulanan ayna', a: 'ayna', c: 'akciger', i: 'Soluk verdiğimiz havadaki su buharı soğuk aynayı buğulandırır; bu buhar akciğerlerden gelir.' },
+      { n: 'Sindirilmeyen besin', a: 'posa', c: 'kalin', i: 'Sindirilmeyen besinler kalın bağırsakta bir süre depolanır ve anüsten atılır.' },
+      { n: 'Fazla su (dışkıyla)', a: 'kalinsu', c: 'kalin', i: 'Kalın bağırsak, sindirilmeyen besinlerle birlikte fazla suyun atılmasını sağlar.' }
+    ]
+  },
+  kan: {
+    name: 'Kanın bileşenleri ve görevleri', kicker: 'SIRALA VE YERLEŞTİR · DOLAŞIM', crumb: 'Dolaşım Sistemi',
+    intro: 'Her görev kartını, o görevi yapan kan bileşenine yerleştir.',
+    cats: [
+      { id: 'plazma', name: 'Plazma', sub: 'kanın bir bileşeni', c: '#ffbb3d' },
+      { id: 'alyuvar', name: 'Alyuvar', sub: 'bir kan hücresi', c: '#ff5468' },
+      { id: 'akyuvar', name: 'Akyuvar', sub: 'bir kan hücresi', c: '#a879ff' },
+      { id: 'pulcuk', name: 'Kan pulcukları', sub: 'kan hücreleri', c: '#4c8dff' }
+    ],
+    items: [
+      { n: 'Kanın sıvı kısmı', a: 'tup', c: 'plazma', i: 'Plazma, kanın sıvı kısmını oluşturur.' },
+      { n: 'Büyük kısmı sudur', a: 'su', c: 'plazma', i: 'Plazmanın büyük bir miktarını su oluşturur.' },
+      { n: 'Besin ve hormon taşır', a: 'tasir', c: 'plazma', i: 'Plazmada besin, enzim ve hormonlar bulunur ve taşınır.' },
+      { n: 'Atık maddeleri taşır', a: 'atik', c: 'plazma', i: 'Plazmada atık maddeler de bulunur; kan bunları ilgili organlara taşır.' },
+      { n: 'Oksijen taşır', a: 'oksijen', c: 'alyuvar', i: 'Alyuvarlar oksijenin taşınmasında görevlidir.' },
+      { n: 'Kana kırmızı rengi verir', a: 'kirmizi', c: 'alyuvar', i: 'Kana kırmızı rengini veren hücreler alyuvarlardır.' },
+      { n: 'Sayısı en fazla olan hücre', a: 'coksayi', c: 'alyuvar', i: 'Alyuvarlar kanda sayısı en fazla olan hücrelerdir.' },
+      { n: 'Karbon dioksit taşır', a: 'co2tasir', c: 'alyuvar', i: 'Alyuvarlar oksijenle birlikte karbon dioksidi de taşır.' },
+      { n: 'Mikroplarla savaşır', a: 'savas', c: 'akyuvar', i: 'Akyuvarlar vücudun mikroplara karşı savunmasında görevlidir.' },
+      { n: 'Sayısı en az olan hücre', a: 'azsayi', c: 'akyuvar', i: 'Akyuvarlar kanda en az sayıda bulunan hücrelerdir.' },
+      { n: 'Beyaz kan hücresi', a: 'beyaz', c: 'akyuvar', i: 'Akyuvarlara beyaz kan hücreleri de denir.' },
+      { n: 'Hastalıkta sayısı artar', a: 'hastalik', c: 'akyuvar', i: 'Vücut mikroplarla savaşırken akyuvarların sayısı artar.' },
+      { n: 'Pıhtılaşmayı sağlar', a: 'pihti', c: 'pulcuk', i: 'Kan pulcukları yaralanmalarda pıhtılaşmayı sağlar.' },
+      { n: 'Yaralanmada kan kaybını önler', a: 'yara', c: 'pulcuk', i: 'Kan pulcukları pıhtılaşarak yaralanmada kan kaybını önler.' },
+      { n: 'Zedelenen damarı tıkar', a: 'tikar', c: 'pulcuk', i: 'Kan pulcukları damarın iç yüzeyinde pıhtılaşıp zedelenen kısmı tıkar.' }
+    ]
+  },
+  organ: {
+    name: 'Hangi sisteme ait?', kicker: 'SIRALA VE YERLEŞTİR · SİSTEMLER', crumb: 'Vücudumuzdaki Sistemler',
+    intro: 'Her yapı ve organı ait olduğu sisteme yerleştir.',
+    cats: [
+      { id: 'sindirim', name: 'Sindirim', sub: 'besinleri parçalar, emer', c: '#ffbb3d' },
+      { id: 'dolasim', name: 'Dolaşım', sub: 'kanı vücutta dolaştırır', c: '#ff5468' },
+      { id: 'solunum', name: 'Solunum', sub: 'gaz alışverişi', c: '#a879ff' },
+      { id: 'bosaltim', name: 'Boşaltım', sub: 'kanı süzer, atıkları atar', c: '#4c8dff' }
+    ],
+    items: [
+      { n: 'Mide', a: 'mide', c: 'sindirim', i: 'Midede proteinlerin kimyasal sindirimi başlar; besinler bulamaç hâline gelir.' },
+      { n: 'Pankreas', a: 'pankreas', c: 'sindirim', i: 'Pankreas öz suyunu ince bağırsağa göndererek kimyasal sindirime yardım eder.' },
+      { n: 'İnce bağırsak', a: 'incebagirsak', c: 'sindirim', i: 'Sindirim ince bağırsakta tamamlanır; besinler villuslarla kana geçer.' },
+      { n: 'Karaciğer', a: 'karaciger', c: 'sindirim', i: 'Karaciğer safra salgılar; safra yağların fiziksel sindirimine yardım eder.', w: 'Karaciğer boşaltıma da yardım eder ama safra salgılayan, <b>sindirime yardımcı</b> bir organdır.' },
+      { n: 'Yemek borusu', a: 'yemekborusu', c: 'sindirim', i: 'Yemek borusu besinleri kas hareketleriyle yutaktan mideye iletir.' },
+      { n: 'Kalp', a: 'kalp', c: 'dolasim', i: 'Kalp kasılıp gevşeyerek kanı damarlarda dolaştırır.' },
+      { n: 'Atardamar', a: 'atardamar', c: 'dolasim', i: 'Atardamarlar kalpten çıkan kanı vücuda taşır.' },
+      { n: 'Kılcal damar', a: 'kilcal', c: 'dolasim', i: 'Kılcal damarlar atar ve toplardamarları bağlar; madde alışverişi burada olur.' },
+      { n: 'Akciğerler', a: 'akciger', c: 'solunum', i: 'Akciğerler süngerimsi yapıdadır; sağ akciğer soldakinden büyüktür.', w: 'Akciğerler karbon dioksit atarak boşaltıma yardım eder ama bir <b>solunum</b> organıdır.' },
+      { n: 'Gırtlak', a: 'girtlak', c: 'solunum', i: 'Gırtlakta ses telleri bulunur; yutak ile soluk borusu arasındadır.' },
+      { n: 'Soluk borusu', a: 'solukborusu', c: 'solunum', i: 'Kıkırdak yapıdaki soluk borusu havanın akciğerlere ulaşmasını sağlar.' },
+      { n: 'Diyafram', a: 'diyafram', c: 'solunum', i: 'Diyafram göğüs ve karın boşluğunu ayıran, solunuma yardımcı kaslı yapıdır.' },
+      { n: 'Böbrek', a: 'bobrek', c: 'bosaltim', i: 'Böbrekler kanı süzer, atıklardan idrar oluşturur.' },
+      { n: 'Mesane', a: 'mesane', c: 'bosaltim', i: 'Mesane (idrar kesesi) idrarı dışarı atılıncaya kadar depolar.' },
+      { n: 'Üreter', a: 'ureter', c: 'bosaltim', i: 'Üreterler böbreklerde oluşan idrarı mesaneye iletir.' },
+      { n: 'Üretra', a: 'uretra', c: 'bosaltim', i: 'Üretra, mesanedeki idrarın vücuttan atıldığı kanaldır.' }
+    ]
+  }
+};
+
+/* ==================================================================
+   OYUN
+   ================================================================== */
+const WAVE = 8;
+const params = new URLSearchParams(location.search);
+let setId = params.get('set'); if (!SETS[setId]) setId = null;
+let ui, S, queue = [], wave = [], placed = {}, total = 0, done = 0, firstOk = 0, score = 0, streak = 0, misses = [];
+let sel = null, busy = false, over = true, timer, gen = 0, dragMoved = false;
+const $ = ZD.$, $$ = ZD.$$;
+
+function mountUI() {
+  const s = setId ? SETS[setId] : null;
+  ui = ZD.mount({
+    kicker: s ? s.kicker : 'SIRALA VE YERLEŞTİR',
+    title: s ? s.name : 'Sırala ve Yerleştir',
+    crumb: ['7. Sınıf Fen Bilimleri', '3. Ünite', s ? s.crumb : 'Vücudumuzdaki Sistemler'],
+    stats: [{ id: 'time', label: 'Süre', value: '0:00' }, { id: 'ok', label: 'Doğru', value: s ? `0 / ${s.items.length}` : '—' },
+            { id: 'score', label: 'Puan', value: 0 }, { id: 'seri', label: 'Seri', value: '×0', cls: 'seri' }],
+    onHelp: help,
+    onRestart() { if (setId) restart(); else renderPicker(); }
+  });
+  timer = new ZD.Timer(t => ui.stat('time', ZD.Timer.fmt(t)));
+}
+
+/* ---------------- Set seçici ---------------- */
+function renderPicker() {
+  const thumbs = { atik: ['co2', 'ter', 'idrar'], kan: ['oksijen', 'beyaz', 'pihti'], organ: ['kalp', 'akciger', 'bobrek'] };
+  ui.body.innerHTML = `<div class="picker zd-fade-in"><h2>Bir set seç</h2><p>Kartları sürükleyip doğru sütuna bırak.</p>
+    <div class="sets">${Object.entries(SETS).map(([id, s]) => `
+      <button class="set" data-id="${id}" aria-label="${s.name} setini oyna">
+        <span class="thumbs">${thumbs[id].map(a => `<span>${A[a]()}</span>`).join('')}</span>
+        <h3>${s.name}</h3>
+        <span class="cats">${s.cats.map(c => `<i style="--c:${c.c}">${c.name}</i>`).join('')}</span>
+        <small>${s.items.length} kart · ${s.crumb}</small>
+      </button>`).join('')}</div></div>`;
+  $$('.set', ui.body).forEach(b => b.onclick = () => {
+    ZD.sfx('click'); setId = b.dataset.id;
+    try { history.replaceState(null, '', '?set=' + setId); } catch (e) { }
+    mountUI(); setup(); showIntro();
+  });
+}
+
+/* ---------------- Kurulum ---------------- */
+function setup() {
+  S = SETS[setId];
+  const cap = Math.max(...S.cats.map(c => S.items.filter(i => i.c === c.id).length));
+  const sc = cap <= 4 ? 2 : 3, nslots = Math.ceil(cap / sc) * sc;
+  ui.body.innerHTML = `<div class="game">
+    <div class="cols">${S.cats.map(c => `
+      <div class="col" data-cat="${c.id}" style="--c:${c.c};--sc:${sc}" role="button" tabindex="0" aria-label="${c.name} sütunu">
+        <span class="cnt" aria-label="yerleşen">0</span><h3>${c.name}</h3><div class="sub">${c.sub}</div>
+        <div class="slots">${'<div class="slot"></div>'.repeat(nslots)}</div>
+      </div>`).join('')}</div>
+    <div class="info hint" id="info" aria-live="polite"><div class="nm">Bir kart seç</div><div class="tx">Kartı sürükleyip doğru sütuna bırak ya da önce karta, sonra sütuna dokun.</div></div>
+    <div class="items" id="items"></div>
+  </div>`;
+  $$('.col', ui.body).forEach(col => {
+    col.addEventListener('click', () => { if (sel && !busy) attempt(sel, col); });
+    col.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && sel) { e.preventDefault(); attempt(sel, col); } });
+  });
+  reset();
+}
+
+function reset() {
+  gen++;
+  S.items.forEach(i => { i._done = false; i._tried = false; });
+  queue = ZD.shuffle(S.items); total = queue.length; done = 0; firstOk = 0; score = 0; streak = 0; misses = []; sel = null; busy = false; over = false;
+  placed = {}; S.cats.forEach(c => placed[c.id] = 0);
+  $$('.slot', ui.body).forEach(s => { s.innerHTML = ''; s.classList.remove('fill'); });
+  $$('.col .cnt', ui.body).forEach(c => c.textContent = '0');
+  ui.stat('ok', `0 / ${total}`); ui.stat('score', 0); ui.stat('seri', '×0');
+  timer.reset();
+  $$('.zd-modal').forEach(m => m.remove());
+  setInfo(null);
+  nextWave(true);
+}
+
+function nextWave(first) {
+  wave = queue.splice(0, WAVE);
+  const box = $('#items'); box.innerHTML = '';
+  wave.forEach((it, i) => {
+    const el = ZD.h('div', { class: 'item', tabindex: '0', role: 'button', 'aria-label': it.n + ' kartı' }, `<span class="x">${ZD.I.x}</span><div class="art">${A[it.a]()}</div><div class="lb">${it.n}</div>`);
+    el.style.setProperty('--d', (i * 0.06) + 's');
+    el._it = it; it._tried = false;
+    box.appendChild(el);
+    ZD.drag(el, {
+      enabled: () => !busy && !over && !el.classList.contains('gone'),
+      onStart() { dragMoved = false; select(el, true); },
+      onMove(x, y, ghost) {
+        dragMoved = true;
+        const t = document.elementFromPoint(x, y), col = t && t.closest('.col');
+        $$('.col', ui.body).forEach(c => c.classList.toggle('over', c === col));
+      },
+      onDrop(x, y, tgt) {
+        $$('.col', ui.body).forEach(c => c.classList.remove('over'));
+        if (!dragMoved) return true; // dokunma: yalnız seç
+        const col = tgt && tgt.closest('.col');
+        if (!col) return false;
+        return attempt(el, col, x, y);
+      }
+    });
+    el.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(el); } });
+  });
+  if (!first) {
+    ZD.sfx('level');
+    const w = ZD.h('div', { class: 'wave' }, 'YENİ DALGA!'); ui.stage.appendChild(w); setTimeout(() => w.remove(), 1300);
+  }
+}
+
+function setInfo(it) {
+  const info = $('#info'); if (!info) return;
+  info.classList.remove('swap'); void info.offsetWidth; info.classList.add('swap');
+  if (!it) { info.classList.add('hint'); info.innerHTML = `<div class="nm">Bir kart seç</div><div class="tx">Kartı sürükleyip doğru sütuna bırak ya da önce karta, sonra sütuna dokun.</div>`; return; }
+  info.classList.remove('hint');
+  info.innerHTML = `<div class="nm">${it.n}</div><div class="tx">${it.i}</div>`;
+}
+function select(el, fromDrag) {
+  if (over || el.classList.contains('gone')) return;
+  ZD.hideHand();
+  $$('.item.sel', ui.body).forEach(e => e !== el && e.classList.remove('sel'));
+  if (!fromDrag && sel === el) { el.classList.remove('sel'); sel = null; setInfo(null); return; }
+  sel = el; el.classList.add('sel');
+  $$('.col', ui.body).forEach(c => c.classList.add('sel-target'));
+  setInfo(el._it);
+  if (!fromDrag) ZD.sfx('tap');
+}
+
+/* yerleştirme denemesi → true: doğru */
+function attempt(el, col, x, y) {
+  if (busy || over) return false;
+  const it = el._it, cat = S.cats.find(c => c.id === col.dataset.cat), right = S.cats.find(c => c.id === it.c);
+  if (it.c === cat.id) {
+    // doğru
+    streak++; done++;
+    if (!it._tried) firstOk++;
+    const pts = (it._tried ? 40 : 100) + Math.min(streak - 1, 5) * 20;
+    score += pts;
+    ui.stat('ok', `${done} / ${total}`, true); ui.stat('score', score, true); ui.stat('seri', '×' + streak, true);
+    const slot = $$('.slot', col)[placed[cat.id]++];
+    if (slot) { slot.innerHTML = A[it.a](); slot.classList.add('fill'); slot.title = it.n; }
+    const cnt = $('.cnt', col); cnt.textContent = placed[cat.id]; cnt.classList.remove('bump'); void cnt.offsetWidth; cnt.classList.add('bump');
+    col.classList.remove('good'); void col.offsetWidth; col.classList.add('good');
+    el.classList.remove('sel'); el.classList.add('gone'); sel = null;
+    $$('.col', ui.body).forEach(c => c.classList.remove('sel-target'));
+    ZD.sfx('good');
+    popPts(col, pts);
+    if (streak > 0 && streak % 4 === 0) say(`Harika seri! <b>×${streak}</b>`, 'good', 1400);
+    setInfo(it);
+    if (wave.every(w => w._done || w === it)) {
+      it._done = true;
+      const g = gen; busy = true;
+      setTimeout(() => {
+        if (g !== gen) return; busy = false;
+        if (queue.length) nextWave(false); else finish();
+      }, 650);
+    } else it._done = true;
+    return true;
+  }
+  // yanlış
+  streak = 0; ui.stat('seri', '×0');
+  if (!it._tried) { it._tried = true; misses.push(it); }
+  el.classList.add('tried');
+  ZD.sfx('bad');
+  col.classList.remove('zd-shake'); void col.offsetWidth; col.classList.add('zd-shake', 'bad');
+  setTimeout(() => col.classList.remove('zd-shake', 'bad'), 650);
+  if (!x) { el.classList.remove('miss'); void el.offsetWidth; el.classList.add('miss'); }
+  say(`<span><b>${it.n}</b> → ${right.name}. ${it.w || it.i}</span>`, 'bad', 3200);
+  return false;
+}
+
+function popPts(col, pts) {
+  const sr = ui.stage.getBoundingClientRect(), r = col.getBoundingClientRect();
+  const p = ZD.h('div', { class: 'pts' }, '+' + pts);
+  p.style.left = (r.left + r.width / 2 - sr.left) + 'px'; p.style.top = (r.top + r.height * .45 - sr.top) + 'px';
+  ui.stage.appendChild(p); setTimeout(() => p.remove(), 950);
+}
+
+/* tostu ortadaki bilgi alanının üstüne konumla (sütunları örtmesin) */
+function say(msg, type, ms) {
+  const t = $('#zd-toast'), info = $('#info');
+  if (t && info) { const sr = ui.stage.getBoundingClientRect(), r = info.getBoundingClientRect(); t.style.top = Math.max(70, r.top - sr.top - 4) + 'px'; }
+  ZD.toast(msg, type, ms);
+}
+
+/* ---------------- Bitiş ---------------- */
+function finish() {
+  over = true; timer.stop();
+  const catName = id => S.cats.find(c => c.id === id);
+  const rv = misses.length
+    ? `<div class="hd"><h4>Gözden geçir · ilk denemede kaçanlar</h4></div><ul>${misses.map(it => { const c = catName(it.c); return `<li><span class="th">${A[it.a]()}</span><span><b>${it.n}</b><i style="--c:${c.c}">→ ${c.name}</i></span></li>`; }).join('')}</ul>`
+    : `<div class="ok">Tüm kartları ilk denemede doğru yerleştirdin!</div>`;
+  setTimeout(() => {
+    ZD.result({
+      title: misses.length === 0 ? 'Kusursuz!' : firstOk / total >= .6 ? 'Harika iş!' : 'Tamamlandı!',
+      correct: firstOk, total, score, time: timer.t,
+      text: `${total} kartın <b style="color:#fff">${firstOk}</b> tanesini ilk denemede doğru yerleştirdin.`,
+      onReplay: restart,
+      extra: `<div class="rv">${rv}</div>`
+    });
+  }, 500);
+}
+
+function restart() { reset(); timer.start(); }
+
+/* ---------------- Yönerge ---------------- */
+function steps() {
+  return [
+    `Alttaki kartı tut, sürükle ve doğru <b>sütuna</b> bırak. İstersen önce karta, sonra sütuna dokunabilirsin.`,
+    `Seçtiğin kartın adı ve kısa bilgisi ortada görünür. Yanlış sütunda kart geri döner ve nedeni yazılır.`,
+    `Art arda doğrular <b style="color:var(--green)">seri</b> puanı kazandırır. Kartlar bitince yeni dalga gelir!`
+  ];
+}
+function showIntro() {
+  ZD.intro({
+    kicker: S.kicker, title: S.name, text: S.intro, steps: steps(), start: 'Başla',
+    onStart() { timer.start(); setTimeout(demo, 500); }
+  });
+}
+function demo() {
+  const el = $$('.item', ui.body).find(e => !e.classList.contains('gone')); if (!el) return;
+  ZD.pointAt(el, { fy: .45 });
+  setTimeout(() => { const col = $(`.col[data-cat="${el._it.c}"]`, ui.body); if (col && !over) ZD.pointAt(col, { fy: .55, ms: 1300 }); }, 1300);
+}
+function help() {
+  if (!setId) { ZD.toast('Önce bir set seç.', '', 1800); return; }
+  if (over) return;
+  const was = timer.run; timer.stop();
+  ZD.modal({
+    html: `<span class="zd-chip">NASIL OYNANIR?</span><h2>${S.name}</h2><ul class="zd-howto">${steps().map((s, i) => `<li><b>${i + 1}</b><span>${s}</span></li>`).join('')}</ul>`,
+    actions: [{ label: ZD.I.play + 'Devam et', cls: 'lg', onClick() { if (was) timer.start(); setTimeout(demo, 300); } }]
+  });
+}
+
+/* test/otomasyon için salt-okunur durum */
+window.__kategori = () => ({ over, done, total, wave: wave.map(w => ({ n: w.n, c: w.c, done: !!w._done })) });
+
+mountUI();
+if (setId) { setup(); showIntro(); } else renderPicker();
+})();
+</script></body></html>
