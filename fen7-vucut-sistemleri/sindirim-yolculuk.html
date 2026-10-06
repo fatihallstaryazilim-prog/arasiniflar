@@ -911,7 +911,7 @@ pYard.innerHTML = `<div class="sh"><div class="ic">${ICON.liver}</div><div><smal
   <p class="lead">Karaciğer ve pankreas besinlerin geçtiği organlardan değildir; salgılarını kanallarla <b>ince bağırsağa</b> göndererek sindirime yardımcı olurlar.</p>
   <div class="aux">${['liver', 'gall', 'panc'].map(k => `<div class="auxc"><div class="ic">${ICON[k]}</div><div><h4>${AUXTXT[k].name}</h4><p>${AUXTXT[k].txt}</p><span class="zd-chip ${k === 'panc' ? 'purple' : k === 'gall' ? 'green' : 'amber'} tg">${AUXTXT[k].tag}</span></div></div>`).join('')}</div>`;
 $$('#tabs button').forEach(b => b.onclick = () => {
-  if (S.tab === b.dataset.tab) return; ZD.sfx('click'); S.tab = b.dataset.tab;
+  if (S.tab === b.dataset.tab) return; ZD.sfx('click'); ZD.hideHand(); S.tab = b.dataset.tab;
   $$('#tabs button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
   pYol.hidden = S.tab !== 'yol'; pYard.hidden = S.tab !== 'yard';
   applyFocus(); camTo(camFor(), 900);
