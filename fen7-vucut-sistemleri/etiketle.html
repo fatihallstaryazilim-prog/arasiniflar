@@ -126,6 +126,11 @@
   .eg-legend button.blink{animation:egblink .5s ease-in-out infinite alternate}
   .eg-zoom{display:none}
   .eg-pick{padding:4px 12px 18px}
+  .eg-pgrid{grid-template-columns:1fr 1fr;gap:10px}
+  .eg-pc{padding:8px;gap:7px}
+  .eg-pc h3{font-size:14.5px}
+  .eg-pc .mt{font-size:12px}
+  .eg-pc .go span{display:none}
 }
 </style></head>
 <body><div id="app"></div><script src="assets/zd.js"></script><script>
@@ -558,7 +563,7 @@ const ui = ZD.mount({
   kicker: 'ETİKETLEME OYUNU', title: 'Organları Etiketle',
   crumb: ['7. Sınıf Fen Bilimleri','3. Ünite','Organları Etiketle'],
   stats: [{id:'time',label:'Süre',value:'0:00.0'},{id:'score',label:'Puan',value:0,cls:'cyan'},{id:'lbl',label:'Etiket',value:'0 / 0'},{id:'streak',label:'Seri',value:0,cls:'green'}],
-  onHelp(){ if (!G) return; showHelp(true); },
+  onHelp(){ if (!G){ const c = $('.eg-pc'); c && ZD.pointAt(c, { ms: 2200 }); ZD.toast('Etiketlemek istediğin sistemin kartına dokun.', '', 2400); return; } showHelp(true); },
   onRestart(){ if (G) startSet(G.key, false); }
 });
 const kickerEl = $('.zd-title small'), crumbEl = $('.zd-crumb b');
