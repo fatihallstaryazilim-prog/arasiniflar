@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="assets/zd.css">
 <style>
   .zd-body{padding:2px 16px 16px}
-  .sim{display:grid;grid-template-columns:276px minmax(0,1fr) 300px;grid-template-rows:auto minmax(0,1fr);gap:10px 12px;
+  .sim{display:grid;grid-template-columns:268px minmax(0,1fr) 318px;grid-template-rows:auto minmax(0,1fr);gap:10px 12px;
     height:clamp(500px,calc(100vh - 190px),900px)}
   .bar{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
   .bar .sp{flex:1}
@@ -54,13 +54,13 @@
   .lbl.sel rect,.lbl.okf rect{stroke:#fff;stroke-width:2}
   .scene-tag{position:absolute;left:14px;top:12px;display:flex;gap:8px;align-items:center;pointer-events:none;z-index:2}
   .ph-pill{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:1.4px;background:rgba(0,0,0,.45);border:1px solid var(--line);color:var(--muted);transition:.3s}
-  .ph-pill.in{color:#04262c;background:linear-gradient(180deg,#9ff8ff,#35eefc);border-color:#35eefc;box-shadow:0 0 18px rgba(53,238,252,.45)}
-  .ph-pill.out{color:#fff;background:linear-gradient(180deg,#b993ff,#7c4dff);border-color:#b993ff;box-shadow:0 0 18px rgba(168,121,255,.45)}
-  .ph-pill.hold{color:#3a2300;background:linear-gradient(180deg,#ffd36b,#ffa41b);border-color:#ffd36b;box-shadow:0 0 18px rgba(255,187,61,.45)}
+  .ph-pill.p-in{color:#04262c;background:linear-gradient(180deg,#9ff8ff,#35eefc);border-color:#35eefc;box-shadow:0 0 18px rgba(53,238,252,.45)}
+  .ph-pill.p-out{color:#fff;background:linear-gradient(180deg,#b993ff,#7c4dff);border-color:#b993ff;box-shadow:0 0 18px rgba(168,121,255,.45)}
+  .ph-pill.p-hold{color:#3a2300;background:linear-gradient(180deg,#ffd36b,#ffa41b);border-color:#ffd36b;box-shadow:0 0 18px rgba(255,187,61,.45)}
 
   /* basılı tut butonu */
   .holdwrap{display:flex;flex-direction:column;gap:6px}
-  .hold{position:relative;width:100%;min-height:76px;border-radius:22px;overflow:hidden;display:flex;align-items:center;gap:12px;padding:10px 16px;
+  .hold{position:relative;width:100%;min-height:70px;border-radius:22px;overflow:hidden;display:flex;align-items:center;gap:12px;padding:10px 16px;
     background:linear-gradient(180deg,#1d4166,#10253e);border:2px solid rgba(73,243,255,.85);color:#fff;
     box-shadow:0 0 0 1px rgba(53,238,252,.25),0 0 22px rgba(53,238,252,.38),0 7px 0 rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.16);
     touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .14s var(--ease),box-shadow .2s,border-color .2s}
@@ -71,10 +71,11 @@
   .hold.on .fill{background:linear-gradient(90deg,rgba(47,227,155,.22),rgba(47,227,155,.5))}
   .hold .ic{width:48px;height:48px;flex:none;position:relative;filter:drop-shadow(0 4px 6px rgba(0,0,0,.4))}
   .hold .t{position:relative;text-align:left;display:flex;flex-direction:column;gap:2px;line-height:1.15}
-  .hold .t b{font-size:17px;font-weight:800;letter-spacing:.4px}
+  .hold .t b{font-size:16px;font-weight:800;letter-spacing:.3px}
   .hold .t small{font-size:12.5px;color:#bfe9f5;font-weight:500}
   .hold.ring{animation:hring 1.4s infinite}
   @keyframes hring{50%{box-shadow:0 0 0 6px rgba(53,238,252,.25),0 0 30px rgba(53,238,252,.55),0 7px 0 rgba(0,0,0,.38)}}
+  .zd-howto strong{color:#fff;font-weight:800}
   kbd{font-family:var(--font);font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2)}
 
   /* bilgi kartı */
@@ -82,44 +83,51 @@
   .info .sw{width:16px;height:16px;border-radius:50%;flex:none;box-shadow:0 0 0 3px rgba(255,255,255,.08),0 0 12px currentColor}
   .info h3{font-size:20px;font-weight:800;line-height:1.15}
   .info .sub2{font-size:12.5px;color:var(--amber);font-weight:600;margin:-2px 0 6px}
-  .info p{font-size:14.5px;line-height:1.55;color:#d3e3f3}
+  .info p{font-size:14px;line-height:1.52;color:#d3e3f3}
   .info .src{font-size:11px;color:var(--dim);margin-top:8px}
+  .info{flex:1}
+  .ktop{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .kcnt{font-size:12px;font-weight:700;color:var(--muted)} .kcnt b{color:var(--green);font-size:15px}
+  .info .analog{margin-top:8px;padding:8px 10px;border-radius:12px;background:rgba(95,200,74,.1);border:1px solid rgba(95,200,74,.35);font-size:13.5px;color:#d8ffc8}
+  .info .analog b{color:#bdf5a0}
   .prog{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--muted);font-weight:600}
   .prog .zd-meter{flex:1;height:8px}
   .tree .row{display:flex;gap:10px;align-items:center}
-  .tree svg{width:104px;height:116px;flex:none}
+  .tree svg{width:96px;height:108px;flex:none}
   .tree ul{list-style:none;display:grid;gap:6px;flex:1}
-  .tree li{font-size:13.5px;line-height:1.25;padding:7px 9px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--line);cursor:pointer;transition:.2s;min-height:44px;display:flex;flex-direction:column;justify-content:center}
+  .tree li{font-size:13.5px;line-height:1.2;padding:5px 9px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--line);cursor:pointer;transition:.2s;min-height:44px;display:flex;flex-direction:column;justify-content:center}
   .tree li:hover{border-color:var(--line-2);background:rgba(53,238,252,.08)}
   .tree li b{font-weight:800;color:#bdf5a0}
   .tree li span{color:#d6e4f3}
 
   /* antrenör */
-  .story p{font-size:14px;line-height:1.5;color:#d6e4f3;margin-top:8px}
-  .ringwrap{position:relative;width:150px;height:150px;margin:2px auto 0}
+  .story{padding:11px 14px!important}
+  .story p{font-size:13.5px;line-height:1.45;color:#d6e4f3;margin-top:7px}
+  .ringwrap{position:relative;width:136px;height:136px;margin:0 auto}
   .ringwrap svg{width:100%;height:100%}
   .ringwrap .trk{fill:none;stroke:rgba(255,255,255,.08);stroke-width:12}
   .ringwrap .trk2{fill:none;stroke-width:3;transition:stroke .25s}
   .ringwrap .arc{fill:none;stroke-width:12;stroke-linecap:round;transition:stroke .3s}
   .ringwrap .rc{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center}
-  .ringwrap .rc b{font-size:44px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
-  .ringwrap .rc span{font-size:12.5px;font-weight:800;letter-spacing:1.2px;margin-top:4px;max-width:110px}
-  .trsub{text-align:center;font-size:13.5px;color:#cfe0f2;min-height:20px;margin-top:4px}
+  .ringwrap .rc b{font-size:40px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+  .ringwrap .rc span{font-size:11.5px;font-weight:800;letter-spacing:.8px;margin-top:3px;max-width:96px;line-height:1.15}
+  .trsub{text-align:center;font-size:13px;color:#cfe0f2;min-height:42px;margin-top:4px;line-height:1.3}
   .trsub .st{display:inline-block;margin-top:4px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800}
   .trsub .st.ok{background:rgba(47,227,155,.15);color:var(--green)}
   .trsub .st.no{background:rgba(255,84,104,.15);color:#ff8a98}
   .trsteps{display:flex;gap:6px;justify-content:center;margin-top:8px}
-  .trsteps span{font-size:11.5px;font-weight:800;letter-spacing:.6px;padding:6px 9px;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid var(--line);color:var(--muted);transition:.25s}
+  .trsteps span{white-space:nowrap;font-size:11px;font-weight:800;letter-spacing:.3px;padding:5px 7px;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid var(--line);color:var(--muted);transition:.25s}
   .trsteps span.on[data-k="in"]{color:#04262c;background:#35eefc;border-color:#35eefc}
   .trsteps span.on[data-k="hold"]{color:#3a2300;background:#ffbb3d;border-color:#ffbb3d}
   .trsteps span.on[data-k="out"]{color:#fff;background:#8f63ff;border-color:#b993ff}
-  .trrow{display:grid;grid-template-columns:auto 1fr;gap:12px;align-items:center}
+  .trrow{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center}
+  .trrow .zd-btn{min-height:44px}
   .heart{width:46px;height:46px;display:grid;place-items:center}
   .heart svg{width:42px;height:40px;animation:hb 1s infinite;filter:drop-shadow(0 0 10px rgba(255,77,100,.55))}
   @keyframes hb{0%,100%{transform:scale(1)}12%{transform:scale(1.18)}24%{transform:scale(.98)}36%{transform:scale(1.1)}}
   .bpm b{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums}
   .bpm small{display:block;font-size:12px;font-weight:700}
-  .uy{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);font-weight:700;margin-top:10px}
+  .uy{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);font-weight:700;margin-top:8px}
   .uy .zd-meter{flex:1}
   .uy b{color:var(--text);min-width:40px;text-align:right}
 
@@ -154,15 +162,15 @@
   .note b{color:#7ff0c0}
 
   /* sağ panel */
-  .st{padding:12px 13px}
+  .st{padding:11px 11px}
   .st-hd{display:flex;align-items:center;justify-content:space-between;gap:8px}
-  .st-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:9px 0 7px;padding:3px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--line)}
-  .st-tabs button{min-height:32px;border-radius:9px;font-size:12.5px;font-weight:700;color:var(--muted);transition:.2s}
+  .st-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:8px 0 6px;padding:3px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--line)}
+  .st-tabs button{min-height:30px;border-radius:9px;font-size:12.5px;font-weight:700;color:var(--muted);transition:.2s}
   .st-tabs button.on[data-t="in"]{background:linear-gradient(180deg,#bff8ff,#35eefc);color:#04262c}
   .st-tabs button.on[data-t="out"]{background:linear-gradient(180deg,#c9b0ff,#8f63ff);color:#fff}
-  .st-list{list-style:none;display:grid;gap:4px}
-  .st-list li{display:flex;gap:9px;align-items:center;padding:5px 8px;border-radius:10px;font-size:13.8px;line-height:1.25;color:#6f8aa8;border:1px solid transparent;transition:color .3s,background .3s,border-color .3s}
-  .st-list li i{width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;border:2px solid rgba(255,255,255,.14);color:transparent;transition:.3s var(--spring)}
+  .st-list{list-style:none;display:grid;gap:3px}
+  .st-list li{display:flex;gap:8px;align-items:center;padding:4px 6px;border-radius:10px;font-size:13.3px;line-height:1.25;color:#6f8aa8;border:1px solid transparent;transition:color .3s,background .3s,border-color .3s}
+  .st-list li i{width:20px;height:20px;flex:none;border-radius:50%;display:grid;place-items:center;border:2px solid rgba(255,255,255,.14);color:transparent;transition:.3s var(--spring)}
   .st-list li i svg{width:13px;height:13px}
   .st-list li.on{color:#eef6ff;background:rgba(47,227,155,.07);border-color:rgba(47,227,155,.22)}
   .st-list li.on i{background:var(--green);border-color:var(--green);color:#03291b;box-shadow:0 0 10px rgba(47,227,155,.6)}
@@ -170,21 +178,22 @@
   .st-list.out li.on i{background:#a879ff;border-color:#a879ff;color:#fff;box-shadow:0 0 10px rgba(168,121,255,.6)}
   .st-list li.pop i{animation:pop .5s var(--spring)}
   @keyframes pop{0%{transform:scale(.3)}100%{transform:scale(1)}}
-  .spc{padding:12px 13px;display:flex;flex-direction:column;gap:7px;flex:1;min-height:0}
+  .spc{padding:11px 11px;display:flex;flex-direction:column;gap:6px;flex:1;min-height:0}
   .sp-hd{display:flex;align-items:baseline;justify-content:space-between}
-  .sp-hd b{font-size:22px;font-weight:900;color:var(--cyan);font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(53,238,252,.4)}
-  #spiro{width:100%;height:84px;flex:1;min-height:60px;max-height:150px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--line)}
+  .sp-hd b{font-size:20px;font-weight:900;color:var(--cyan);font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(53,238,252,.4)}
+  #spiro{width:100%;height:84px;flex:1 1 0;min-height:40px;max-height:170px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--line)}
   .cav{display:grid;grid-template-columns:96px 1fr 76px;gap:8px;align-items:center;font-size:12.5px;color:#c9d8ea;font-weight:600}
   .cav .b2{height:9px;border-radius:99px;background:rgba(0,0,0,.4);overflow:hidden}
   .cav .b2 i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#14c3dc,#35eefc);box-shadow:0 0 10px rgba(53,238,252,.5)}
   .cav .b2.am i{background:linear-gradient(90deg,#ffa41b,#ffd36b);box-shadow:0 0 10px rgba(255,187,61,.5)}
   .cav em{font-style:normal;font-size:12px;font-weight:800;text-align:right;color:var(--muted)}
   .cav em.up{color:var(--green)} .cav em.dn{color:#ff9aa8}
-  .rate{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--line);font-size:12.5px;color:#c9d8ea;font-weight:600}
-  .rate b{font-size:22px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
+  .rate{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--line);font-size:12.5px;color:#c9d8ea;font-weight:600}
+  .rate b{font-size:19px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
   .rate em{font-style:normal;margin-left:auto;font-size:11.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--amber)}
   .rdot{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#e9ffff,#35eefc 60%,#0a8fa3);box-shadow:0 0 10px #35eefc;flex:none}
 
+  .m-kesif [data-stat="s1"]{min-width:150px}
   /* duyarlı */
   @media (max-width:1100px){ .sim{grid-template-columns:250px minmax(0,1fr) 270px} }
   @media (max-width:860px){
@@ -266,8 +275,8 @@ function rng(seed){return()=>{seed=(seed*16807)%2147483647;return(seed-1)/214748
 const P=(x,y)=>`${f1(x)} ${f1(y)}`;
 
 /* =====================  DİYAFRAM  ===================== */
-const DK0=[[-178,556],[-160,520],[-132,482],[-96,458],[-58,452],[-24,466],[0,470],[24,466],[60,456],[98,462],[134,486],[160,522],[178,558]];
-const DK1=[[-178,560],[-160,546],[-132,530],[-96,516],[-58,510],[-24,512],[0,514],[24,512],[60,510],[98,516],[134,532],[160,548],[178,562]];
+const DK0=[[-178,556],[-160,516],[-132,474],[-96,446],[-58,440],[-24,454],[0,459],[24,455],[60,446],[98,452],[134,480],[160,518],[178,558]];
+const DK1=[[-178,562],[-160,548],[-132,532],[-96,520],[-58,516],[-24,517],[0,518],[24,517],[60,516],[98,520],[134,534],[160,550],[178,564]];
 const thick=x=>9+7*(1-Math.min(1,Math.abs(x-CX)/178));
 const diaPts=b=>DK0.map((p,i)=>[CX+lerp(p[0],DK1[i][0],b),lerp(p[1],DK1[i][1],b)]);
 const DT0=crSample(diaPts(0),10);
@@ -279,7 +288,7 @@ function setDia(b){const t=diaPts(b);DT=crSample(t,10);DB=crSample(t.map(p=>[p[0
 /* =====================  AKCİĞERLER  ===================== */
 const LUNG={
   R:{side:-1,lat:[[-82,290],[-110,301],[-134,328],[-150,370],[-158,418],[-162,462],[-163,498]],base:[-157,-34],med:[[-30,446],[-28,424],[-34,398],[-40,368],[-48,334],[-62,304]]},
-  L:{side:1,lat:[[78,294],[104,304],[128,332],[144,374],[152,422],[156,466],[157,500]],base:[152,98],med:[[90,452],[72,441],[54,433],[40,416],[34,394],[38,362],[46,328],[60,302]]}
+  L:{side:1,lat:[[74,294],[98,303],[120,330],[134,372],[142,420],[146,464],[147,498]],base:[142,100],med:[[90,452],[72,441],[54,433],[40,416],[34,394],[38,362],[46,328],[60,302]]}
 };
 function lungPts(L,b){
   const s=L.side,pts=[],n=L.lat.length;
@@ -438,7 +447,7 @@ const CAPS=[[[-96,52],[-66,46],[-40,42],[-22,48],[-4,48],[14,46],[32,38],[48,22]
   [[-96,6],[-72,8],[-50,2],[-44,-18],[-30,-36],[-8,-44],[14,-46],[34,-38],[52,-32],[72,-40],[98,-34]],
   [[-74,88],[-50,70],[-28,62],[-6,58],[16,56],[36,48],[54,36],[70,20],[98,10]]];
 const CAPL=[[[-22,48],[-38,20],[-44,-18]],[[32,38],[52,6],[52,-32]],[[-6,58],[-4,48]],[[14,46],[20,4],[14,-46]]];
-const MG={x:716,y:572,r:90};
+const MG={x:712,y:568,r:100};
 
 svg.innerHTML=`
 <defs>
@@ -466,7 +475,7 @@ svg.innerHTML=`
   <linearGradient id="gCart" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c6d6ea"/><stop offset=".4" stop-color="#f5faff"/><stop offset="1" stop-color="#9fb3cc"/></linearGradient>
   <linearGradient id="gEso" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9aa8"/><stop offset="1" stop-color="#e2566e" stop-opacity="0"/></linearGradient>
   <radialGradient id="gHeart" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#ff8a9a"/><stop offset=".5" stop-color="#ff4d64"/><stop offset="1" stop-color="#a3122e"/></radialGradient>
-  <linearGradient id="gAbd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffbb3d" stop-opacity=".16"/><stop offset="1" stop-color="#ffbb3d" stop-opacity="0"/></linearGradient>
+  <linearGradient id="gAbd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffbb3d" stop-opacity=".2"/><stop offset=".6" stop-color="#ff9a3d" stop-opacity=".08"/><stop offset="1" stop-color="#ffbb3d" stop-opacity="0"/></linearGradient>
   <linearGradient id="gBlood" gradientUnits="userSpaceOnUse" x1="-80" y1="0" x2="80" y2="0"><stop offset="0" stop-color="#5b6cff"/><stop offset=".5" stop-color="#a64fc4"/><stop offset="1" stop-color="#ff3b55"/></linearGradient>
   <radialGradient id="gAlv" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#fff3f7"/><stop offset=".35" stop-color="#ffc3d3"/><stop offset=".8" stop-color="#e46f94"/><stop offset="1" stop-color="#b03d68"/></radialGradient>
   <radialGradient id="gMagBg" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#3a1630"/><stop offset="1" stop-color="#12081a"/></radialGradient>
@@ -520,11 +529,10 @@ svg.innerHTML=`
     <path d="M24 112 C30 108 33 116 30 124" stroke-opacity=".25" stroke-width="1.5"/>
   </g>
 </g>
-<g id="spine" opacity=".14" pointer-events="none">${Array.from({length:15},(_,i)=>`<rect x="${CX-12}" y="${270+i*26}" width="24" height="20" rx="6" fill="#dfe8f3"/>`).join('')}</g>
 
 <!-- boşluklar -->
 <path id="chestFill" fill="#35eefc" opacity=".05" pointer-events="none"/>
-<path id="abdFill" fill="url(#gAbd)" pointer-events="none"/>
+<path id="abdFill" fill="url(#gAbd)" stroke="#ffbb3d" stroke-opacity=".35" stroke-width="1.4" stroke-dasharray="5 5" pointer-events="none"/>
 
 <!-- kalp (arkada, soluk) -->
 <g id="heartG" pointer-events="none" opacity=".62"><g transform="translate(${CX+26} 452) rotate(-24) scale(.92)">
@@ -588,11 +596,11 @@ svg.innerHTML=`
 <!-- göğüs kafesi -->
 <g id="cage" pointer-events="none">
   <path id="icL" fill="url(#gIc)"/><path id="icR" fill="url(#gIc)"/>
-  <path id="icF" stroke="#ffd7c4" stroke-width="1" fill="none" stroke-opacity=".5"/>
-  <path id="ribS" stroke="#2c3e57" stroke-opacity=".45" stroke-width="11" fill="none" stroke-linecap="round" transform="translate(0 2.5)"/>
-  <path id="ribO" stroke="#9fb1c8" stroke-opacity=".7" stroke-width="9.5" fill="none" stroke-linecap="round"/>
-  <path id="ribC" stroke="url(#gBone)" stroke-opacity=".78" stroke-width="7" fill="none" stroke-linecap="round"/>
-  <path id="ribH" stroke="#fff" stroke-opacity=".7" stroke-width="1.8" fill="none" stroke-linecap="round" transform="translate(0 -1.8)"/>
+  <path id="icF" stroke="#ffc9ae" stroke-width="1.1" fill="none" stroke-opacity=".55"/>
+  <path id="ribS" stroke="#2c3e57" stroke-opacity=".22" stroke-width="9" fill="none" stroke-linecap="round" transform="translate(0 2.5)"/>
+  <path id="ribO" stroke="#9fb1c8" stroke-opacity=".42" stroke-width="8" fill="none" stroke-linecap="round"/>
+  <path id="ribC" stroke="url(#gBone)" stroke-opacity=".5" stroke-width="5.6" fill="none" stroke-linecap="round"/>
+  <path id="ribH" stroke="#fff" stroke-opacity=".55" stroke-width="1.4" fill="none" stroke-linecap="round" transform="translate(0 -1.8)"/>
   <path id="stern" fill="url(#gBone)" fill-opacity=".55" stroke="#fff" stroke-opacity=".5"/>
   <path d="M${P(CX-14,294)}C${P(CX-60,300)} ${P(CX-100,272)} ${P(CX-150,284)}M${P(CX+14,294)}C${P(CX+60,300)} ${P(CX+100,272)} ${P(CX+150,284)}" stroke="#9fb1c8" stroke-opacity=".75" stroke-width="10" fill="none" stroke-linecap="round"/>
   <path d="M${P(CX-14,294)}C${P(CX-60,300)} ${P(CX-100,272)} ${P(CX-150,284)}M${P(CX+14,294)}C${P(CX+60,300)} ${P(CX+100,272)} ${P(CX+150,284)}" stroke="url(#gBone)" stroke-opacity=".85" stroke-width="7" fill="none" stroke-linecap="round"/>
@@ -663,10 +671,10 @@ svg.innerHTML=`
     ${CAPL.map(c=>`<path d="${crPath(c,false)}" stroke="url(#gBlood)" stroke-width="3.6" fill="none" stroke-linecap="round"/>`).join('')}
     ${CAPS.map(c=>`<path d="${crPath(c,false)}" stroke="#fff" stroke-opacity=".3" stroke-width="1.2" fill="none" transform="translate(-.8 -1.4)"/>`).join('')}
     <g font-size="11" font-weight="800" paint-order="stroke" stroke="#12081a" stroke-width="3" stroke-linejoin="round">
-      <text x="-14" y="-56" fill="#ffd6e2" text-anchor="middle" id="magAlvT">Alveol</text>
-      <text x="-50" y="84" fill="#aab4ff">Kılcal damar</text>
-      <text x="-82" y="30" fill="#8f9bff" font-size="10">O₂ az kan</text>
-      <text x="44" y="-58" fill="#ff8c9c" font-size="10">O₂ zengin kan</text>
+      <text x="58" y="-12" fill="#ffd6e2" id="magAlvT" font-size="12.5">Alveol</text>
+      <text x="0" y="90" fill="#c3c9ff" text-anchor="middle">Kılcal damar</text>
+      <text x="-90" y="26" fill="#9aa5ff" font-size="10">O₂ az</text>
+      <text x="88" y="-2" fill="#ff8c9c" font-size="10" text-anchor="end">O₂ çok</text>
     </g>
   </g>
   <circle r="${MG.r}" fill="none" stroke="#071423" stroke-width="13"/>
@@ -711,10 +719,10 @@ const LABELS=[
   {p:'diyafram',t:['Diyafram'],x:132,y:534,a:'end',tg:()=>[CX-128,yAt(DT,CX-128)+7],sub:'dia'},
   {p:'yutak',t:['Yutak'],x:468,y:104,a:'start',tg:()=>[CX+28,150]},
   {p:'girtlak',t:['Gırtlak','(ses telleri)'],x:468,y:200,a:'start',tg:()=>[CX+4,226]},
-  {p:'soluk',t:['Soluk borusu'],x:578,y:282,a:'start',tg:()=>[CX+6,322]},
-  {p:'brons',t:['Bronş'],x:578,y:334,a:'start',tg:()=>[CX+24,384]},
-  {p:'bronscuk',t:['Bronşçuk'],x:578,y:386,a:'start',tg:()=>mapPt(bcSeg.cx,bcSeg.cy,1,S.b)},
-  {p:'akciger-sol',t:['Sol akciğer'],x:578,y:438,a:'start',tg:()=>[CX+138,408]}
+  {p:'soluk',t:['Soluk borusu'],x:578,y:268,a:'start',tg:()=>[CX+6,322]},
+  {p:'brons',t:['Bronş'],x:578,y:318,a:'start',tg:()=>[CX+24,384]},
+  {p:'bronscuk',t:['Bronşçuk'],x:578,y:368,a:'start',tg:()=>mapPt(bcSeg.cx,bcSeg.cy,1,S.b)},
+  {p:'akciger-sol',t:['Sol akciğer'],x:578,y:418,a:'start',tg:()=>[CX+138,408]}
 ];
 let icTarget=[CX-150,352],chestPt=[CX-172,452];
 const LG=$('#labels',svg);
@@ -762,11 +770,11 @@ function drawAnatomy(b){
       const o=[[CX-158+ex,434+disp(CX-158)*wgt(434)],[CX-126,452+disp(CX-126)*wgt(452)],[CX-98,yAt(DT,CX-98)-24],[CX-84,yAt(DT,CX-84)-4]];
       f=crPath(h,false)+crPath(o,false);
     }else{
-      const o=[[CX+44,352],[CX+86,392+disp(CX+86)*wgt(392)],[CX+122,440+disp(CX+122)*wgt(440)],[CX+150+ex,yAt(DT,CX+150)-14]];
+      const o=[[CX+44,352],[CX+86,392+disp(CX+86)*wgt(392)],[CX+122,440+disp(CX+122)*wgt(440)],[CX+140+ex,yAt(DT,CX+140)-14]];
       f=crPath(o,false);
     }
     E['l'+k+'f'].setAttribute('d',f);E['l'+k+'f2'].setAttribute('d',f);E['l'+k+'f2'].setAttribute('transform','translate(1.2 1.6)');
-    const hx=k==='R'?CX-118-6*b:CX+112+6*b;E['l'+k+'h'].setAttribute('cx',f1(hx));E['l'+k+'h'].setAttribute('cy',f1(372+6*b));
+    const hx=k==='R'?CX-118-6*b:CX+104+6*b;E['l'+k+'h'].setAttribute('cx',f1(hx));E['l'+k+'h'].setAttribute('cy',f1(372+6*b));
     E['l'+k+'h'].setAttribute('transform',`rotate(${k==='R'?14:-14} ${f1(hx)} ${f1(372+6*b)})`);
     E['l'+k+'t'].setAttribute('opacity',f1((.62+.25*b)*100)/100);
   });
@@ -793,7 +801,7 @@ function drawAnatomy(b){
     for(let k=0;k<6;k++)fib+=`M${P(ta[k][0],ta[k][1])}L${P(tb[k+1][0],tb[k+1][1])}`;}
     E[s<0?'icL':'icR'].setAttribute('d',d);});
   E.icF.setAttribute('d',fib);
-  const ico=f1((.2+.32*b)*100)/100;E.icL.setAttribute('opacity',ico);E.icR.setAttribute('opacity',ico);
+  const ico=f1((.13+.3*b)*100)/100;E.icF.setAttribute('stroke-opacity',f1((.3+.45*b)*100)/100);E.icL.setAttribute('opacity',ico);E.icR.setAttribute('opacity',ico);
   icTarget=bez(RB[-1][1],.8).map((v,j)=>v+(j?18:0));
   const sl=-6*b;E.stern.setAttribute('d',`M${P(CX-11,292+sl)}L${P(CX+11,292+sl)}L${P(CX+9,470+sl)}L${P(CX,484+sl)}L${P(CX-9,470+sl)}Z`);
   /* göğüs boşluğu sınırı */
@@ -838,17 +846,20 @@ function resize(){
   VS=Math.min(r.width/VW,r.height/VH);VOX=(r.width-VW*VS)/2;VOY=(r.height-VH*VS)/2;
   const sp=$('#spiro'),sr=sp.getBoundingClientRect();sp.width=Math.round(sr.width*DPR);sp.height=Math.round(sr.height*DPR);
 }
-function sprite(core,glow){const c=document.createElement('canvas');c.width=c.height=48;const g=c.getContext('2d');const gr=g.createRadialGradient(24,24,0,24,24,24);
-  gr.addColorStop(0,'#fff');gr.addColorStop(.18,core);gr.addColorStop(.36,core);gr.addColorStop(.48,glow);gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,48,48);return c;}
-const SPR={air:sprite('#c9fbff','rgba(53,238,252,.35)'),o2:sprite('#9fdcff','rgba(120,190,255,.45)'),co2:sprite('#c6a6ff','rgba(168,121,255,.42)'),
-  dust:sprite('#6a5a46','rgba(90,74,58,.35)'),soot:sprite('#3d3742','rgba(30,26,34,.3)')};
+function sprite(core,glow,rim){const c=document.createElement('canvas');c.width=c.height=48;const g=c.getContext('2d');const gr=g.createRadialGradient(24,24,0,24,24,24);
+  gr.addColorStop(0,glow);gr.addColorStop(.62,glow.replace(/[\d.]+\)$/,'0.12)'));gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,48,48);
+  g.fillStyle=rim||'rgba(3,16,30,.7)';g.beginPath();g.arc(24,24,10.5,0,7);g.fill();
+  const cg=g.createRadialGradient(20,20,1,24,24,9);cg.addColorStop(0,'#fff');cg.addColorStop(.35,core);cg.addColorStop(1,core);g.fillStyle=cg;g.beginPath();g.arc(24,24,8.6,0,7);g.fill();
+  g.fillStyle='rgba(255,255,255,.85)';g.beginPath();g.arc(20.5,20.5,2.4,0,7);g.fill();return c;}
+const SPR={air:sprite('#7ff6ff','rgba(53,238,252,.55)'),o2:sprite('#a9d8ff','rgba(120,180,255,.6)'),co2:sprite('#b48cff','rgba(168,121,255,.6)'),
+  dust:sprite('#c9a87c','rgba(201,168,124,.4)','rgba(40,26,10,.75)'),soot:sprite('#8b8392','rgba(120,112,128,.4)','rgba(15,10,20,.8)')};
 const parts=[];let accIn=0,accOut=0,magBoost=0;
 function pRoute(){return S.mode==='ortam'?S.route:'nose';}
 function spawnAir(kind,fromEnd){const list=PATHS[pRoute()];const pa=list[(Math.random()*list.length)|0];
   parts.push({pa,s:fromEnd?pa.len*(.84+Math.random()*.16):Math.random()*10,kind,r:Math.random(),life:1,free:false,lab:Math.random()<.13});}
 /* toz */
 const dust=[],stuck=[],dep=[];
-function spawnDust(){dust.push({x:150+Math.random()*92,y:86+Math.random()*120,vx:(Math.random()-.5)*10,vy:(Math.random()-.5)*10,st:'air',r:2+Math.random()*1.6,soot:Math.random()<.45});}
+function spawnDust(){dust.push({x:150+Math.random()*92,y:86+Math.random()*120,vx:(Math.random()-.5)*10,vy:(Math.random()-.5)*10,st:'air',r:2.4+Math.random()*1.8,soot:Math.random()<.45});}
 /* büyüteç */
 const CAPSM=CAPS.map(c=>{const s=crSample(c,8);return{s,c:cum(s)};});
 const CAPPTS=[];CAPSM.forEach(c=>c.s.forEach(p=>CAPPTS.push(p)));
@@ -882,10 +893,10 @@ function stepParticles(dt){
   const E0=ENTRY[S.route];
   for(let i=dust.length-1;i>=0;i--){const d=dust[i];
     if(d.st==='air'){
-      d.vx+=(Math.random()-.5)*30*dt;d.vy+=(Math.random()-.5)*30*dt;d.vx*=.98;d.vy*=.98;d.x+=d.vx*dt;d.y+=d.vy*dt;
-      if(d.x<140||d.x>246)d.vx*=-1;if(d.y<70||d.y>215)d.vy*=-1;d.x=clamp(d.x,140,246);d.y=clamp(d.y,70,215);
-      const dx=E0[0]-d.x,dy=E0[1]-d.y,dd=Math.hypot(dx,dy);
-      if(fl>.06&&dd<30+110*Math.min(1,fl)){const k=Math.min(1,dt*(1.2+fl*3)*(90/(dd+20)));d.x+=dx*k;d.y+=dy*k;
+      const dx=E0[0]-d.x,dy=E0[1]-d.y,dd=Math.hypot(dx,dy),pull=S.mode==='ortam'&&fl>.06&&dd<40+110*Math.min(1,fl);
+      if(!pull){d.vx+=(Math.random()-.5)*30*dt;d.vy+=(Math.random()-.5)*30*dt;d.vx*=.98;d.vy*=.98;d.x+=d.vx*dt;d.y+=d.vy*dt;
+        if(d.x<140||d.x>248)d.vx*=-1;if(d.y<70||d.y>215)d.vy*=-1;d.x=clamp(d.x,140,248);d.y=clamp(d.y,70,215);}
+      if(pull){const k=Math.min(1,dt*(1.2+fl*3)*(90/(dd+20)));d.x+=dx*k;d.y+=dy*k;
         if(dd<7){const list=PATHS[S.route];d.pa=list[(Math.random()*list.length)|0];d.s=d.pa.entryS;d.st='in';d.route=S.route;
           d.trap=S.route==='nose'?Math.random()<.84:Math.random()<.14;d.trapAt=d.s+(S.route==='nose'?6+Math.random()*90:10+Math.random()*120);}}
       if(S.air!=='dirty'||S.mode!=='ortam'){d.life=(d.life??1)-dt*1.5;if(d.life<=0)dust.splice(i,1);}
@@ -912,11 +923,11 @@ function drawParticles(){
   for(const d of dust){cx.globalAlpha=d.life==null?1:clamp(d.life,0,1);cx.drawImage(d.soot?SPR.soot:SPR.dust,d.x-d.r*2.6,d.y-d.r*2.6,d.r*5.2,d.r*5.2);
     cx.strokeStyle='rgba(255,220,180,.35)';cx.lineWidth=.6;cx.beginPath();cx.arc(d.x,d.y,d.r*.95,0,7);cx.stroke();}
   /* hava parçacıkları */
-  cx.font='800 9.5px Lexend,system-ui,sans-serif';cx.textAlign='center';
+  cx.font='800 11px Lexend,system-ui,sans-serif';cx.textAlign='center';
   for(const p of parts){let x,y;if(p.free){x=p.x;y=p.y;}else{[x,y]=posAt(p.pa,p.s);}
-    const a=clamp(p.life,0,1);cx.globalAlpha=a;const sz=p.kind==='air'?9:11;
+    const a=clamp(p.life,0,1);cx.globalAlpha=a;const sz=p.kind==='air'?13:15;
     cx.drawImage(SPR[p.kind],x-sz/2,y-sz/2,sz,sz);
-    if(p.lab&&p.kind!=='air'){cx.globalAlpha=a*.95;cx.fillStyle=p.kind==='co2'?'#e3d4ff':'#d7f1ff';cx.fillText(p.kind==='co2'?'CO₂':'O₂',x+8,y-6);}}
+    if(p.lab&&p.kind!=='air'){cx.globalAlpha=a*.95;cx.fillStyle=p.kind==='co2'?'#e3d4ff':'#d7f1ff';cx.strokeStyle='rgba(3,12,24,.85)';cx.lineWidth=3;cx.strokeText(p.kind==='co2'?'CO₂':'O₂',x+9,y-7);cx.fillText(p.kind==='co2'?'CO₂':'O₂',x+9,y-7);}}
   /* büyüteç */
   cx.save();cx.globalAlpha=1;cx.beginPath();cx.arc(MG.x,MG.y,MG.r-4,0,7);cx.clip();cx.translate(MG.x,MG.y);
   for(const c of cells){const cs=CAPSM[c.c];const L=cs.c[cs.c.length-1],s=c.s*L;let k=1;while(k<cs.c.length-1&&cs.c[k]<s)k++;
@@ -998,7 +1009,7 @@ function setStats(arr){arr.forEach(([l,v,c],i)=>{const el=$(`[data-stat="s${i+1}
 function stopTimer(){if(timer){timer.stop();timer=null;}}
 
 function setMode(m,restart){
-  S.mode=m;stopTimer();TR.run=false;ZD.hideHand();hl(null);hl(null,'okf');release();
+  S.mode=m;document.body.className='m-'+m;stopTimer();TR.run=false;ZD.hideHand();hl(null);hl(null,'okf');release();
   $$('#modeSeg button').forEach(b=>{b.classList.toggle('on',b.dataset.m===m);b.setAttribute('aria-selected',b.dataset.m===m);});
   scene.classList.toggle('nolabels',m==='gorev');
   scene.classList.toggle('pick',m!=='antrenor');
@@ -1020,28 +1031,31 @@ const TREEART=`<svg viewBox="0 0 104 116" aria-hidden="true"><defs><linearGradie
 <path d="M33 60 C30 52 30 46 32 40" stroke-width="3"/><path d="M71 60 C74 52 74 46 72 40" stroke-width="3"/></g>
 <g>${[[22,46,13],[34,32,14],[52,24,16],[70,32,14],[82,46,13],[52,46,11],[30,52,9],[74,52,9]].map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="url(#gLf)"/><circle cx="${x-r*.35}" cy="${y-r*.4}" r="${r*.28}" fill="#fff" opacity=".35"/>`).join('')}</g>
 <g font-family="Lexend,system-ui" font-size="8" font-weight="800" fill="#fff" stroke="#0b1a2d" stroke-width="2.4" paint-order="stroke" text-anchor="middle"><text x="52" y="98">gövde</text><text x="86" y="66">dal</text><text x="52" y="12">yaprak</text></g></svg>`;
-function renderKesif(){
-  setStats([['Aşama','Dinlenme'],['Hacim','%0','cyan'],['Soluk/dk',RATE[S.act]],['Keşif',S.visited.size+'/10','green']]);
-  mp.innerHTML=`<div class="card info zd-info" id="infoCard">
-      <span class="zd-chip">YAPI KARTI</span>
-      <div class="hd"><span class="sw" style="color:#35eefc;background:#35eefc"></span><h3>Bir yapıya dokun</h3></div>
-      <p>Sahnedeki yapılara ya da etiketlerine dokun; ders kitabındaki tanımı burada açılır. Sonra butona basılı tutarak soluk al, bırakarak soluk ver.</p>
-      <div class="prog"><span>Keşfedilen</span><div class="zd-meter"><i id="kProg" style="width:${S.visited.size*10}%"></i></div><b id="kProgT">${S.visited.size}/10</b></div>
-    </div>
-    <div class="card tree"><div class="ttl" style="margin-bottom:8px">Ağaç benzetmesi</div>
-      <div class="row">${TREEART}<ul>
+const ANALOGY={soluk:'Ağaç benzetmesinde <b>gövde</b>: soluk borusu.',brons:'Ağaç benzetmesinde <b>dallar</b>: bronşlar.',alveol:'Ağaç benzetmesinde <b>yapraklar</b>: alveoller.'};
+function kHead(){return `<div class="ktop"><span class="zd-chip">YAPI KARTI</span><span class="kcnt">Keşif <b>${S.visited.size}</b>/10</span></div>`;}
+function treeBlock(){return `<div class="tree"><div class="ttl" style="margin:12px 0 8px">Ağaç benzetmesi</div><div class="row">${TREEART}<ul>
         <li data-go="soluk"><b>Gövde</b><span>= Soluk borusu</span></li>
         <li data-go="brons"><b>Dallar</b><span>= Bronşlar</span></li>
-        <li data-go="alveol"><b>Yapraklar</b><span>= Alveoller</span></li></ul></div></div>`;
-  $$('.tree li',mp).forEach(li=>li.onclick=()=>onPart(li.dataset.go));
+        <li data-go="alveol"><b>Yapraklar</b><span>= Alveoller</span></li></ul></div></div>`;}
+function bindTree(){$$('.tree li',mp).forEach(li=>li.onclick=()=>onPart(li.dataset.go));const tb=$('#treeBtn');if(tb)tb.onclick=()=>{ZD.sfx('click');hl(null);renderKesifCard();};}
+function renderKesifCard(){
+  const card=$('#infoCard');if(!card)return;
+  card.innerHTML=`${kHead()}<div class="hd"><span class="sw" style="color:#35eefc;background:#35eefc"></span><h3>Bir yapıya dokun</h3></div>
+      <p>Sahnedeki yapılara ya da etiketlerine dokun; ders kitabındaki tanımı burada açılır. Butona basılı tutarak soluk al, bırakarak soluk ver.</p>${treeBlock()}`;
+  bindTree();
+}
+function renderKesif(){
+  setStats([['Aşama','Dinlenme'],['Hacim','%0','cyan'],['Soluk/dk',RATE[S.act]],['Keşif',S.visited.size+'/10','green']]);
+  mp.innerHTML=`<div class="card info zd-info" id="infoCard"></div>`;renderKesifCard();
 }
 function showInfo(part){
   const k=PART2INFO(part),I=INFO[k],card=$('#infoCard');if(!card)return;
   const sub=part==='akciger-sag'?'Sağ akciğer · ekranda solda görünür (kişiye karşıdan bakıyorsun)':part==='akciger-sol'?'Sol akciğer · kalbe yer açan girintisi vardır':'';
-  card.innerHTML=`<span class="zd-chip">YAPI KARTI</span><div class="hd"><span class="sw" style="color:${I.color};background:${I.color}"></span><h3>${part.startsWith('akciger')?PARTNAME(part):I.name}</h3></div>
-    ${sub?`<div class="sub2">${sub}</div>`:''}<p>${I.text}</p>
-    <div class="prog"><span>Keşfedilen</span><div class="zd-meter"><i id="kProg" style="width:${S.visited.size*10}%"></i></div><b>${S.visited.size}/10</b></div>`;
-  card.classList.remove('zd-fade-in');void card.offsetWidth;card.classList.add('zd-fade-in');
+  card.innerHTML=`${kHead()}<div class="hd"><span class="sw" style="color:${I.color};background:${I.color}"></span><h3>${part.startsWith('akciger')?PARTNAME(part):I.name}</h3></div>
+    ${sub?`<div class="sub2">${sub}</div>`:''}<p>${I.text}</p>${ANALOGY[k]?`<p class="analog">${ANALOGY[k]}</p>`:''}
+    <div class="src">Kaynak: Fen Bilimleri 7 · Solunum Sistemi</div>
+    <button class="zd-btn sm ghost" id="treeBtn" style="margin-top:10px">${ZD.I.arrowL}Ağaç benzetmesi</button>`;
+  card.classList.remove('zd-fade-in');void card.offsetWidth;card.classList.add('zd-fade-in');bindTree();
 }
 
 /* ---------- Antrenör ---------- */
@@ -1053,8 +1067,8 @@ function renderTrainer(){
   Object.assign(TR,{run:false,cyc:0,pi:-1,pt:0,m:[0,0,0],tot:[0,0,0],bpm:118,bpmT:118,time:0});
   setStats([['Döngü','0/3'],['Uyum','%0','cyan'],['Nabız','118'],['Süre','0:00']]);
   mp.innerHTML=`<div class="card story"><span class="zd-chip amber">DEFNE'NİN SAHNE HEYECANI</span>
-      <p>Defne ilk kez sahneye çıkacak: kalbi hızla atıyor, nefes alıp verirken zorlanıyor. Öğretmeninin anlattığı doğru nefes yöntemiyle onu sakinleştir!</p></div>
-    <div class="card">
+      <p>Sahneye çıkma sırası Defne'de: kalbi hızla atıyor, nefesi zorlanıyor. Doğru nefesle onu sakinleştir!</p></div>
+    <div class="card" style="padding:12px 14px">
       <div class="ringwrap"><svg viewBox="0 0 160 160"><circle cx="80" cy="80" r="66" class="trk"/><circle cx="80" cy="80" r="74" class="trk2" id="trOk" stroke="rgba(255,255,255,.06)"/>
         <circle id="trArc" cx="80" cy="80" r="66" class="arc" stroke="#35eefc" transform="rotate(-90 80 80)" stroke-dasharray="414.7" stroke-dashoffset="414.7"/></svg>
         <div class="rc"><b id="trSec">3</b><span id="trLbl" style="color:#8fa8c4">HAZIR MISIN?</span></div></div>
@@ -1062,15 +1076,15 @@ function renderTrainer(){
       <div class="trsteps"><span data-k="in">AL · 4 sn</span><span data-k="hold">TUT · 3-4 sn</span><span data-k="out">VER · 6 sn</span></div>
       <div class="uy"><span>Uyum</span><div class="zd-meter"><i id="trMeter"></i></div><b id="trUy">%0</b></div>
     </div>
-    <div class="card" style="padding:10px 14px"><div class="trrow"><div class="heart" id="trHeart">${HEART}</div>
-      <div class="bpm"><b id="trBpm">118</b> <span style="font-size:12px;color:var(--muted);font-weight:700">atım/dk</span><small id="trCalm" style="color:#ff8a98">Heyecan: yüksek</small></div></div></div>
-    <button class="zd-btn green" id="trStart">${ZD.I.play}Antrenmanı başlat</button>`;
+    <div class="card trrow" style="padding:8px 12px"><div class="heart" id="trHeart">${HEART}</div>
+      <div class="bpm"><b id="trBpm">118</b> <span style="font-size:12px;color:var(--muted);font-weight:700">atım/dk</span><small id="trCalm" style="color:#ff8a98">Heyecan: yüksek</small></div>
+      <button class="zd-btn green sm" id="trStart">${ZD.I.play}Başlat</button></div>`;
   $('#trStart').onclick=()=>{ZD.sfx('click');if(TR.run){TR.run=false;stopTimer();renderTrainer();return;}startTrainer();};
   heartAnim();
 }
 function startTrainer(){
   Object.assign(TR,{run:true,cyc:0,pi:-1,pt:0,m:[0,0,0],tot:[0,0,0],bpm:118,bpmT:118,time:0,last:''});
-  $('#trStart').innerHTML=ZD.I.pause+'Durdur';$('#trStart').className='zd-btn ghost';
+  $('#trStart').innerHTML=ZD.I.pause+'Durdur';$('#trStart').className='zd-btn ghost sm';
   stopTimer();timer=new ZD.Timer(t=>{TR.time=t;ui.stat('s4',ZD.Timer.fmt(t));});timer.start();
   ZD.pointAt(holdBtn,{ms:2600});
 }
@@ -1107,7 +1121,7 @@ function finishTrainer(){
   setTimeout(()=>ZD.result({title:avg>=.8?'Harika! Defne sakinleşti':avg>=.55?'Güzel! Defne rahatlıyor':'Biraz daha pratik',correct:good,total:3,score:Math.round(avg*100),time:TR.time,
     text:`Ortalama uyum: %${Math.round(avg*100)} · Nabız 118 → ${TR.bpmT} atım/dk.<br>Doğru nefes: göğüs yerine diyaframı hareket ettir; burundan alırken karnını şişir, 3-4 sn tut, verirken karnını yavaşça içe çek. Nefes vermeyi almaktan daha yavaş yap.`,
     onReplay:()=>{renderTrainer();startTrainer();}}),500);
-  const b=$('#trStart');if(b){b.innerHTML=ZD.I.restart+'Yeniden başlat';b.className='zd-btn green';}
+  const b=$('#trStart');if(b){b.innerHTML=ZD.I.restart+'Yeniden';b.className='zd-btn green sm';}
 }
 
 /* ---------- Görevler ---------- */
@@ -1207,8 +1221,8 @@ function onPart(part){
 
 /* =====================  YARDIM / GİRİŞ  ===================== */
 const HELP={
-  kesif:{t:'Serbest Keşif',s:['Yapılara veya etiketlerine dokun: kitaptaki tanımı soldaki kartta açılır.','<b>BASILI TUT: SOLUK AL</b> butonuna (ya da Boşluk tuşuna) basılı tut; diyaframın düzleştiğini, kaburgaların açıldığını izle. Bırakınca soluk verirsin.','Etkinlik seçerek (Dinlenme / Spor / Heyecan) otomatik nefesin hızını değiştir.']},
-  antrenor:{t:'Doğru Nefes Antrenörü',s:['Halka sayaç seni yönlendirir: <b>Burundan al</b> (4 sn) → <b>Tut</b> (3-4 sn) → <b>Yavaşça ver</b> (6 sn).','Al ve Tut boyunca butonu basılı tut, Ver aşamasında bırak.','Uyumun arttıkça Defne\'nin kalp atışı sakinleşir. 3 döngü sonunda sonucunu gör.']},
+  kesif:{t:'Serbest Keşif',s:['Yapılara veya etiketlerine dokun: kitaptaki tanımı soldaki kartta açılır.','<strong>BASILI TUT: SOLUK AL</strong> butonuna (ya da Boşluk tuşuna) basılı tut; diyaframın düzleştiğini, kaburgaların açıldığını izle. Bırakınca soluk verirsin.','Etkinlik seçerek (Dinlenme / Spor / Heyecan) otomatik nefesin hızını değiştir.']},
+  antrenor:{t:'Doğru Nefes Antrenörü',s:['Halka sayaç seni yönlendirir: <strong>Burundan al</strong> (4 sn) → <strong>Tut</strong> (3-4 sn) → <strong>Yavaşça ver</strong> (6 sn).','Al ve Tut boyunca butonu basılı tut, Ver aşamasında bırak.','Uyumun arttıkça Defne\'nin kalp atışı sakinleşir. 3 döngü sonunda sonucunu gör.']},
   gorev:{t:'Görevler',s:['Soldaki görevi oku ve sahnedeki doğru yapıya dokun. Etiketler bu modda gizlidir.','Bazı görevlerde butonla soluk alıp vermen gerekir.','İlk denemede doğru: 100 puan + seri bonusu. Yanlışta kitaptan kısa açıklama görürsün.']},
   ortam:{t:'Ortam Testi',s:['Temiz ya da kirli havayı ve burundan ya da ağızdan nefesi seç.','Soluk alırken toz ve is parçacıklarının nereye gittiğini izle: burundaki kıllar ve mukus çoğunu tutar.','Sayaçları karşılaştır ve sağlık önerilerini oku.']}
 };
@@ -1243,7 +1257,7 @@ function loop(now){
 function phaseChanged(){
   const ph=S.phase,pill=$('#phPill');
   const N={in:'SOLUK ALMA',out:'SOLUK VERME',hold:'NEFES TUTULUYOR',rest:'DİNLENME'};
-  pill.textContent=N[ph];pill.className='ph-pill '+(ph==='rest'?'':ph);
+  pill.textContent=N[ph];pill.className='ph-pill '+(ph==='rest'?'':'p-'+ph);
   if(S.mode==='kesif')ui.stat('s1',{in:'Soluk al',out:'Soluk ver',hold:'Tut',rest:'Dinlenme'}[ph]);
   $('#stNote').textContent={in:'Şimdi',out:'Şimdi',hold:'Akciğerler dolu',rest:S.holding?'':'Butona basılı tut'}[ph];
   const ct=$('#cavCt'),at=$('#cavAt');
@@ -1269,8 +1283,8 @@ holdBtn.classList.add('ring');
 ZD.intro({kicker:'SİMÜLASYON · SOLUNUM SİSTEMİ',title:'Soluk Al, Soluk Ver',
   art:`<div style="width:84px;height:84px;margin:0 auto 6px;filter:drop-shadow(0 0 18px rgba(255,159,184,.45))">${LUNGICON.replace('class="ic"','style="width:84px;height:84px"').replace(/hiL/g,'hiL2')}</div>`,
   text:'Diyafram, kaburgalar ve akciğerler soluk alıp verirken nasıl hareket ediyor? Canlı modelde keşfet!',
-  steps:['<b>BASILI TUT: SOLUK AL</b> butonuna (veya Boşluk tuşuna) basılı tut: diyafram kasılıp düzleşir, akciğerler havayla dolar. Bırakınca soluk verirsin.',
-    'Sağdaki <b>Durum tablosu</b> o anda olanları sırayla işaretler; büyüteçte alveollerdeki O₂ ve CO₂ alışverişini izle.',
+  steps:['<strong>BASILI TUT: SOLUK AL</strong> butonuna (veya Boşluk tuşuna) basılı tut: diyafram kasılıp düzleşir, akciğerler havayla dolar. Bırakınca soluk verirsin.',
+    'Sağdaki <strong>Durum tablosu</strong> o anda olanları sırayla işaretler; büyüteçte alveollerdeki O₂ ve CO₂ alışverişini izle.',
     'Üstten mod seç: Serbest Keşif, Doğru Nefes Antrenörü, Görevler ve Ortam Testi.'],
   start:'Başla',onStart:()=>{setTimeout(()=>ZD.pointAt(holdBtn,{ms:3000}),350);}});
 })();

@@ -744,7 +744,7 @@ function renderPieces(t) {
       if (u._s !== s) { u.setAttribute('href', '#' + s); u._s = s; }
       const wx = S.wob * Math.sin(t * 3.1 + i * 1.7), wy = S.wob * Math.cos(t * 2.7 + i * 1.3);
       u.setAttribute('transform', `translate(${(p.x + wx).toFixed(2)},${(p.y + wy).toFixed(2)}) scale(${(p.r / 10 * p.k).toFixed(3)}) rotate(${p.rot || 0})`);
-      u.setAttribute('opacity', p.o.toFixed(2));
+      u.setAttribute('opacity', (p.o ?? 1).toFixed(2));
     });
   };
   sync(pcsG, S.pieces, p => p.s); sync(fatsG, S.fat, () => 'fatD');

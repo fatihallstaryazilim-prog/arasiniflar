@@ -10,7 +10,7 @@
 .prompt .streak.on{transform:scale(1)}
 
 /* --- Kart yığını --- */
-.stack{position:relative;width:min(600px,100%);height:clamp(220px,38vh,330px);margin:8px auto 0;perspective:1200px}
+.stack{position:relative;width:min(600px,100%);height:clamp(220px,36vh,330px);margin:8px auto 0;perspective:1200px}
 .card{
   position:absolute;inset:0;border-radius:24px;
   background:
@@ -67,7 +67,7 @@
 .choice{display:flex;flex-direction:column;align-items:center;gap:10px;--c:#ff4a3d;--c2:#ff8a73;--ca:rgba(255,74,61,.35)}
 .choice.r{--c:#35eefc;--c2:#4ef7ff;--ca:rgba(53,238,252,.32)}
 .ring{
-  width:clamp(84px,14vh,118px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;
+  width:clamp(84px,13vh,118px);aspect-ratio:1;border-radius:50%;display:grid;place-items:center;
   background:radial-gradient(circle at 50% 45%,#0f2238 0%,#081526 70%);
   border:3px solid var(--c);
   box-shadow:0 0 0 1px var(--ca),0 0 22px var(--c),0 0 60px var(--ca),inset 0 0 22px var(--ca);
@@ -151,6 +151,7 @@
   .fb .box{font-size:13.5px}
 }
 @media (min-width:861px){.deck .meta{display:contents}}
+.zd-howto li strong{color:#fff;font-weight:700}
 </style></head>
 <body><div id="app"></div><script src="assets/zd.js"></script><script>
 (function(){
@@ -535,9 +536,9 @@ function restart() { reset(); locked = false; started = true; timer.start(); arm
 /* ---------------- Yönerge ---------------- */
 function introSteps() {
   return [
-    `Kartı oku ve doğru tarafa <b>fırlat</b>: sola <b style="color:#ff8a73">${D.L}</b>, sağa <b style="color:var(--cyan)">${D.R}</b>.`,
-    'Kartı parmağınla sürükleyebilir, alttaki büyük butonlara dokunabilir ya da klavyede <b>←</b> / <b>→</b> tuşlarını kullanabilirsin.',
-    'Hızlı cevap ek puan, art arda doğrular <b>seri çarpanı</b> kazandırır. Süren <b>90 saniye</b>!'
+    `Kartı oku ve doğru tarafa <strong>fırlat</strong>: sola <strong style="color:#ff8a73">${D.L}</strong>, sağa <strong style="color:var(--cyan)">${D.R}</strong>.`,
+    'Kartı parmağınla sürükleyebilir, alttaki büyük butonlara dokunabilir ya da klavyede <strong>←</strong> / <strong>→</strong> tuşlarını kullanabilirsin.',
+    'Hızlı cevap ek puan, art arda doğrular <strong>seri çarpanı</strong> kazandırır. Süren <strong>90 saniye</strong>!'
   ];
 }
 function showIntro() {
