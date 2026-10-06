@@ -139,11 +139,11 @@
   background:linear-gradient(180deg,rgba(44,84,124,.7),rgba(14,32,56,.85));border:1.5px solid rgba(127,246,255,.55);
   box-shadow:0 0 24px rgba(53,238,252,.25),inset 0 1px 0 rgba(255,255,255,.12),0 16px 34px rgba(0,0,0,.4)}
 .fcard .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-.fcard p{font-size:19px;font-weight:600;line-height:1.42;min-height:96px;display:flex;align-items:center;justify-content:center;text-align:center}
+.fcard p{font-size:19px;font-weight:600;line-height:1.42;min-height:84px;display:flex;align-items:center;justify-content:center;text-align:center}
 .fcard.swap p{animation:dy-in .45s var(--ease)}
 @keyframes dy-in{from{opacity:0;transform:translateY(12px)}}
 .fbtns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
-.fbtn{height:64px;border-radius:18px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:18px;font-weight:800;color:#fff;
+.fbtn{height:60px;border-radius:18px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:18px;font-weight:800;color:#fff;
   box-shadow:0 6px 0 rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .12s}
 .fbtn b{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.2);font-size:17px}
 .fbtn.d{background:linear-gradient(180deg,#3ff0a8,#13a96d)}
@@ -160,7 +160,7 @@
 .bdg.route{opacity:.95}
 
 /* ---- set seçici ---- */
-.pick{position:absolute;inset:0;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:18px;
+.pick{position:relative;height:clamp(500px,calc(100vh - 182px),900px);z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:18px;
   background:radial-gradient(ellipse at 50% 30%,rgba(10,30,52,.92),rgba(5,12,22,.97))}
 .pick[hidden]{display:none}
 .pick h2{font-size:26px;font-weight:800;text-align:center}
@@ -206,7 +206,7 @@
   .pcard{padding:14px 10px}
   .pcard svg{width:84px;height:84px}
   .pcard b{font-size:17px}
-  .pick{position:relative;inset:auto;min-height:560px;justify-content:flex-start}
+  .pick{height:auto;min-height:560px;justify-content:flex-start}
   .pick h2{font-size:21px}
 }
 </style></head>
@@ -237,8 +237,8 @@ const SETS = {
   ]},
   solunum:{ name:'Solunum', full:'Solunum Sistemi', nodes:[
     {t:'Akciğerler sağ ve sol olmak üzere iki parçadan oluşur.', a:'D', e:'Akciğerler göğüs kafesi içinde sağ ve sol iki parçadır; sağ akciğer soldakinden büyüktür.'},
-    {t:'Soğuk havalarda ağızdan nefes almak solunum sistemi organlarını korur.', a:'Y', e:'Burun havayı nemlendirir, ısıtır; kıllar toz ve mikropları tutar. Soğukta ağızdan nefes almak organları korumaz.'},
     {t:'Tütün ürünleri sadece solunum sistemi sağlığına zarar verir.', a:'Y', e:'Tütün ürünleri yalnızca solunum sistemine değil dolaşım sistemine de zarar verir.'},
+    {t:'Soğuk havalarda ağızdan nefes almak solunum sistemi organlarını korur.', a:'Y', e:'Burun havayı nemlendirir, ısıtır; kıllar toz ve mikropları tutar. Soğukta ağızdan nefes almak organları korumaz.'},
     {t:'Diyafram, akciğerlerin hacminin artıp azalmasına yardımcı olan bir kastır.', a:'D', e:'Diyafram solunuma yardımcı bir kastır: kasılıp düzleşince akciğer hacmi artar, gevşeyip kubbeleşince azalır.'},
     {t:'Kaburga kasları nefes alırken gevşer, nefes verirken kasılır.', a:'Y', e:'Tam tersi: soluk alırken kaburgalar arası kaslar kasılır, soluk verirken gevşer.'},
     {t:'Kapalı alanları düzenli olarak havalandırmak solunum sistemi sağlığı için önemlidir.', a:'D', e:'Kapalı mekânları havalandırmak temiz hava sağlar ve solunum sistemini korur.'},
@@ -246,9 +246,9 @@ const SETS = {
   ]},
   bosaltim:{ name:'Boşaltım', full:'Boşaltım Sistemi', nodes:[
     {t:'Vücudun sağlıklı kalabilmesi için düzenli ve yeterli miktarda su içilmesi gerekir.', a:'D', e:'Yeterli su; böbrek taşı ve idrar yolu enfeksiyonu riskini azaltır, vücut sıcaklığını düzenler.'},
-    {t:'İdrar kesesi, kandaki atık maddeleri süzerek idrar oluşturur.', a:'Y', e:'Kanı süzerek idrarı böbrekler oluşturur. İdrar kesesi (mesane) idrarı yalnızca depolar.'},
-    {t:'Böbrek ve deri, aynı atık maddeleri vücuttan uzaklaştıran organlardır.', a:'Y', e:'Böbrekler fazla su, tuz, üre gibi atıkları uzaklaştırır; deri terleme ile su ve tuzun bir kısmını atar.'},
     {t:'Deri, boşaltıma yardımcı bir organdır.', a:'D', e:'Deri terleme ile su ve tuzun bir kısmını vücuttan atar; boşaltıma yardımcı organdır.'},
+    {t:'Böbrek ve deri, aynı atık maddeleri vücuttan uzaklaştıran organlardır.', a:'Y', e:'Böbrekler fazla su, tuz, üre gibi atıkları uzaklaştırır; deri terleme ile su ve tuzun bir kısmını atar.'},
+    {t:'İdrar kesesi, kandaki atık maddeleri süzerek idrar oluşturur.', a:'Y', e:'Kanı süzerek idrarı böbrekler oluşturur. İdrar kesesi (mesane) idrarı yalnızca depolar.'},
     {t:'Terleme, vücut sıcaklığının düzenlenmesine katkıda bulunur.', a:'D', e:'Terleme ile hem su ve tuz atılır hem de vücut sıcaklığı dengelenir.'},
     {t:'Karbon dioksit, tuz ve su, soluk verildiğinde akciğerlerden dışarı atılır.', a:'Y', e:'Soluk verildiğinde akciğerlerden karbon dioksit ve su buharı atılır; tuz akciğerlerden atılmaz.'},
     {t:'Böbrekler; karbon dioksit, fazla su, sindirim atıkları gibi maddeleri vücuttan uzaklaştırır.', a:'Y', e:'Karbon dioksiti akciğerler, sindirilmeyen besin atıklarını kalın bağırsak uzaklaştırır. Böbrekler kanı süzer.'}
@@ -673,7 +673,7 @@ function showPicker(){
 function showHelp(point){
   ZD.intro({ kicker:'NASIL OYNANIR?', title:'Doğru Çıkışı Bul',
     text:'Ders kitabındaki "Neler Öğrendik?" labirentinin dijital hâli. En üstteki ifadeden başla; her ifade için karar ver.',
-    steps:['İfade <b>doğruysa D</b> (yeşil, sol kol), <b>yanlışsa Y</b> (kırmızı, sağ kol) rozetine dokun. Klavyede <b>D</b>/<b>Y</b> ya da ←/→ da olur.',
+    steps:['İfade <strong style="color:#fff">doğruysa D</strong> (yeşil, sol kol), <strong style="color:#fff">yanlışsa Y</strong> (kırmızı, sağ kol) rozetine dokun. Klavyede <strong style="color:#fff">D</strong>/<strong style="color:#fff">Y</strong> ya da ←/→ da olur.',
            'Işık topu seçtiğin kol boyunca bir sonraki ifadeye kayar. Yanlış karar verirsen de ilerlersin!',
            'Üç karardan sonra 8 çıkış kapısından birine ulaşırsın. Doğru çıkış yeşil parıltıyla açılır; değilse hatalı kararların kırmızıyla gösterilir.'],
     start: cur ? 'Oyna' : 'Set seç',
