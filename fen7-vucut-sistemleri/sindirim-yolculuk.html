@@ -214,6 +214,7 @@
   .opt .oi{width:30px;height:30px}
   .sh h3{font-size:19px}
 }
+@media (max-width:560px){.pip{display:none}}
 @media (max-width:420px){.foods{gap:8px}.food b{font-size:13px}.food small{font-size:10.5px}.opts{grid-template-columns:1fr}.opt{min-height:52px}}
 </style></head>
 <body><div id="app"></div><script src="assets/zd.js"></script><script>
@@ -292,7 +293,7 @@ const STOPS = [null,
     def: 'Yemek borusundan gelen besinler midedeki kasların kasılıp gevşemesiyle fiziksel sindirime uğrar. Mide öz suyundaki enzimlerle proteinlerin kimyasal sindirimi başlar. Besinler buradan ince bağırsağa gönderilir.',
     ok: 'Doğru! Midede hem fiziksel hem kimyasal sindirim olur.',
     why: { 0: '<b>Eksik.</b> Kasların kasılıp gevşemesi fizikseldir; mide öz suyundaki enzimler de proteinlerin kimyasal sindirimini başlatır.', 1: '<b>Eksik.</b> Enzimler proteinleri kimyasal olarak sindirir; midedeki kasların kasılıp gevşemesi de fiziksel sindirimdir.', 3: '<b>Yanlış.</b> Midede hem fiziksel hem kimyasal sindirim olur; besinler bulamaç hâline gelir.' } },
-  { key: 'ince', org: 'ince', name: 'İnce bağırsak', rail: 'İnce b.', ans: 2, cam: [254, 530, 2.45],
+  { key: 'ince', org: 'ince', name: 'İnce bağırsak', rail: 'İnce b.', ans: 2, cam: [254, 526, 2.45],
     ctx: () => '<b>Bulamaç</b> hâline gelen besin ince bağırsağa geçti. Yardımcı organlar (karaciğer ve pankreas) göreve hazır.',
     def: 'Besinlerin fiziksel ve kimyasal sindirimi burada tamamlanır. Sindirimi tamamlanan besinler, ince bağırsağın iç yüzeyinde bulunan villuslar sayesinde emilerek kana geçer. Villuslar, girintili çıkıntılı yapısı sayesinde ince bağırsağın iç yüzeyini genişleterek temas yüzeyini artırır. Böylece emilimin hızlı olmasını sağlar.',
     ok: 'Doğru! Fiziksel ve kimyasal sindirim ince bağırsakta tamamlanır.',
@@ -360,14 +361,14 @@ const POLY = {
   stoIn: [[298, 1615], [345, 1558], [410, 1498], [520, 1488], [582, 1510], [588, 1600], [562, 1662], [470, 1702], [350, 1702], [288, 1682]],
   ince: [[136, 1902], [231, 1912], [346, 1928], [462, 1898], [536, 1862], [536, 2270], [521, 2312], [464, 2300], [379, 2256], [336, 2262], [300, 2296], [205, 2292], [200, 2210], [150, 2160], [138, 2085]],
   duod: [[130, 1600], [175, 1581], [270, 1581], [287, 1625], [207, 1634], [198, 1700], [202, 1740], [176, 1760], [138, 1746], [128, 1660]],
-  kalinO: [[0, 1760], [35, 1710], [120, 1698], [200, 1740], [300, 1783], [440, 1760], [505, 1696], [560, 1666], [645, 1686], [680, 1760], [698, 2000], [698, 2230], [670, 2314], [600, 2374], [520, 2404], [430, 2400], [428, 2434], [288, 2434], [230, 2302], [130, 2306], [12, 2288], [0, 2150]],
+  kalinO: [[0, 1760], [35, 1710], [120, 1698], [200, 1740], [300, 1783], [440, 1760], [505, 1696], [560, 1666], [645, 1686], [680, 1760], [698, 2000], [698, 2230], [670, 2314], [600, 2374], [520, 2404], [430, 2400], [426, 2470], [402, 2560], [366, 2602], [328, 2560], [290, 2470], [230, 2302], [130, 2306], [12, 2288], [0, 2150]],
   kalinI: [[100, 1842], [138, 1868], [231, 1912], [346, 1927], [462, 1897], [538, 1860], [540, 2268], [521, 2312], [464, 2300], [379, 2256], [336, 2260], [300, 2295], [205, 2290], [200, 2210], [150, 2160], [138, 2085], [136, 1900]],
-  anus: [[286, 2432], [428, 2432], [414, 2520], [382, 2566], [366, 2592], [344, 2582], [320, 2525]]
+  anus: [[280, 2380], [440, 2380], [416, 2520], [384, 2568], [366, 2600], [344, 2588], [318, 2525]]
 };
 const CLIP = {
   mouthU: polyD(POLY.mouthU), jaw: polyD(POLY.jaw), phar: polyD(POLY.phar), eso: polyD(POLY.eso), liver: polyD(POLY.liver),
   gall: polyD(POLY.gall) + polyD(POLY.duct), panc: polyD(POLY.pancH) + polyD(POLY.pancT), mide: polyD(POLY.mide), stoIn: polyD(POLY.stoIn),
-  ince: polyD(POLY.ince) + polyD(POLY.duod), kalin: polyD(POLY.kalinO) + polyD(POLY.kalinI), anus: polyD(POLY.anus)
+  ince: polyD(POLY.ince) + polyD(POLY.duod), kalin: polyD(POLY.kalinO) + polyD(POLY.kalinI)
 };
 const IMG_EL = (clip, extra = '') => `<image href="${IMG.src}" x="${IMG.x}" y="${IMG.y}" width="${IMG.w * IMG.s}" height="${IMG.h * IMG.s}" preserveAspectRatio="none"${clip ? ` clip-path="url(#c_${clip})"` : ''}${extra}/>`;
 const JAW_PIV = W(350, 478), PHAR_C = W(377, 520), STO_C = W(455, 1590), GALL_C = W(140, 1465);
@@ -394,6 +395,8 @@ const DEFS = `
 <filter id="fBlur2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2"/></filter>
 <filter id="fBlur5" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
 ${Object.keys(CLIP).map(k => `<clipPath id="c_${k}" clipPathUnits="userSpaceOnUse"><path d="${CLIP[k]}" clip-rule="evenodd"/></clipPath>`).join('')}
+<linearGradient id="gFadeA" gradientUnits="userSpaceOnUse" x1="0" y1="${W(0, 2400)[1]}" x2="0" y2="${W(0, 2490)[1]}"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient>
+<mask id="m_anus" maskUnits="userSpaceOnUse" x="0" y="0" width="520" height="800"><path d="${polyD(POLY.anus)}" fill="url(#gFadeA)"/></mask>
 <radialGradient id="gPool" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#d8f6ff" stop-opacity=".16"/><stop offset=".55" stop-color="#7fd8ff" stop-opacity=".07"/><stop offset="1" stop-color="#35eefc" stop-opacity="0"/></radialGradient>
 <linearGradient id="gEsoL" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a8335a"/><stop offset=".22" stop-color="#c24a72"/><stop offset=".5" stop-color="#da8ea5"/><stop offset=".8" stop-color="#c24a72"/><stop offset="1" stop-color="#a8335a"/></linearGradient>
 <mask id="mBite" maskUnits="userSpaceOnUse" x="0" y="0" width="130" height="120"><rect width="130" height="120" fill="#fff"/><circle cx="100" cy="44" r="11"/><circle cx="99" cy="61" r="11.5"/><circle cx="94" cy="77" r="10"/></mask>
@@ -423,9 +426,9 @@ ${Object.keys(CLIP).map(k => `<clipPath id="c_${k}" clipPathUnits="userSpaceOnUs
 /* ---------------- Ana SVG ---------------- */
 // [anahtar, ad, ucX, ucY (görsel pikseli), etiket x, etiket y (sahne), hizalama]
 const lblDefs = [
-  ['mouth', 'Ağız', 190, 495, 168, 128, 'l'], ['yutak', 'Yutak', 381, 540, 318, 176, 'r'], ['eso', 'Yemek borusu', 377, 900, 318, 262, 'r'],
-  ['mide', 'Mide', 520, 1560, 382, 452, 'r'], ['liver', 'Karaciğer', 150, 1330, 150, 402, 'l'], ['gall', 'Safra kesesi', 140, 1465, 150, 446, 'l'],
-  ['panc', 'Pankreas', 265, 1700, 150, 502, 'l'], ['ince', 'İnce bağırsak', 330, 2040, 150, 628, 'l'], ['kalin', 'Kalın bağırsak', 612, 1980, 382, 596, 'r'],
+  ['mouth', 'Ağız', 190, 495, 168, 142, 'l'], ['yutak', 'Yutak', 381, 540, 318, 176, 'r'], ['eso', 'Yemek borusu', 377, 900, 318, 262, 'r'],
+  ['mide', 'Mide', 520, 1560, 382, 452, 'r'], ['liver', 'Karaciğer', 150, 1330, 150, 408, 'l'], ['gall', 'Safra kesesi', 140, 1465, 150, 458, 'l'],
+  ['panc', 'Pankreas', 265, 1700, 150, 510, 'l'], ['ince', 'İnce bağırsak', 330, 2040, 150, 598, 'l'], ['kalin', 'Kalın bağırsak', 612, 1980, 382, 596, 'r'],
   ['anus', 'Anüs', 360, 2560, 300, 770, 'r']
 ].map(([k, n, ix, iy, px, py, al]) => { const [ax, ay] = W(ix, iy); return [k, n, +ax.toFixed(1), +ay.toFixed(1), px, py, al]; });
 const MAIN = `
@@ -439,7 +442,7 @@ const MAIN = `
 <g id="base">${IMG_EL('')}</g>
 <!-- organ vurguları: figürün organ bölgesine kırpılmış kopyaları (seçili organ parlak, diğerleri soluk) -->
 <g class="org" data-o="kalin">${IMG_EL('kalin')}</g>
-<g class="org" data-o="anus">${IMG_EL('anus')}</g>
+<g class="org" data-o="anus">${IMG_EL('', ' mask="url(#m_anus)"')}</g>
 <g class="org" data-o="ince">${IMG_EL('ince')}</g>
 <g class="org" data-o="liver">${IMG_EL('liver')}</g>
 <g class="org" data-o="panc">${IMG_EL('panc')}</g>
