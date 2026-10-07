@@ -115,6 +115,9 @@ input.kr::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;bac
 .note{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;background:rgba(168,121,255,.1);border:1px solid rgba(168,121,255,.4);font-size:14px;line-height:1.45;color:#e4d8ff}
 .note.pulse{animation:zd-gg 1s}
 .note svg{width:20px;height:20px;flex:none;color:#c6a8ff;margin-top:1px}
+.real-m .box{max-width:min(640px,94vw)}
+.real-m img{display:block;width:100%;height:auto;margin:12px 0 4px;border-radius:14px;background:radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.14),rgba(255,255,255,.02) 72%)}
+.real-m .cap{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:12.5px;font-weight:700;color:#cfe0f2;text-align:center;margin-bottom:6px}
 .mk-stats{display:flex;gap:8px;flex:1}
 .mk-stats div{flex:1;text-align:center;padding:6px 4px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--line)}
 .mk-stats b{display:block;font-size:21px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15}
@@ -145,6 +148,8 @@ input.kr::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;bac
 .tile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 7px;border-radius:14px;background:rgba(0,0,0,.22);border:1px solid var(--line);transition:.2s var(--ease);min-height:44px}
 .tile:hover{border-color:var(--line-2)}
 .tile svg{width:32px;height:32px}
+.tile img.ic{width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+.tile img.ic[src*=platelet]{width:26px;height:26px;margin:3px 0}
 .tile .tn{font-size:12.5px;font-weight:700;white-space:nowrap}
 .tile .tc{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--cyan);line-height:1.1}
 .tile .tc small{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.6px}
@@ -294,9 +299,10 @@ const COL = { rbc: '#ff7a8a', wbc: '#c6a8ff', plt: '#ffd36b', plazma: '#ffbb3d',
 /* ---------------- İkonlar ---------------- */
 const ICON = {
   plazma: `<svg viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="icP" cx=".4" cy=".55" r=".6"><stop offset="0" stop-color="#fff6d6"/><stop offset=".6" stop-color="#f4cf7a"/><stop offset="1" stop-color="#c98e3c"/></radialGradient></defs><path d="M20 4C26 13 31 18.5 31 25a11 11 0 0 1-22 0C9 18.5 14 13 20 4Z" fill="url(#icP)" stroke="#fff3c8" stroke-opacity=".7"/><ellipse cx="15.5" cy="23" rx="2.4" ry="4.2" fill="#fff" opacity=".55"/></svg>`,
-  rbc: `<svg viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="icR" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff9d97"/><stop offset=".42" stop-color="#ef5a5e"/><stop offset=".74" stop-color="#c81e30"/><stop offset="1" stop-color="#7d0c19"/></radialGradient></defs><circle cx="20" cy="21" r="15.5" fill="url(#icR)"/><circle cx="20.6" cy="21.6" r="6.6" fill="#ffb3aa" opacity=".45"/><path d="M8.6 15.5A13 13 0 0 1 16.5 8.4" stroke="#ffe0d8" stroke-width="2.6" fill="none" stroke-linecap="round" opacity=".85"/></svg>`,
-  wbc: `<svg viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="icW" cx=".38" cy=".35" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#e3d8ff"/><stop offset="1" stop-color="#a98fe6"/></radialGradient><radialGradient id="icN" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#b58cf2"/><stop offset="1" stop-color="#4a2596"/></radialGradient></defs><path d="M20 3.5c7 0 13.5 4.8 15 11.5 1.6 7-2.6 15.5-9.5 19-6.4 3.2-15 .6-18.6-5.6C3.2 22 4.4 12.6 10 7.6 12.8 5 16.3 3.5 20 3.5Z" fill="url(#icW)" stroke="#fff" stroke-opacity=".85"/><path d="M13 20c1-4 4-5 6.5-4.5M21 16c3 0 5.5 2 5.5 5.5" stroke="#6a3fc0" stroke-width="3" fill="none" stroke-linecap="round"/><circle cx="13.5" cy="21.5" r="4.2" fill="url(#icN)"/><circle cx="20" cy="15.5" r="4.2" fill="url(#icN)"/><circle cx="26.5" cy="22" r="4.2" fill="url(#icN)"/></svg>`,
-  plt: `<svg viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="icT" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#fff1bf"/><stop offset=".5" stop-color="#f0c66c"/><stop offset="1" stop-color="#9a64c0"/></radialGradient></defs><path d="M10 12c3-3 8-2 9 1 1 3-1 6-4 6.5S8 18 8.4 15.6 10 12 10 12Z" fill="url(#icT)"/><path d="M24 9c3.6-1 7 1.5 6.6 4.6-.5 3.3-4.6 4.3-7 2.7S20.6 10 24 9Z" fill="url(#icT)"/><path d="M17 25c3-2.4 8.4-1.4 9.4 2.4.8 3.4-3 6.2-6.8 5.4-3.6-.8-5.4-5.4-2.6-7.8Z" fill="url(#icT)"/></svg>`
+  // Servier Medical Art (CC BY 4.0) hücre çizimleri
+  rbc: `<img class="ic" src="assets/img/cell_rbc.webp" width="690" height="668" alt="" decoding="async">`,
+  wbc: `<img class="ic" src="assets/img/cell_neutrophil.webp" width="659" height="682" alt="" decoding="async">`,
+  plt: `<img class="ic" src="assets/img/cell_platelet.webp" width="646" height="682" alt="" decoding="async">`
 };
 const SVGI = {
   scalpel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21 14.5 9.5"/><path d="M14.5 9.5 20 4c1 2 .5 5-2 7.5L15 14"/></svg>',
@@ -315,7 +321,7 @@ const ui = ZD.mount({
   kicker: 'SİMÜLASYON · DOLAŞIM SİSTEMİ', title: 'Kan Laboratuvarı: Mikroskop Altında Kan',
   crumb: ['7. Sınıf Fen Bilimleri', '3. Ünite', 'Dolaşım Sistemi'],
   stats: [{ id: 'time', label: 'Süre', value: '0:00', cls: 'cyan' }, { id: 'score', label: 'Puan', value: 0 }, { id: 'found', label: 'Bulunan', value: '0/8', cls: 'green' }, { id: 'streak', label: 'Seri', value: 0 }],
-  onHelp() { showHelp(); }, onRestart() { restartMode(); }
+  onHelp() { showHelp(); }, onRestart() { restartMode(); }, credit: true
 });
 
 function overlaySVG() {
@@ -1258,6 +1264,14 @@ function sceneCount() {
    PANEL
    ===================================================================== */
 const CHECK = ZD.I.check;
+// Yaralanma: gerçek görünüm (Servier Medical Art çizimi) — bilgi penceresi
+function showReal() {
+  ZD.modal({ cls: 'real-m', dismiss: true, html: `<span class="zd-chip red">GERÇEKTE NASIL GÖRÜNÜR?</span><h2>Yaralanma ve pıhtılaşma</h2>
+    <img src="assets/img/coagulation.webp" width="1393" height="845" alt="Deri ve damar kesiti: sağlam damar, yaralanmada kanın sızması ve kan pulcuklarının oluşturduğu pıhtı" decoding="async">
+    <div class="cap"><span>1. Sağlam damar</span><span>2. Yaralanma: kan sızar</span><span>3. Pıhtı yarayı tıkar</span></div>
+    <p>Kan pulcukları zedelenen damarın iç yüzeyinde pıhtılaşır ve yarayı tıkayarak kan kaybını önler.</p>`,
+    actions: [{ label: 'Simülasyona dön', cls: 'ghost' }] });
+}
 function renderPane() {
   const m = st.mode; let h = '';
   if (m === 'tani') {
@@ -1282,7 +1296,7 @@ function renderPane() {
     const S = ['Damar duvarı zedelendi; kenar çizgisi kırıldı.', 'Alyuvarlar yırtıktan dışarı sızıyor: kan kaybı başladı.', 'Kan pulcukları yaraya doğru hareket edip birikiyor.', 'Kan pulcukları pıhtılaştı, zedelenen kısmı tıkadı: kan kaybı önlendi.'];
     h = `<div class="p-head"><span class="zd-chip red">SENARYO</span><span class="p-ttl">Yaralanma ve pıhtılaşma</span><span class="p-step">400× · Damar kesiti</span></div>
     <p class="p-text"><b>Damarı çiz</b>; yırtıktan sızan kanı ve kan pulcuklarının yarayı nasıl tıkadığını izle.</p>
-    <div class="row"><button class="zd-btn red" id="cutBtn" ${Y.torn ? 'disabled' : ''}>${SVGI.scalpel}Damarı çiz</button><button class="zd-btn ghost sm" id="yRe" aria-label="Senaryoyu yeniden başlat">${ZD.I.restart}Yeniden</button></div>
+    <div class="row"><button class="zd-btn red" id="cutBtn" ${Y.torn ? 'disabled' : ''}>${SVGI.scalpel}Damarı çiz</button><button class="zd-btn ghost sm" id="yRe" aria-label="Senaryoyu yeniden başlat">${ZD.I.restart}Yeniden</button><button class="zd-btn ghost sm" id="yReal" aria-label="Gerçekte nasıl görünür?">${SVGI.book}Gerçekte nasıl?</button></div>
     <ol class="steps">${S.map((s, i) => `<li class="${Y.step > i + 1 || (Y.step === 4 && i === 3) ? (i === 3 ? 'fin' : 'done') : Y.step === i + 1 ? 'act' : ''}"><b>${Y.step > i + 1 || (Y.step === 4) ? CHECK : i + 1}</b><span>${s}</span></li>`).join('')}</ol>
     <div class="mgrid"><div><div class="mrow"><span>Kan kaybı hızı</span><b id="yRateT">—</b></div><div class="zd-meter red"><i id="yRate"></i></div></div>
     <div><div class="mrow"><span>Pıhtı oluşumu</span><b id="yClT">0%</b></div><div class="zd-meter amber"><i id="yCl"></i></div></div></div>`;
@@ -1311,6 +1325,7 @@ function renderPane() {
   b('#yRe', () => { sfx('click'); yaraInit(); renderPane(); });
   b('#callBtn', () => callWBC());
   b('#mkRe', () => { sfx('click'); mkInit(); renderPane(); });
+  b('#yReal', () => { sfx('click'); showReal(); });
   document.querySelectorAll('#oxSpd button').forEach(btn => btn.onclick = () => { sfx('click'); OX.speed = +btn.dataset.s; renderPane(); });
   if (m === 'tani' && GM.done) setTimeout(animateBars, 60);
 }

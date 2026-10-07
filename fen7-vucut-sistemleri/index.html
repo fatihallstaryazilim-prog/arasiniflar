@@ -18,6 +18,7 @@
   .hero{display:grid;grid-template-columns:300px 1fr;gap:36px;align-items:center;padding:26px 0 30px;border-bottom:1px solid var(--line)}
   .hero-cover{width:300px;aspect-ratio:1;border-radius:24px;overflow:hidden;box-shadow:0 0 0 2px rgba(73,243,255,.6),0 0 30px rgba(73,243,255,.35),0 30px 70px rgba(0,0,0,.55);transform:rotate(-1.5deg);transition:transform .5s var(--spring)}
   .hero-cover:hover{transform:rotate(0) scale(1.02)}
+  .hero-cover{position:relative}
   .hero-cover svg{width:100%;height:100%}
   .kick{display:flex;align-items:center;gap:12px;font-size:12px;font-weight:700;letter-spacing:2.4px;color:var(--cyan);text-transform:uppercase}
   .kick::before{content:"";width:36px;height:2px;background:var(--cyan);border-radius:2px}
@@ -68,6 +69,21 @@
   .card{display:flex;flex-direction:column;gap:10px;text-decoration:none;color:inherit;outline:none}
   .card .cov{position:relative;border-radius:18px;overflow:hidden;aspect-ratio:1;box-shadow:0 0 0 1.5px rgba(73,243,255,.35),0 16px 34px rgba(0,0,0,.45);transition:transform .35s var(--spring),box-shadow .35s}
   .card .cov svg{width:100%;height:100%;display:block}
+  /* kapak katmanları: arka SVG → Servier görselleri → ön SVG */
+  .cv-fr{position:absolute;left:0;top:0;width:100%;height:100%;pointer-events:none}
+  .cv-i,.cv-c,.cv-bub,.cv-scope{position:absolute;display:block;max-width:none;margin:0}
+  .cv-i{object-fit:contain;filter:drop-shadow(0 7px 8px rgba(0,0,0,.55)) drop-shadow(0 0 1px rgba(0,0,0,.35))}
+  .cv-i.sm{filter:drop-shadow(0 4px 4px rgba(0,0,0,.55))}
+  .cv-c{overflow:hidden;filter:drop-shadow(0 7px 8px rgba(0,0,0,.55))}
+  .cv-c img{position:absolute;left:0;width:100%;display:block;max-width:none}
+  .cv-bub,.cv-scope{border-radius:50%;overflow:hidden;background:radial-gradient(circle at 50% 38%,#24506a,#0b2131 75%);box-shadow:0 0 0 2px var(--c,#35eefc),0 0 14px color-mix(in srgb,var(--c,#35eefc) 60%,transparent),0 8px 16px rgba(0,0,0,.5)}
+  .cv-bub img{width:100%;height:100%;object-fit:cover;display:block}
+  .cv-scope{background:radial-gradient(circle at 44% 38%,#fffaf0,#f6e3c6 62%,#e2bf94);box-shadow:inset 0 0 22px rgba(120,70,20,.45)}
+  .cv-scope img{position:absolute;max-width:none;filter:drop-shadow(0 2px 2px rgba(90,30,10,.3))}
+  .cv-breathe{transform-origin:50% 60%}
+  .card:hover .cv-breathe{animation:cvBreathe 2.6s ease-in-out infinite}
+  @keyframes cvBreathe{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  @media (prefers-reduced-motion:reduce){.card:hover .cv-breathe{animation:none}}
   .card:hover .cov,.card:focus-visible .cov{transform:translateY(-6px) scale(1.02);box-shadow:0 0 0 2px rgba(73,243,255,.85),0 0 26px rgba(73,243,255,.4),0 26px 44px rgba(0,0,0,.5)}
   .card .play{position:absolute;inset:auto 12px 12px auto;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#fff;color:#0b1626;opacity:0;transform:scale(.6);transition:.3s var(--spring);box-shadow:0 8px 20px rgba(0,0,0,.4)}
   .card .play svg{width:20px;height:20px;margin-left:3px}
@@ -80,6 +96,8 @@
   .empty{padding:40px;text-align:center;color:var(--muted);border:1px dashed var(--line-2);border-radius:18px;display:none}
   footer{max-width:1280px;margin:30px auto 0;padding:20px 24px;border-top:1px solid var(--line);font-size:12.5px;color:var(--dim);line-height:1.6}
   footer b{color:var(--muted)}
+  footer .credit{margin-top:6px}
+  footer .credit a{color:var(--muted)}
 
   @media (max-width:980px){
     .hero{grid-template-columns:1fr;justify-items:center;text-align:center}
@@ -130,14 +148,17 @@
     </main>
   </div>
 </div>
-<footer>Kaynak: <b>Fen Bilimleri 7 Ders Kitabı (MEB, 2026-2027), 3. Ünite</b> ve Türkiye Yüzyılı Maarif Modeli Fen Bilimleri Dersi Öğretim Programı (FB.7.3). Tüm görseller vektörel olarak bu set için çizilmiştir. Sonuçlar yalnızca bu cihazda saklanır.</footer>
+<footer>Kaynak: <b>Fen Bilimleri 7 Ders Kitabı (MEB, 2026-2027), 3. Ünite</b> ve Türkiye Yüzyılı Maarif Modeli Fen Bilimleri Dersi Öğretim Programı (FB.7.3). Arayüz ve oyun çizimleri bu set için hazırlanmıştır. Sonuçlar yalnızca bu cihazda saklanır.<p class="credit" id="credit">Anatomik çizimler: Servier Medical Art · CC BY 4.0 · uyarlanmıştır</p></footer>
 
 <script src="assets/zd.js"></script>
 <script>
 (function(){
 'use strict';
 /* ==================================================================
-   KAPAK SANATI — tamamen vektörel
+   KAPAK SANATI — vektörel kabuk (zemin, başlık, şerit, oyun şemaları)
+   + Servier Medical Art anatomik görselleri (img katmanı, CC BY 4.0)
+   Katmanlar: arka SVG (zemin/şema) → img katmanı (organlar) → ön SVG (yazı/etiket/çerçeve)
+   Tüm konumlar 300×300 kapak koordinatındadır.
    ================================================================== */
 let uid=0;
 const ACC = { sin:['#ffb547','#ff7a3d'], dol:['#ff4d64','#c3123a'], sol:['#35eefc','#2a8dff'], bos:['#ffd36b','#f0a020'], gen:['#b993ff','#7c4dff'] };
@@ -151,64 +172,51 @@ const RIBICON = {
   cross:'<rect x="-9" y="-3" width="6" height="6" rx="1.3" fill="#fff"/><rect x="-3" y="-3" width="6" height="6" rx="1.3" fill="#fff" opacity=".7"/><rect x="3" y="-3" width="6" height="6" rx="1.3" fill="#fff"/><rect x="-3" y="-9" width="6" height="6" rx="1.3" fill="#fff" opacity=".7"/><rect x="-3" y="3" width="6" height="6" rx="1.3" fill="#fff" opacity=".7"/>'
 };
 
-// ---- organ çizimleri (yerel koordinat, merkez 0,0) ----
-const ART = {
-  heart(id){ return `<defs><radialGradient id="h${id}" cx=".35" cy=".28" r=".85"><stop offset="0" stop-color="#ff95a4"/><stop offset=".35" stop-color="#e5304f"/><stop offset=".8" stop-color="#9c1030"/><stop offset="1" stop-color="#5e0619"/></radialGradient></defs>
-    <g transform="scale(.62) translate(-322 -305)">
-      <path d="M300,222 C300,170 286,150 262,140" stroke="#5b6cff" stroke-width="22" fill="none" stroke-linecap="round"/>
-      <path d="M340,222 C340,160 380,140 414,150" stroke="#ff3b55" stroke-width="24" fill="none" stroke-linecap="round"/>
-      <path d="M300,222 C300,170 286,150 262,140" stroke="rgba(255,255,255,.3)" stroke-width="5" fill="none" transform="translate(-3,-3)"/>
-      <path d="M340,222 C340,160 380,140 414,150" stroke="rgba(255,255,255,.3)" stroke-width="5" fill="none" transform="translate(-3,-3)"/>
-      <path d="M258,250 C250,226 272,212 292,220 C304,206 336,206 348,220 C368,210 392,224 386,252 C400,290 392,330 362,362 C345,380 330,392 318,404 C300,388 278,368 262,342 C244,312 244,276 258,250 Z" fill="url(#h${id})"/>
-      <path d="M300,232 C290,270 296,320 312,370 M340,232 C352,270 352,300 346,340" stroke="rgba(255,190,120,.55)" stroke-width="3" fill="none" stroke-linecap="round"/>
-      <path d="M270,236 C286,214 314,212 326,218" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".35" fill="none"/>
-      <ellipse cx="276" cy="272" rx="8" ry="18" fill="#fff" opacity=".22"/>
-    </g>`; },
-  lungs(id){ return `<defs><radialGradient id="l${id}" cx=".38" cy=".3" r=".8"><stop offset="0" stop-color="#ffd6e1"/><stop offset=".45" stop-color="#f58fab"/><stop offset="1" stop-color="#b03d64"/></radialGradient><pattern id="lt${id}" width="9" height="9" patternUnits="userSpaceOnUse"><circle cx="4.5" cy="4.5" r="2.8" fill="none" stroke="rgba(255,255,255,.2)"/></pattern><linearGradient id="tr${id}" x1="0" x2="1"><stop offset="0" stop-color="#9fb5cf"/><stop offset=".5" stop-color="#f2f8ff"/><stop offset="1" stop-color="#8ea6c2"/></linearGradient></defs>
-    <g transform="scale(.5) translate(-320 -96)">
-      <path d="M310,-40 L330,-40 L330,34 C348,42 364,52 380,66 L372,76 C358,62 340,54 320,48 C300,54 282,62 268,76 L260,66 C276,52 292,42 310,34 Z" fill="url(#tr${id})"/>
-      ${[-30,-18,-6,6,18].map(y=>`<rect x="308" y="${y}" width="24" height="4" rx="2" fill="#fff" opacity=".6"/>`).join('')}
-      <path d="M232,32 C200,34 168,70 160,112 C152,150 158,180 176,186 C200,192 236,184 262,176 C276,170 280,150 278,120 C276,80 262,40 232,32 Z" fill="url(#l${id})"/>
-      <path d="M232,32 C200,34 168,70 160,112 C152,150 158,180 176,186 C200,192 236,184 262,176 C276,170 280,150 278,120 C276,80 262,40 232,32 Z" fill="url(#lt${id})"/>
-      <path d="M408,36 C436,40 466,74 474,114 C480,148 474,176 458,182 C436,188 410,182 392,176 C380,170 380,156 386,146 C376,140 366,128 366,112 C364,78 380,40 408,36 Z" fill="url(#l${id})"/>
-      <path d="M408,36 C436,40 466,74 474,114 C480,148 474,176 458,182 C436,188 410,182 392,176 C380,170 380,156 386,146 C376,140 366,128 366,112 C364,78 380,40 408,36 Z" fill="url(#lt${id})"/>
-      <path d="M268,76 C250,92 236,110 222,130 M246,104 C232,112 214,116 200,114 M372,76 C390,92 404,110 418,130 M394,104 C408,112 426,116 440,114" stroke="#f3f8ff" stroke-width="5" stroke-linecap="round" fill="none" opacity=".75"/>
-      <ellipse cx="206" cy="68" rx="24" ry="12" fill="#fff" opacity=".28" transform="rotate(-30 206 68)"/><ellipse cx="432" cy="68" rx="18" ry="10" fill="#fff" opacity=".24" transform="rotate(30 432 68)"/>
-    </g>`; },
-  digest(id){ return `<defs><linearGradient id="st${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffb3be"/><stop offset=".5" stop-color="#ef6a82"/><stop offset="1" stop-color="#b8344f"/></linearGradient><linearGradient id="in${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffc2b3"/><stop offset="1" stop-color="#e46d68"/></linearGradient><linearGradient id="lv${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d0615a"/><stop offset="1" stop-color="#7d2420"/></linearGradient></defs>
-    <path d="M-62,-30 C-40,-48 -6,-46 4,-30 C10,-18 -8,-6 -30,-2 C-52,2 -70,-8 -62,-30 Z" fill="url(#lv${id})"/>
-    <ellipse cx="-44" cy="-30" rx="12" ry="5" fill="#fff" opacity=".22" transform="rotate(-15 -44 -30)"/>
-    <path d="M6,-70 C6,-56 8,-46 12,-38" stroke="url(#st${id})" stroke-width="11" fill="none" stroke-linecap="round"/>
-    <path d="M10,-42 C26,-54 56,-46 62,-22 C68,4 52,26 26,30 C4,33 -10,24 -8,12 C-6,2 8,4 16,-2 C24,-8 20,-20 12,-26 Z" fill="url(#st${id})"/>
-    <path d="M22,-40 C40,-46 54,-34 56,-20" stroke="#fff" stroke-width="5" opacity=".35" fill="none" stroke-linecap="round"/>
-    <path d="M-48,40 C-48,30 48,30 48,40 C48,50 -48,50 -48,60 C-48,70 48,70 48,80 C48,90 -40,90 -40,96" stroke="url(#in${id})" stroke-width="13" fill="none" stroke-linecap="round"/>
-    <path d="M-48,40 C-48,30 48,30 48,40 C48,50 -48,50 -48,60 C-48,70 48,70 48,80" stroke="rgba(255,255,255,.3)" stroke-width="3" fill="none" transform="translate(-1,-3)"/>
-    <path d="M-64,96 L-64,30 C-64,18 -58,14 -48,14 L52,14 C62,14 66,20 66,30 L66,96" stroke="#d2665f" stroke-width="13" fill="none" stroke-linecap="round" stroke-dasharray="14 4" opacity=".9"/>`; },
-  kidneys(id){ const k=(x,f)=>`<g transform="translate(${x},-18) scale(${f},1)"><path d="M0,-38 C24,-38 38,-18 36,4 C34,26 20,40 2,38 C-10,37 -14,26 -10,14 C-6,6 -14,0 -16,-10 C-20,-28 -12,-38 0,-38 Z" fill="url(#kd${id})"/><path d="M6,-28 C20,-26 28,-12 28,2" stroke="#fff" stroke-width="5" opacity=".3" fill="none" stroke-linecap="round"/><path d="M-8,8 C-4,2 4,0 12,4" stroke="#5a1220" stroke-width="2" fill="none" opacity=".5"/></g>`;
-    return `<defs><radialGradient id="kd${id}" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ff8f99"/><stop offset=".5" stop-color="#c8505a"/><stop offset="1" stop-color="#6e1a28"/></radialGradient><radialGradient id="bl${id}" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ffe7a8"/><stop offset=".6" stop-color="#ffcf6b"/><stop offset="1" stop-color="#d48812"/></radialGradient></defs>
-    <path d="M-42,-8 C-30,30 -14,48 -6,62 M42,-8 C30,30 14,48 6,62" stroke="#ffd27a" stroke-width="6" fill="none" stroke-linecap="round"/>
-    ${k(-52,-1)}${k(52,1)}
-    <path d="M-26,60 C-26,44 26,44 26,60 C30,80 14,92 0,92 C-14,92 -30,80 -26,60 Z" fill="url(#bl${id})"/>
-    <ellipse cx="-10" cy="58" rx="9" ry="4" fill="#fff" opacity=".4"/>
-    <path d="M0,92 L0,108" stroke="#ffd27a" stroke-width="6" stroke-linecap="round"/>`; },
-  cells(id){ const rbc=(x,y,r,rot,sy=1)=>`<g transform="translate(${x},${y}) rotate(${rot}) scale(1,${sy})"><circle r="${r}" fill="url(#rb${id})"/><circle r="${r*.48}" fill="#8f0d25" opacity=".45"/><ellipse cx="${-r*.35}" cy="${-r*.45}" rx="${r*.35}" ry="${r*.18}" fill="#fff" opacity=".35"/></g>`;
-    return `<defs><radialGradient id="rb${id}" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#ff8a9b"/><stop offset=".6" stop-color="#e52346"/><stop offset="1" stop-color="#8f0d25"/></radialGradient><radialGradient id="wb${id}" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ffffff"/><stop offset=".7" stop-color="#e3d9ff"/><stop offset="1" stop-color="#a98ee6"/></radialGradient></defs>
-    <circle r="78" fill="rgba(255,214,140,.07)" stroke="rgba(255,214,140,.25)" stroke-width="2"/>
-    ${rbc(-40,-30,20,10,.85)}${rbc(28,-42,18,-20,.7)}${rbc(46,10,22,30,.9)}${rbc(-18,34,19,0,.6)}${rbc(-56,18,15,40,.8)}${rbc(20,46,14,0,.95)}
-    <g transform="translate(4,-4)"><circle r="24" fill="url(#wb${id})"/><path d="M-10,-4 C-14,-14 -2,-16 0,-8 C4,-16 16,-12 10,-2 C18,4 6,14 0,6 C-6,14 -18,6 -10,-4 Z" fill="#7c4dff" opacity=".75"/><ellipse cx="-9" cy="-12" rx="7" ry="3.5" fill="#fff" opacity=".6"/></g>
-    ${[[-62,-52],[66,-30],[-30,62],[60,52],[-70,50]].map(([x,y])=>`<path transform="translate(${x},${y})" d="M-5,-2 C-3,-6 4,-5 5,-1 C6,4 0,6 -3,4 C-6,3 -6,0 -5,-2 Z" fill="#ffcf6b"/>`).join('')}`; },
-  drop(id){ return `<defs><radialGradient id="dp${id}" cx=".38" cy=".55" r=".7"><stop offset="0" stop-color="#ff8a9b"/><stop offset=".55" stop-color="#e5203f"/><stop offset="1" stop-color="#7e0a20"/></radialGradient></defs>
-    <path d="M0,-70 C18,-40 46,-12 46,22 C46,50 25,70 0,70 C-25,70 -46,50 -46,22 C-46,-12 -18,-40 0,-70 Z" fill="url(#dp${id})"/>
-    <path d="M-26,8 C-26,-10 -14,-28 -4,-42" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".35" fill="none"/>
-    <path d="M0,4 V40 M-18,22 H18" stroke="#fff" stroke-width="9" stroke-linecap="round"/>`; },
-  micro(id){ return `${ART.cells(id)}<circle r="80" fill="none" stroke="#dfe8f5" stroke-width="8"/><circle r="80" fill="none" stroke="rgba(0,0,0,.4)" stroke-width="2"/><path d="M56,56 L96,96" stroke="#dfe8f5" stroke-width="16" stroke-linecap="round"/><path d="M56,56 L96,96" stroke="rgba(255,255,255,.5)" stroke-width="4" stroke-linecap="round" transform="translate(-3,-3)"/>`; },
-  label(id, organ){ return `<g transform="translate(-10,6) scale(.88)">${ART[organ](id)}</g>
-    ${[[-52,-62,-96,-74],[48,-30,92,-46],[-40,48,-92,62]].map(([x1,y1,x2,y2],i)=>`<path d="M${x1},${y1} L${x2},${y2}" stroke="#35eefc" stroke-width="2.4"/><circle cx="${x1}" cy="${y1}" r="4" fill="#35eefc"/><rect x="${x2-(x2<0?40:0)}" y="${y2-12}" width="40" height="24" rx="7" fill="${i===1?'#fff':'rgba(10,26,44,.92)'}" stroke="${i===1?'#fff':'#4a6a8c'}"/>${i===1?`<rect x="${x2+8}" y="${y2-3}" width="24" height="6" rx="3" fill="#0b1626"/>`:`<text x="${x2-(x2<0?20:-20)}" y="${y2+5}" text-anchor="middle" font-size="13" font-weight="800" fill="#cfe3f7">${i+1}.</text>`}`).join('')}`; },
-  cards(id, a, b){ return `<g transform="rotate(-8)"><rect x="-64" y="-62" width="128" height="92" rx="14" fill="#122a44" stroke="#2b4d72"/></g>
+/* ---- Servier görselleri: doğal boyutlar (en-boy oranı + width/height öznitelikleri) ---- */
+const IMG = { heart_ext:[1022,1386], heart_outer:[989,1384], heart_section:[1049,1384], lungs:[1386,1315], digestive_full:[698,2580],
+  dg_stomach:[606,670], dg_smallint:[678,669], dg_liver:[678,564], dg_colon:[447,658], kidney_ext:[967,1386], kidney_section:[858,1386],
+  kidneys_vessels:[1390,848], urinary:[795,1356], cell_rbc:[690,668], cell_neutrophil:[659,682], cell_platelet:[646,682], resp_all:[1140,1400],
+  ribcage_in:[1200,1382], skin:[1282,1248], colon:[940,1387], mouth:[899,1388], villi:[1290,1385], stomach:[1342,1376] };
+const pc = v => +(v/3).toFixed(3)+'%';               // 300 birim → yüzde
+const imgTag = (n, style='', cls='') => { const [W,H]=IMG[n]; return `<img${cls?` class="${cls}"`:''} src="assets/img/${n}.webp" width="${W}" height="${H}" alt="" loading="lazy" decoding="async"${style?` style="${style}"`:''}>`; };
+// boyut: varsayılan yükseklik (o.w=true → genişlik); döndürme/aynalama isteğe bağlı
+function dims(n, size, byW){ const [W,H]=IMG[n]; return byW? [size, size*H/W] : [size*W/H, size]; }
+function pic(n, cx, cy, size, o={}){
+  const [w,h]=dims(n,size,o.w); const tf=[o.rot?`rotate(${o.rot}deg)`:'', o.flip?'scaleX(-1)':''].join(' ').trim();
+  return imgTag(n, `left:${pc(cx-w/2)};top:${pc(cy-h/2)};width:${pc(w)};height:${pc(h)}${tf?`;transform:${tf}`:''}${o.st||''}`, 'cv-i'+(o.cls?' '+o.cls:''));
+}
+// görselin içindeki (fx,fy) oransal noktasının kapak koordinatı (etiket uçları için)
+function at(n, cx, cy, size, fx, fy, byW){ const [w,h]=dims(n,size,byW); return [cx-w/2+fx*w, cy-h/2+fy*h]; }
+// dikey kırpma: görselin y0..y1 aralığı, yükseklik h
+function crop(n, cx, cy, h, y0, y1){
+  const [W,H]=IMG[n], w=h*W/(H*(y1-y0));
+  return {w, html:`<div class="cv-c" style="left:${pc(cx-w/2)};top:${pc(cy-h/2)};width:${pc(w)};height:${pc(h)}">${imgTag(n,`top:${(-y0/(y1-y0)*100).toFixed(3)}%;height:${(100/(y1-y0)).toFixed(3)}%`)}</div>`,
+    at:(fx,fy)=>[cx-w/2+fx*w, cy-h/2+(fy-y0)/(y1-y0)*h]};
+}
+// yuvarlak büyüteç balonu
+const bubble = (n, cx, cy, r, c, pos='50% 50%') => `<div class="cv-bub" style="left:${pc(cx-r)};top:${pc(cy-r)};width:${pc(2*r)};height:${pc(2*r)};--c:${c}">${imgTag(n,`object-position:${pos}`)}</div>`;
+
+// arka plan: organın altına ışık havuzu + zemin gölgesi
+const pool = (id, cx, cy, rx, ry, gy) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="url(#lp${id})"/>${gy?`<ellipse cx="${cx}" cy="${gy}" rx="${rx*.62}" ry="7" fill="url(#sh${id})"/>`:''}`;
+
+// etiket kutuları (ön katman): [uçX, uçY, 'L'|'R', kutuY]
+function tags(pins){
+  return pins.map(([px,py,side,by],i)=>{ const bx = side==='L'? 16 : 244, ex = side==='L'? 56 : 244, on=i===1;
+    return `<path d="M${px},${py} L${ex+(side==='L'?6:-6)},${by} L${ex},${by}" fill="none" stroke="#04121c" stroke-width="5" stroke-linejoin="round" opacity=".55"/>
+    <path d="M${px},${py} L${ex+(side==='L'?6:-6)},${by} L${ex},${by}" fill="none" stroke="#35eefc" stroke-width="2.2" stroke-linejoin="round"/>
+    <circle cx="${px}" cy="${py}" r="6" fill="none" stroke="#35eefc" stroke-opacity=".45" stroke-width="2"/><circle cx="${px}" cy="${py}" r="3.4" fill="#35eefc" stroke="#04121c" stroke-width="1.2"/>
+    <rect x="${bx}" y="${by-12}" width="40" height="24" rx="7" fill="${on?'#fff':'rgba(10,26,44,.94)'}" stroke="${on?'#fff':'#4a6a8c'}" stroke-width="1.5"/>
+    ${on?`<rect x="${bx+8}" y="${by-3}" width="24" height="6" rx="3" fill="#0b1626"/>`:`<text x="${bx+20}" y="${by+5}" text-anchor="middle" font-family="Lexend,system-ui,sans-serif" font-size="13" font-weight="800" fill="#cfe3f7">${i+1}.</text>`}`; }).join('');
+}
+
+/* ---- oyun şemaları (yerel koordinat, merkez 0,0 → kapakta 150,172) ---- */
+const GAME = {
+  cards(){ return `<g transform="rotate(-8)"><rect x="-64" y="-62" width="128" height="92" rx="14" fill="#122a44" stroke="#2b4d72"/></g>
     <g transform="rotate(4)"><rect x="-66" y="-66" width="132" height="96" rx="14" fill="#16314f" stroke="#35eefc" stroke-opacity=".5"/><rect x="-36" y="-52" width="72" height="18" rx="5" fill="none" stroke="#35eefc" stroke-width="2"/><rect x="-26" y="-46" width="52" height="6" rx="3" fill="#35eefc"/><rect x="-46" y="-20" width="92" height="7" rx="3.5" fill="#e9f3ff"/><rect x="-38" y="-6" width="76" height="7" rx="3.5" fill="#e9f3ff" opacity=".8"/><rect x="-28" y="8" width="56" height="7" rx="3.5" fill="#e9f3ff" opacity=".6"/></g>
     <g transform="translate(-46,62)"><circle r="22" fill="rgba(255,90,100,.12)" stroke="#ff6b78" stroke-width="3"/><path d="M8,0H-8M-1,-7l-7,7 7,7" stroke="#ff8a8a" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
     <g transform="translate(46,62)"><circle r="22" fill="rgba(53,238,252,.12)" stroke="#35eefc" stroke-width="3"/><path d="M-8,0H8M1,-7l7,7-7,7" stroke="#6ff4ff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>`; },
-  sort(id){ const cols=['#ffbe4d','#2fe39b','#a879ff','#35eefc']; return cols.map((c,i)=>`<g transform="translate(${-78+i*52},-60)"><rect width="44" height="78" rx="8" fill="#10253e" stroke="#2a4b6e"/><rect width="44" height="5" rx="2.5" fill="${c}"/>${i%2?`<rect x="6" y="14" width="32" height="26" rx="6" fill="#fff"/><circle cx="22" cy="27" r="7" fill="${c}"/>`:''}${i===2?`<rect x="6" y="46" width="32" height="26" rx="6" fill="#fff"/><circle cx="22" cy="59" r="7" fill="#ff6b78"/>`:''}</g>`).join('')+
+  // sütunların tepesinde organ görseli için ışıklı yuva bırakılır
+  sort(){ const cols=['#ffbe4d','#2fe39b','#a879ff','#35eefc']; return cols.map((c,i)=>`<g transform="translate(${-78+i*52},-64)"><rect width="44" height="84" rx="8" fill="#10253e" stroke="#2a4b6e"/><rect width="44" height="5" rx="2.5" fill="${c}"/><ellipse cx="22" cy="30" rx="20" ry="18" fill="${c}" opacity=".16"/>${i===2?`<rect x="6" y="56" width="32" height="22" rx="6" fill="#fff"/><circle cx="22" cy="67" r="6" fill="#ff6b78"/>`:''}${i===0?`<rect x="6" y="56" width="32" height="22" rx="6" fill="#fff"/><circle cx="22" cy="67" r="6" fill="${c}"/>`:''}</g>`).join('')+
     [0,1,2,3].map(i=>`<g transform="translate(${-78+i*40},30)"><rect width="34" height="38" rx="8" fill="#fff"/><circle cx="17" cy="16" r="9" fill="${['#ff8a5c','#5b6cff','#ff3b55','#ffd36b'][i]}"/><rect x="7" y="29" width="20" height="4" rx="2" fill="#9fb0c4"/></g>`).join('')+
     `<g transform="translate(52,18) rotate(-10)"><rect width="38" height="42" rx="8" fill="#fff" stroke="#35eefc" stroke-width="3"/><circle cx="19" cy="18" r="10" fill="#2fe39b"/><rect x="8" y="32" width="22" height="4" rx="2" fill="#9fb0c4"/></g>`; },
   maze(id){ const N=[[0,-66],[-50,-24],[50,-24],[-76,22],[-26,22],[26,22],[76,22]]; const E=[[0,1],[0,2],[1,3],[1,4],[2,5],[2,6]]; const lit=new Set(['0-2','2-5']);
@@ -217,51 +225,106 @@ const ART = {
       [[3,-76],[4,-26],[5,26],[6,76]].map(([k,x])=>`<path d="M${x},22 L${x+(x<0?-11:11)},48 M${x},22 L${x+(x<0?14:-14)},48" stroke="${k===5?'#35eefc':'#2a4b6e'}" stroke-width="2"/>`).join('')+
       N.map(([x,y],i)=>`<g transform="translate(${x},${y})"><rect x="-22" y="-13" width="44" height="26" rx="8" fill="${[0,2,5].includes(i)?'#103a4a':'#10253e'}" stroke="${[0,2,5].includes(i)?'#35eefc':'#2a4b6e'}" stroke-width="2"/><text y="5" text-anchor="middle" font-size="12" font-weight="800" fill="${[0,2,5].includes(i)?'#bff6ff':'#6b88a6'}">${['D','Y','D','Y','D','Y','D'][i]}?</text></g>`).join('')+
       `<defs><filter id="cg${id}" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter></defs>`; },
-  cross(id){ const L=[[0,0,'A'],[1,0,'L'],[2,0,'V'],[3,0,'E'],[4,0,'O'],[5,0,'L'],[2,1,''],[2,2,'L'],[2,3,'U'],[2,4,'S'],[0,3,''],[1,3,''],[3,3,''],[5,1,''],[5,2,'']];
-    return `<g transform="translate(-90,-78)">`+L.map(([c,r,ch])=>`<rect x="${c*31}" y="${r*31}" width="28" height="28" rx="6" fill="${ch?'#1d3c5e':'#132a45'}" stroke="${ch?'#5fa8d6':'#2a4b6e'}"/>${ch?`<text x="${c*31+14}" y="${r*31+20}" text-anchor="middle" font-size="16" font-weight="800" fill="#fff">${ch}</text>`:''}`).join('')+`<rect x="${2*31-2}" y="${1*31-2}" width="32" height="32" rx="7" fill="none" stroke="#35eefc" stroke-width="3"/></g>`+
-      ['K','A','Ğ'].map((ch,i)=>`<g transform="translate(${-56+i*44},88)"><rect x="-18" y="-20" width="36" height="40" rx="9" fill="#33557d"/><rect x="-18" y="-20" width="36" height="34" rx="9" fill="#4b72a0"/><text y="7" text-anchor="middle" font-size="20" font-weight="800" fill="#fff">${ch}</text></g>`).join(''); },
-  body(id){ return `<defs><linearGradient id="gb${id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="rgba(53,238,252,.35)"/><stop offset=".25" stop-color="rgba(53,238,252,.06)"/><stop offset=".75" stop-color="rgba(53,238,252,.06)"/><stop offset="1" stop-color="rgba(53,238,252,.35)"/></linearGradient></defs>
-    <ellipse cx="0" cy="-104" rx="27" ry="31" fill="url(#gb${id})" stroke="#49f3ff" stroke-opacity=".7" stroke-width="2"/>
-    <path d="M-12,-76 L-12,-64 C-30,-62 -52,-56 -62,-44 C-72,-32 -74,-14 -74,4 L-70,104 C-70,118 -58,128 -44,130 L44,130 C58,128 70,118 70,104 L74,4 C74,-14 72,-32 62,-44 C52,-56 30,-62 12,-64 L12,-76 Z" fill="url(#gb${id})" stroke="#49f3ff" stroke-opacity=".7" stroke-width="2"/>
-    <g transform="translate(0,-28) scale(.55)">${ART.lungs(id+'a')}</g>
-    <g transform="translate(6,-6) scale(.42)">${ART.heart(id+'b')}</g>
-    <g transform="translate(6,48) scale(.5)">${ART.digest(id+'c')}</g>
-    <g transform="translate(0,82) scale(.42)">${ART.kidneys(id+'d')}</g>`; }
+  cross(){ const L=[[0,0,'A'],[1,0,'L'],[2,0,'V'],[3,0,'E'],[4,0,'O'],[5,0,'L'],[2,1,''],[2,2,'L'],[2,3,'U'],[2,4,'S'],[0,3,''],[1,3,''],[3,3,''],[5,1,''],[5,2,'']];
+    return `<g transform="translate(-90,-78)">`+L.map(([c,r,ch])=>`<rect x="${c*31}" y="${r*31}" width="28" height="28" rx="6" fill="${ch?'#1d3c5e':'#132a45'}" stroke="${ch?'#5fa8d6':'#2a4b6e'}"/>${ch?`<text x="${c*31+14}" y="${r*31+20}" text-anchor="middle" font-size="16" font-weight="800" fill="#fff">${ch}</text>`:''}`).join('')+`<rect x="${2*31-2}" y="${1*31-2}" width="32" height="32" rx="7" fill="none" stroke="#35eefc" stroke-width="3"/>`+
+      [[0,1],[1,1],[3,1],[4,1]].map(([c,r])=>`<rect x="${c*31}" y="${r*31}" width="28" height="28" rx="6" fill="rgba(73,243,255,.05)" stroke="rgba(73,243,255,.18)" stroke-dasharray="3 3"/>`).join('')+`</g>`; },
+  drop(id){ return `<defs><radialGradient id="dp${id}" cx=".38" cy=".55" r=".7"><stop offset="0" stop-color="#ff8a9b"/><stop offset=".55" stop-color="#e5203f"/><stop offset="1" stop-color="#7e0a20"/></radialGradient></defs>
+    <path d="M0,-70 C18,-40 46,-12 46,22 C46,50 25,70 0,70 C-25,70 -46,50 -46,22 C-46,-12 -18,-40 0,-70 Z" fill="url(#dp${id})"/>
+    <path d="M-26,8 C-26,-10 -14,-28 -4,-42" stroke="#fff" stroke-width="7" stroke-linecap="round" opacity=".35" fill="none"/>
+    <path d="M0,4 V40 M-18,22 H18" stroke="#fff" stroke-width="9" stroke-linecap="round"/>`; }
+};
+
+/* ---- kapak kompozisyonları: {b: arka SVG, h: img katmanı, f: ön SVG} ---- */
+const g = (id, s, x=150, y=172, k=1) => `<g transform="translate(${x},${y}) scale(${k})" filter="url(#ds${id})">${s}</g>`;
+const COMP = {
+  // Besinin yolculuğu: gövde sindirim figürü + ağız ve villus büyüteçleri
+  digestSim(id,a){ const c=crop('digestive_full',150,166,160,.455,.985); const [mx,my]=c.at(.5,.47), [vx,vy]=c.at(.6,.8);
+    return { b: pool(id,150,170,92,96,246),
+      h: c.html + bubble('mouth',64,134,29,a,'50% 45%') + bubble('villi',238,198,29,a,'50% 40%'),
+      f: `<g fill="none" stroke="${a}" stroke-width="2.2" stroke-dasharray="4 4" stroke-linecap="round"><path d="M88,150 Q120,${my-20} ${mx-4},${my}"/><path d="M${vx},${vy} Q190,${vy-6} 210,198"/></g><circle cx="${mx}" cy="${my}" r="3.5" fill="${a}" stroke="#04121c"/><circle cx="${vx}" cy="${vy}" r="3.5" fill="${a}" stroke="#04121c"/>` }; },
+  digestLabel(id){ const c=crop('digestive_full',150,168,150,.46,.86);
+    const p1=c.at(.2,.53), p2=c.at(.7,.6), p3=c.at(.45,.79);
+    return { b: pool(id,150,170,86,90,244), h: c.html, f: tags([[...p1,'L',112],[...p2,'R',148],[...p3,'L',206]]) }; },
+  heartSim(id,a){ return { b: pool(id,150,166,96,100,248)+`<g fill="none" stroke="${a}" stroke-opacity=".35" stroke-width="2"><circle cx="150" cy="168" r="84"/><circle cx="150" cy="168" r="100" stroke-opacity=".16"/></g>`,
+      h: pic('heart_ext',150,172,156) }; },
+  heartLabel(id){ const n='heart_section', H=150, cx=150, cy=170;
+    return { b: pool(id,150,170,84,92,246), h: pic(n,cx,cy,H), f: tags([[...at(n,cx,cy,H,.46,.08),'L',108],[...at(n,cx,cy,H,.7,.6),'R',160],[...at(n,cx,cy,H,.22,.52),'L',204]]) }; },
+  // mikroskop alanı: gerçek hücre çizimleri yuvarlak görüş alanında
+  micro(id,a){ const R=72, cx=150, cy=166, cell=(n,x,y,s,r)=>{ const [w,h]=dims(n,s); return imgTag(n,`left:${((x-w/2)/(2*R)*100).toFixed(2)}%;top:${((y-h/2)/(2*R)*100).toFixed(2)}%;width:${(w/(2*R)*100).toFixed(2)}%;height:${(h/(2*R)*100).toFixed(2)}%;transform:rotate(${r||0}deg)`); };
+    return { b: pool(id,cx,cy,90,90),
+      h: `<div class="cv-scope" style="left:${pc(cx-R)};top:${pc(cy-R)};width:${pc(2*R)};height:${pc(2*R)}">`+
+        cell('cell_rbc',30,36,40,-20)+cell('cell_rbc',104,26,36,25)+cell('cell_rbc',122,86,40,-40)+cell('cell_rbc',26,104,38,40)+cell('cell_rbc',84,124,36,10)+cell('cell_rbc',-2,66,30,0)+cell('cell_rbc',146,46,30,0)+
+        cell('cell_neutrophil',72,72,50,0)+cell('cell_platelet',54,24,14,0)+cell('cell_platelet',112,58,12,30)+cell('cell_platelet',56,112,13,-20)+`</div>`,
+      f: `<circle cx="${cx}" cy="${cy}" r="${R+3}" fill="none" stroke="#dfe8f5" stroke-width="8"/><circle cx="${cx}" cy="${cy}" r="${R+7}" fill="none" stroke="rgba(0,0,0,.45)" stroke-width="1.5"/><circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="rgba(0,0,0,.25)" stroke-width="6"/>
+        <path d="M${cx+54},${cy+54} L${cx+86},${cy+86}" stroke="#dfe8f5" stroke-width="15" stroke-linecap="round"/><path d="M${cx+54},${cy+54} L${cx+86},${cy+86}" stroke="rgba(255,255,255,.55)" stroke-width="4" stroke-linecap="round" transform="translate(-3,-3)"/>` }; },
+  cells(id,a){ return { b: pool(id,150,168,96,92)+`<circle cx="150" cy="168" r="84" fill="rgba(255,214,140,.06)" stroke="rgba(255,214,140,.22)" stroke-width="2" stroke-dasharray="2 6"/>`,
+      h: pic('cell_rbc',116,152,82,{rot:-18}) + pic('cell_rbc',200,122,44,{rot:30}) + pic('cell_rbc',96,222,40,{rot:50}) + pic('cell_neutrophil',190,190,74) + pic('cell_platelet',148,222,30,{rot:20}) + pic('cell_platelet',224,226,22,{rot:-30}) + pic('cell_platelet',78,108,20) }; },
+  drop(id){ return { b: pool(id,150,168,90,90,246)+g(id,GAME.drop(id),142,170,.92),
+      h: pic('cell_rbc',214,198,50,{rot:25}) + pic('cell_rbc',220,134,32,{rot:-35}) + pic('cell_rbc',78,212,36,{rot:60}) + pic('cell_platelet',82,140,22) }; },
+  lungsSim(id,a){ return { b: pool(id,150,170,104,96,248)+`<g fill="none" stroke="${a}" stroke-opacity=".3" stroke-width="2"><path d="M40,236 Q150,262 260,236"/><path d="M52,104 Q150,70 248,104" stroke-dasharray="3 6"/></g>`,
+      h: pic('lungs',150,170,156,{cls:'cv-breathe'}) }; },
+  lungsLabel(id){ const n='resp_all', H=162, cx=150, cy=166;
+    return { b: pool(id,150,168,90,92,246), h: pic(n,cx,cy,H), f: tags([[...at(n,cx,cy,H,.33,.21),'L',106],[...at(n,cx,cy,H,.47,.4),'R',150],[...at(n,cx,cy,H,.36,.64),'L',206]]) }; },
+  kidneysSim(id,a){ return { b: pool(id,150,170,116,84,240), h: pic('kidneys_vessels',150,170,230,{w:true}) }; },
+  kidneysLabel(id){ const n='urinary', H=160, cx=150, cy=168;
+    return { b: pool(id,150,168,80,92,246), h: pic(n,cx,cy,H), f: tags([[...at(n,cx,cy,H,.14,.12),'L',108],[...at(n,cx,cy,H,.74,.45),'R',156],[...at(n,cx,cy,H,.5,.82),'L',212]]) }; },
+  // sıralama: sütun başlarında organ görselleri
+  sortAtik(id){ return { b: g(id,GAME.sort()), h: [['kidney_ext',30],['skin',30],['lungs',30],['colon',32]].map(([n,s],i)=>pic(n,94+i*52,138,s,{cls:'sm'})).join('') }; },
+  sortOrgan(id){ return { b: g(id,GAME.sort()), h: [['dg_stomach',30],['heart_outer',32],['lungs',29],['kidney_ext',30]].map(([n,s],i)=>pic(n,94+i*52,138,s,{cls:'sm'})).join('') }; },
+  cross(id){ return { b: g(id,GAME.cross()), h: pic('heart_outer',89,140,46,{cls:'sm'}) + pic('lungs',183,140,42,{cls:'sm'}) }; },
+  cards(id){ return { b: g(id,GAME.cards()) }; },
+  maze(id){ return { b: g(id,GAME.maze(id)) }; },
+  // kahraman kapak: cam gövde silueti içinde organ kolajı
+  body(id){ const B=`<defs><linearGradient id="gb${id}" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="rgba(53,238,252,.32)"/><stop offset=".25" stop-color="rgba(53,238,252,.05)"/><stop offset=".75" stop-color="rgba(53,238,252,.05)"/><stop offset="1" stop-color="rgba(53,238,252,.32)"/></linearGradient></defs>
+    <ellipse cx="150" cy="58" rx="27" ry="30" fill="url(#gb${id})" stroke="#49f3ff" stroke-opacity=".7" stroke-width="2"/>
+    <path d="M137,86 L137,96 C116,98 92,104 82,118 C72,132 70,152 70,172 L74,280 C74,292 86,300 100,302 L200,302 C214,300 226,292 226,280 L230,172 C230,152 228,132 218,118 C208,104 184,98 163,96 L163,86 Z" fill="url(#gb${id})" stroke="#49f3ff" stroke-opacity=".7" stroke-width="2"/>`;
+    return { b: B + pool(id,150,170,80,110),
+      h: pic('kidney_ext',104,222,32,{flip:true}) + pic('kidney_ext',196,222,32) +
+         pic('lungs',150,138,94) + pic('heart_ext',160,158,48) +
+         pic('dg_colon',150,226,70) + pic('dg_smallint',150,224,38) +
+         pic('dg_liver',130,192,58,{w:true}) + pic('dg_stomach',176,194,38) }; }
 };
 
 function cover(o){
-  const id='c'+(uid++); const [a1,a2]=ACC[o.k]; const [r1,r2,ric]=RIB[o.type];
+  const id='c'+(uid++); const [a1]=ACC[o.k]; const [r1,r2,ric]=RIB[o.type];
   const lines=o.cap; const fs = Math.max(...lines.map(l=>l.length))>14? 25 : 29;
-  const art = typeof o.art==='function'? o.art(id) : ART[o.art](id, o.organ);
-  const hero = o.hero;
-  return `<svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${lines.join(' ')}">
+  const hero = o.hero; const c = COMP[o.art](id, a1);
+  const font = 'font-family="Lexend,system-ui,sans-serif"';
+  const back = `<svg class="cv-bk" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="${hero?'Vücudumuzdaki Sistemler':lines.join(' ')}">
   <defs>
     <radialGradient id="bg${id}" cx=".5" cy=".55" r=".75"><stop offset="0" stop-color="#14465a"/><stop offset=".55" stop-color="#0a2333"/><stop offset="1" stop-color="#050f1a"/></radialGradient>
     <radialGradient id="gl${id}" cx=".5" cy=".55" r=".5"><stop offset="0" stop-color="${a1}" stop-opacity=".35"/><stop offset="1" stop-color="${a1}" stop-opacity="0"/></radialGradient>
-    <linearGradient id="rb${id}x" x1="0" x2="1"><stop offset="0" stop-color="${r1}"/><stop offset="1" stop-color="${r2}"/></linearGradient>
+    <radialGradient id="lp${id}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#eafcff" stop-opacity=".30"/><stop offset=".45" stop-color="#bfefff" stop-opacity=".12"/><stop offset="1" stop-color="#bfefff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="sh${id}" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#000" stop-opacity=".5"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
     <filter id="ds${id}" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="8" stdDeviation="7" flood-color="#000" flood-opacity=".55"/></filter>
-    <filter id="tg${id}" x="-20%" y="-40%" width="140%" height="180%"><feDropShadow dx="0" dy="3" stdDeviation="0" flood-color="#04121c" flood-opacity="1"/><feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="${a1}" flood-opacity=".55"/></filter>
     <pattern id="hx${id}" width="24" height="41.6" patternUnits="userSpaceOnUse" patternTransform="scale(.9)"><path d="M12,0 L24,6.9 L24,20.8 L12,27.7 L0,20.8 L0,6.9 Z M12,27.7 L12,41.6" fill="none" stroke="rgba(120,220,255,.07)" stroke-width="1"/></pattern>
   </defs>
   <rect width="300" height="300" fill="url(#bg${id})"/>
   <rect width="300" height="300" fill="url(#hx${id})"/>
   <circle cx="150" cy="${hero?160:168}" r="120" fill="url(#gl${id})"/>
   ${Array.from({length:14},(_,i)=>{const x=(i*73+29)%290+5,y=(i*131+47)%280+10,r=(i%3)+1.2;return `<circle cx="${x}" cy="${y}" r="${r}" fill="${i%2?a1:'#bff6ff'}" opacity="${.25+(i%4)*.12}"/>`}).join('')}
-  <g transform="translate(150,${hero?170:172}) scale(${o.scale||1})" filter="url(#ds${id})">${art}</g>
-  ${o.badge?`<g transform="translate(58,196)" filter="url(#ds${id})"><circle r="34" fill="#0b2131" stroke="${a1}" stroke-width="3"/><circle r="34" fill="url(#gl${id})"/><g transform="scale(${o.badge==='lungs'?.36:o.badge==='digest'?.3:o.badge==='kidneys'?.3:.4})">${ART[o.badge](id+'bd')}</g></g>`:''}
-  ${hero?'':`<g filter="url(#tg${id})" font-family="Lexend,system-ui,sans-serif" font-weight="900" text-anchor="middle" fill="#fff" style="paint-order:stroke" stroke="#04121c" stroke-width="5" stroke-linejoin="round">
+  ${c.b||''}
+  ${o.badge?`<g transform="translate(58,196)" filter="url(#ds${id})"><circle r="36" fill="#0b2131" stroke="${a1}" stroke-width="3"/><circle r="36" fill="url(#gl${id})"/><circle r="26" fill="url(#lp${id})"/></g>`:''}
+</svg>`;
+  const layer = (c.h||'') + (o.badge? pic(o.badge,58,196,o.badge==='lungs'||o.badge==='ribcage_in'?46:52,{cls:'sm'}) : '');
+  const front = `<svg class="cv-fr" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+  <defs><filter id="tg${id}" x="-20%" y="-40%" width="140%" height="180%"><feDropShadow dx="0" dy="3" stdDeviation="0" flood-color="#04121c" flood-opacity="1"/><feDropShadow dx="0" dy="0" stdDeviation="6" flood-color="${a1}" flood-opacity=".55"/></filter>
+    <linearGradient id="rb${id}x" x1="0" x2="1"><stop offset="0" stop-color="${r1}"/><stop offset="1" stop-color="${r2}"/></linearGradient></defs>
+  ${c.f||''}
+  ${hero?'':`<g filter="url(#tg${id})" ${font} font-weight="900" text-anchor="middle" fill="#fff" style="paint-order:stroke" stroke="#04121c" stroke-width="5" stroke-linejoin="round">
     ${lines.map((l,i)=>`<text x="150" y="${lines.length>1? 44+i*(fs+4) : 58}" font-size="${fs}" letter-spacing=".5">${l}</text>`).join('')}
   </g>
   <g transform="translate(150,262)">
     <rect x="-118" y="-17" width="236" height="34" rx="10" fill="url(#rb${id}x)" stroke="rgba(255,255,255,.55)" stroke-width="1.5"/>
     <rect x="-118" y="-17" width="236" height="14" rx="10" fill="#fff" opacity=".18"/>
-    <text x="-14" y="6" text-anchor="middle" font-family="Lexend,system-ui,sans-serif" font-size="14" font-weight="800" fill="#fff" letter-spacing=".8" style="paint-order:stroke" stroke="rgba(0,0,0,.25)" stroke-width="2">${o.type}</text>
+    <text x="-14" y="6" text-anchor="middle" ${font} font-size="14" font-weight="800" fill="#fff" letter-spacing=".8" style="paint-order:stroke" stroke="rgba(0,0,0,.25)" stroke-width="2">${o.type}</text>
     <g transform="translate(96,0)"><rect x="-15" y="-15" width="30" height="30" rx="8" fill="rgba(0,0,0,.22)" stroke="rgba(255,255,255,.5)"/>${RIBICON[ric]}</g>
   </g>`}
-  <text x="150" y="${hero?28:14}" text-anchor="middle" font-family="Lexend,system-ui,sans-serif" font-size="${hero?13:9}" font-weight="800" letter-spacing="3" fill="${a1}" opacity=".95">${hero?'FEN BİLİMLERİ 7 · 3. ÜNİTE':'FEN 7 · VÜCUDUMUZDAKİ SİSTEMLER'}</text>
-  ${hero?`<g font-family="Lexend,system-ui,sans-serif" text-anchor="middle" font-weight="900" fill="#fff" style="paint-order:stroke" stroke="#04121c" stroke-width="5" stroke-linejoin="round" filter="url(#tg${id})"><text x="150" y="268" font-size="24">VÜCUDUMUZDAKİ</text><text x="150" y="292" font-size="22" fill="${a1}">SİSTEMLER</text></g>`:''}
+  <text x="150" y="${hero?28:14}" text-anchor="middle" ${font} font-size="${hero?13:9}" font-weight="800" letter-spacing="3" fill="${a1}" opacity=".95">${hero?'FEN BİLİMLERİ 7 · 3. ÜNİTE':'FEN 7 · VÜCUDUMUZDAKİ SİSTEMLER'}</text>
+  ${hero?`<g ${font} text-anchor="middle" font-weight="900" fill="#fff" style="paint-order:stroke" stroke="#04121c" stroke-width="5" stroke-linejoin="round" filter="url(#tg${id})"><text x="150" y="268" font-size="24">VÜCUDUMUZDAKİ</text><text x="150" y="292" font-size="22" fill="${a1}">SİSTEMLER</text></g>`:''}
   <rect x="3" y="3" width="294" height="294" rx="${hero?22:16}" fill="none" stroke="#49f3ff" stroke-opacity=".55" stroke-width="2"/>
 </svg>`;
+  return back + layer + front;
 }
 
 /* ==================================================================
@@ -269,38 +332,39 @@ function cover(o){
    ================================================================== */
 const T = [
   {id:'konu-1',k:'sin',n:'Sindirim Sistemi',kz:'FB.7.3.1 · FB.7.3.2',d:'Sindirim sistemini oluşturan yapı ve organlar, fiziksel ve kimyasal sindirim, sindirim sisteminin sağlığı.',items:[
-    {h:'sindirim-yolculuk.html',type:'SİMÜLASYON',cap:['BESİNİN','YOLCULUĞU'],art:'digest',t:'Besinin Yolculuğu — Sindirim Simülasyonu',kind:'sim'},
-    {h:'etiketle.html?set=sindirim',type:'ETİKETLEME',cap:['SİNDİRİM','ORGANLARI'],art:'label',organ:'digest',t:'Sindirim Organlarını Etiketle',kind:'game'},
-    {badge:'digest',h:'ikili.html?deste=fiziksel-kimyasal',type:'İKİLİ SEÇİM',cap:['FİZİKSEL Mİ','KİMYASAL MI?'],art:'cards',t:'Fiziksel mi, Kimyasal mı?',kind:'game'},
-    {badge:'digest',h:'dy-labirent.html?set=sindirim',type:'DOĞRU-YANLIŞ',cap:['DOĞRU ÇIKIŞI','BUL'],art:'maze',t:'Doğru Çıkışı Bul — Sindirim',kind:'game'}]},
+    {h:'sindirim-yolculuk.html',type:'SİMÜLASYON',cap:['BESİNİN','YOLCULUĞU'],art:'digestSim',t:'Besinin Yolculuğu — Sindirim Simülasyonu',kind:'sim'},
+    {h:'etiketle.html?set=sindirim',type:'ETİKETLEME',cap:['SİNDİRİM','ORGANLARI'],art:'digestLabel',t:'Sindirim Organlarını Etiketle',kind:'game'},
+    {badge:'dg_stomach',h:'ikili.html?deste=fiziksel-kimyasal',type:'İKİLİ SEÇİM',cap:['FİZİKSEL Mİ','KİMYASAL MI?'],art:'cards',t:'Fiziksel mi, Kimyasal mı?',kind:'game'},
+    {badge:'dg_smallint',h:'dy-labirent.html?set=sindirim',type:'DOĞRU-YANLIŞ',cap:['DOĞRU ÇIKIŞI','BUL'],art:'maze',t:'Doğru Çıkışı Bul — Sindirim',kind:'game'}]},
   {id:'konu-2',k:'dol',n:'Dolaşım Sistemi',kz:'FB.7.3.3 · FB.7.3.4 · FB.7.3.5',d:'Kalp, kan ve damarlar; küçük ve büyük kan dolaşımı; kanın yapısı; kan ve organ bağışının toplumsal dayanışma açısından önemi; dolaşım sisteminin sağlığı.',items:[
-    {h:'dolasim-kalp.html',type:'SİMÜLASYON',cap:['KALP VE KAN','DOLAŞIMI'],art:'heart',t:'Kalp ve Kan Dolaşımı Simülatörü',kind:'sim',scale:1.15},
-    {h:'kan-laboratuvari.html',type:'SİMÜLASYON',cap:['KAN','LABORATUVARI'],art:'micro',t:'Kan Laboratuvarı — Mikroskop Altında Kan',kind:'sim',scale:.92},
-    {h:'etiketle.html?set=dolasim',type:'ETİKETLEME',cap:['DOLAŞIM','ŞEMASI'],art:'label',organ:'heart',t:'Dolaşım Şemasını Etiketle',kind:'game'},
-    {badge:'heart',h:'ikili.html?deste=atar-toplar',type:'İKİLİ SEÇİM',cap:['ATARDAMAR MI','TOPLARDAMAR MI?'],art:'cards',t:'Atardamar mı, Toplardamar mı?',kind:'game'},
-    {h:'kategori.html?set=kan',type:'SIRALAMA',cap:['KANIN','BİLEŞENLERİ'],art:'cells',t:'Kanın Bileşenleri ve Görevleri',kind:'game',scale:.95},
-    {h:'ikili.html?deste=bagis',type:'İKİLİ SEÇİM',cap:['KAN BAĞIŞI','YAPABİLİR Mİ?'],art:'drop',scale:.95,t:'Kan Bağışı Yapabilir mi?',kind:'game'},
-    {badge:'heart',h:'dy-labirent.html?set=dolasim',type:'DOĞRU-YANLIŞ',cap:['DOĞRU ÇIKIŞI','BUL'],art:'maze',t:'Doğru Çıkışı Bul — Dolaşım',kind:'game'}]},
+    {h:'dolasim-kalp.html',type:'SİMÜLASYON',cap:['KALP VE KAN','DOLAŞIMI'],art:'heartSim',t:'Kalp ve Kan Dolaşımı Simülatörü',kind:'sim'},
+    {h:'kan-laboratuvari.html',type:'SİMÜLASYON',cap:['KAN','LABORATUVARI'],art:'micro',t:'Kan Laboratuvarı — Mikroskop Altında Kan',kind:'sim'},
+    {h:'etiketle.html?set=dolasim',type:'ETİKETLEME',cap:['DOLAŞIM','ŞEMASI'],art:'heartLabel',t:'Dolaşım Şemasını Etiketle',kind:'game'},
+    {badge:'heart_outer',h:'ikili.html?deste=atar-toplar',type:'İKİLİ SEÇİM',cap:['ATARDAMAR MI','TOPLARDAMAR MI?'],art:'cards',t:'Atardamar mı, Toplardamar mı?',kind:'game'},
+    {h:'kategori.html?set=kan',type:'SIRALAMA',cap:['KANIN','BİLEŞENLERİ'],art:'cells',t:'Kanın Bileşenleri ve Görevleri',kind:'game'},
+    {h:'ikili.html?deste=bagis',type:'İKİLİ SEÇİM',cap:['KAN BAĞIŞI','YAPABİLİR Mİ?'],art:'drop',t:'Kan Bağışı Yapabilir mi?',kind:'game'},
+    {badge:'heart_ext',h:'dy-labirent.html?set=dolasim',type:'DOĞRU-YANLIŞ',cap:['DOĞRU ÇIKIŞI','BUL'],art:'maze',t:'Doğru Çıkışı Bul — Dolaşım',kind:'game'}]},
   {id:'konu-3',k:'sol',n:'Solunum Sistemi',kz:'FB.7.3.6 · FB.7.3.7',d:'Solunum sistemini oluşturan yapı ve organlar, soluk alma ve verme, doğru nefes alma, solunum sisteminin sağlığı, bağımlılık ve Yeşilay.',items:[
-    {h:'solunum-nefes.html',type:'SİMÜLASYON',cap:['SOLUK AL,','SOLUK VER'],art:'lungs',t:'Soluk Al, Soluk Ver — Solunum Simülasyonu',kind:'sim',scale:1.1},
-    {h:'etiketle.html?set=solunum',type:'ETİKETLEME',cap:['SOLUNUM','ORGANLARI'],art:'label',organ:'lungs',t:'Solunum Organlarını Etiketle',kind:'game'},
+    {h:'solunum-nefes.html',type:'SİMÜLASYON',cap:['SOLUK AL,','SOLUK VER'],art:'lungsSim',t:'Soluk Al, Soluk Ver — Solunum Simülasyonu',kind:'sim'},
+    {h:'etiketle.html?set=solunum',type:'ETİKETLEME',cap:['SOLUNUM','ORGANLARI'],art:'lungsLabel',t:'Solunum Organlarını Etiketle',kind:'game'},
     {badge:'lungs',h:'ikili.html?deste=soluk',type:'İKİLİ SEÇİM',cap:['SOLUK ALMA MI','VERME Mİ?'],art:'cards',t:'Soluk Alma mı, Soluk Verme mi?',kind:'game'},
-    {badge:'lungs',h:'dy-labirent.html?set=solunum',type:'DOĞRU-YANLIŞ',cap:['DOĞRU ÇIKIŞI','BUL'],art:'maze',t:'Doğru Çıkışı Bul — Solunum',kind:'game'}]},
+    {badge:'ribcage_in',h:'dy-labirent.html?set=solunum',type:'DOĞRU-YANLIŞ',cap:['DOĞRU ÇIKIŞI','BUL'],art:'maze',t:'Doğru Çıkışı Bul — Solunum',kind:'game'}]},
   {id:'konu-4',k:'bos',n:'Boşaltım Sistemi',kz:'FB.7.3.8 · FB.7.3.9',d:'Böbrekler, üreter, mesane ve üretra; boşaltıma yardımcı organlar (deri, akciğerler, kalın bağırsak, karaciğer); boşaltım sisteminin sağlığı.',items:[
-    {h:'bosaltim-bobrek.html',type:'SİMÜLASYON',cap:['BÖBREK','LABORATUVARI'],art:'kidneys',t:'Böbrek Laboratuvarı — Boşaltım Simülasyonu',kind:'sim',scale:1.05},
-    {h:'etiketle.html?set=bosaltim',type:'ETİKETLEME',cap:['BOŞALTIM','ORGANLARI'],art:'label',organ:'kidneys',t:'Boşaltım Organlarını Etiketle',kind:'game'},
-    {badge:'kidneys',h:'kategori.html?set=atik',type:'SIRALAMA',cap:['HANGİ ORGAN','UZAKLAŞTIRIR?'],art:'sort',t:'Hangi Organ Uzaklaştırır?',kind:'game'},
-    {badge:'kidneys',h:'dy-labirent.html?set=bosaltim',type:'DOĞRU-YANLIŞ',cap:['DOĞRU ÇIKIŞI','BUL'],art:'maze',t:'Doğru Çıkışı Bul — Boşaltım',kind:'game'}]},
+    {h:'bosaltim-bobrek.html',type:'SİMÜLASYON',cap:['BÖBREK','LABORATUVARI'],art:'kidneysSim',t:'Böbrek Laboratuvarı — Boşaltım Simülasyonu',kind:'sim'},
+    {h:'etiketle.html?set=bosaltim',type:'ETİKETLEME',cap:['BOŞALTIM','ORGANLARI'],art:'kidneysLabel',t:'Boşaltım Organlarını Etiketle',kind:'game'},
+    {h:'kategori.html?set=atik',type:'SIRALAMA',cap:['HANGİ ORGAN','UZAKLAŞTIRIR?'],art:'sortAtik',t:'Hangi Organ Uzaklaştırır?',kind:'game'},
+    {badge:'kidney_section',h:'dy-labirent.html?set=bosaltim',type:'DOĞRU-YANLIŞ',cap:['DOĞRU ÇIKIŞI','BUL'],art:'maze',t:'Doğru Çıkışı Bul — Boşaltım',kind:'game'}]},
   {id:'konu-5',k:'gen',n:'Ünite Geneli',kz:'FB.7.3.1 – FB.7.3.9',d:'Dört sistemi birlikte tekrar et: kavramlar, sistemlere ait organlar ve sağlıklı yaşam davranışları.',items:[
     {h:'bulmaca.html',type:'ÇENGEL BULMACA',cap:['ÇENGEL','BULMACA'],art:'cross',t:'Vücudumuzdaki Sistemler — Çengel Bulmaca',kind:'game'},
-    {h:'kategori.html?set=organ',type:'SIRALAMA',cap:['HANGİ SİSTEME','AİT?'],art:'sort',t:'Hangi Sisteme Ait?',kind:'game'},
-    {badge:'heart',h:'ikili.html?deste=saglik',type:'İKİLİ SEÇİM',cap:['SAĞLIĞI KORUR','MU?'],art:'cards',t:'Sağlığı Korur mu, Zarar mı Verir?',kind:'game'}]}
+    {h:'kategori.html?set=organ',type:'SIRALAMA',cap:['HANGİ SİSTEME','AİT?'],art:'sortOrgan',t:'Hangi Sisteme Ait?',kind:'game'},
+    {badge:'heart_ext',h:'ikili.html?deste=saglik',type:'İKİLİ SEÇİM',cap:['SAĞLIĞI KORUR','MU?'],art:'cards',t:'Sağlığı Korur mu, Zarar mı Verir?',kind:'game'}]}
 ];
 
 const total = T.reduce((a,t)=>a+t.items.length,0), sims = T.reduce((a,t)=>a+t.items.filter(i=>i.kind==='sim').length,0);
 ZD.$('#meta').innerHTML = `<span class="m"><b>4</b> konu</span><span class="m"><b>${sims}</b> simülasyon</span><span class="m"><b>${total-sims}</b> oyun</span><span class="m">Akıllı tahta uyumlu</span>`;
 ZD.$('#unitCount').textContent = `${total} materyal`;
-ZD.$('#heroCover').innerHTML = cover({k:'sol',type:'SİMÜLASYON',cap:[''],art:'body',hero:true,scale:1.08});
+ZD.$('#credit').innerHTML = ZD.CREDIT;
+ZD.$('#heroCover').innerHTML = cover({k:'sol',type:'SİMÜLASYON',cap:[''],art:'body',hero:true});
 
 const starSvg = (on)=>`<svg viewBox="0 0 24 24"><path d="M12 2.5l2.9 6 6.6.9-4.8 4.6 1.2 6.5L12 17.4l-5.9 3.1 1.2-6.5L2.5 9.4l6.6-.9Z" fill="${on?'#ffc93c':'#34465e'}"/></svg>`;
 function best(h){ return ZD.store.get('best:'+h,null); }

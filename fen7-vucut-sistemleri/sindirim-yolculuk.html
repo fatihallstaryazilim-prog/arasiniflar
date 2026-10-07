@@ -31,14 +31,26 @@
 .vzoom{position:absolute;right:14px;bottom:14px;z-index:5;font-size:10.5px;font-weight:700;letter-spacing:1.6px;color:var(--dim);padding:6px 10px;border-radius:10px;background:rgba(6,16,30,.6);border:1px solid var(--line)}
 .vzoom b{color:var(--cyan)}
 /* SVG organ durumları */
-#bsvg .org{transition:opacity .7s var(--ease),filter .7s var(--ease)}
-#bsvg.focus .org{opacity:.28;filter:saturate(.45)}
-#bsvg.focus .org.aux{opacity:.95;filter:none}
-#bsvg.focus .org.on{opacity:1;filter:drop-shadow(0 0 2.2px rgba(53,238,252,.95)) drop-shadow(0 0 8px rgba(53,238,252,.55))}
+/* Servier figürü: odakta tüm figür soluklaşır, seçili organın kırpılmış kopyası parlar */
+#bsvg #base{transition:opacity .7s var(--ease)}
+#bsvg.focus #base{opacity:.3}
+#bsvg .org{opacity:0;transition:opacity .7s var(--ease)}
+#bsvg.focus .org.aux{opacity:.96}
+#bsvg.focus .org.on{opacity:1;filter:drop-shadow(0 0 1.6px rgba(53,238,252,.95)) drop-shadow(0 0 6px rgba(53,238,252,.55))}
+/* Yakın plan kartı */
+.pip{position:absolute;right:14px;top:14px;z-index:5;width:clamp(96px,20%,156px);opacity:0;transform:translateY(-8px) scale(.92);transform-origin:100% 0;transition:opacity .45s,transform .6s var(--spring);pointer-events:none}
+.pip.show{opacity:1;transform:none}
+.pip .pc{aspect-ratio:1;border-radius:18px;padding:8px;display:grid;place-items:center;overflow:hidden;background:radial-gradient(circle at 50% 42%,#ffffff,#dbe7f2 78%);border:1.5px solid rgba(73,243,255,.8);box-shadow:0 0 0 4px rgba(73,243,255,.12),0 0 22px rgba(73,243,255,.35),0 14px 30px rgba(0,0,0,.45)}
+.pip img{display:block;width:100%;height:100%;object-fit:contain}
+.pip .pt{margin-top:6px;display:flex;flex-direction:column;align-items:center;gap:1px;padding:4px 8px;border-radius:12px;background:rgba(6,16,30,.82);border:1px solid var(--line);text-align:center}
+.pip .pt b{font-size:10px;font-weight:800;letter-spacing:1.3px;color:#bff9ff;white-space:nowrap}
+.pip .pt small{font-size:10px;font-weight:600;color:var(--muted);line-height:1.2}
+.pip.chew img{animation:pipChew .4s var(--ease)}
+@keyframes pipChew{40%{transform:scale(1.06) translateY(2px)}}
+.pip.churn img{animation:pipChurn .8s var(--ease)}
+@keyframes pipChurn{25%{transform:rotate(-3deg) scale(1.04,.96)}60%{transform:rotate(2deg) scale(.97,1.03)}}
 #bsvg .lbl{opacity:0;transition:opacity .45s}
 #bsvg .lbl.show{opacity:1}
-#bsvg .scan{animation:scan 7s linear infinite}
-@keyframes scan{from{transform:translateY(0)}to{transform:translateY(860px)}}
 #bsvg .trailG{animation:trailPulse 2.4s ease-in-out infinite}
 @keyframes trailPulse{50%{opacity:.55}}
 /* Büyüteç (villus) */
@@ -141,8 +153,8 @@
 /* yardımcı organlar */
 .aux{display:grid;gap:10px}
 .auxc{display:flex;gap:12px;align-items:flex-start;padding:12px;border-radius:16px;background:rgba(0,0,0,.22);border:1px solid var(--line)}
-.auxc .ic{flex:none;width:52px;height:52px;border-radius:15px;display:grid;place-items:center;background:radial-gradient(circle at 30% 25%,#27507a,#0f2239 70%);border:1px solid var(--line-2)}
-.auxc .ic svg{width:40px;height:40px}
+.auxc .ic{flex:none;width:64px;height:64px;border-radius:16px;display:grid;place-items:center;background:radial-gradient(circle at 50% 42%,#ffffff,#d7e4f0 80%);border:1px solid rgba(73,243,255,.45);box-shadow:0 0 14px rgba(53,238,252,.18)}
+.auxc .ic svg{width:54px;height:54px}
 .auxc h4{font-size:16px;font-weight:800;margin-bottom:3px}
 .auxc p{font-size:13px;line-height:1.5;color:#cfe0f2}
 .auxc .tg{display:inline-block;margin-top:6px}
@@ -193,6 +205,10 @@
   .vinfo b{font-size:17px}
   .vinfo .sz{width:60px}
   .vzoom{display:none}
+  .pip{width:92px;right:10px;top:12px}
+  .pip .pc{border-radius:14px;padding:5px}
+  .pip .pt small{display:none}
+  .pip .pt b{font-size:8.5px;letter-spacing:.8px}
   .rn span{font-size:9.5px}
   .opt{font-size:13.5px;padding:9px 10px}
   .opt .oi{width:30px;height:30px}
@@ -212,7 +228,7 @@ const ui = ZD.mount({
   kicker: 'SİMÜLASYON · SİNDİRİM SİSTEMİ', title: 'Besinin Yolculuğu',
   crumb: ['7. Sınıf Fen Bilimleri', '3. Ünite', 'Sindirim Sistemi'],
   stats: [{ id: 'stop', label: 'Durak', value: '0/7' }, { id: 'score', label: 'Puan', value: 0, cls: 'cyan' }, { id: 'time', label: 'Süre', value: '0:00' }, { id: 'streak', label: 'Seri', value: '×0', cls: 'green' }],
-  onHelp: help, onRestart: () => reset(true)
+  onHelp: help, onRestart: () => reset(true), credit: true
 });
 const timer = new ZD.Timer(t => ui.stat('time', ZD.Timer.fmt(t)));
 
@@ -256,113 +272,108 @@ const OPTS = [
   { t: 'Sindirim olmaz', s: 'iletim · emilim · atma', ic: 'yok' }
 ];
 const STOPS = [null,
-  { key: 'agiz', org: 'mouth', name: 'Ağız', rail: 'Ağız', ans: 2, cam: [236, 134, 3.0],
+  { key: 'agiz', org: 'mouth', name: 'Ağız', rail: 'Ağız', ans: 2, cam: [226, 153, 4.2],
     ctx: f => `<b>${f.name}</b> ısırıldı ve lokma ağza alındı. Burçak'ın elması gibi yolculuk burada başlıyor.`,
     def: 'Besinlerin vücuda alındığı ilk organdır. Çiğneme hareketleri ile besinlerin fiziksel sindirimi, tükürük salgısında bulunan enzimler yardımıyla ise karbohidratların kimyasal sindirimi gerçekleşir. Bu nedenle fiziksel ve kimyasal sindirim ağızda başlar.',
     ok: 'Doğru! Fiziksel ve kimyasal sindirim ağızda başlar.',
     why: { 0: '<b>Eksik.</b> Çiğneme fiziksel sindirimdir ama tükürük salgısındaki enzimler karbohidratların kimyasal sindirimini de başlatır.', 1: '<b>Eksik.</b> Tükürükteki enzimler kimyasal sindirim yapar ama çiğneme hareketleri de fiziksel sindirimdir.', 3: '<b>Yanlış.</b> Sindirim ağızda başlar: çiğneme ile fiziksel, tükürükteki enzimlerle kimyasal sindirim gerçekleşir.' } },
-  { key: 'yutak', org: 'yutak', name: 'Yutak', rail: 'Yutak', ans: 3, cam: [262, 152, 2.4],
+  { key: 'yutak', org: 'yutak', name: 'Yutak', rail: 'Yutak', ans: 3, cam: [254, 148, 3.8],
     ctx: () => 'Çiğnenen lokma, dilin yardımıyla ağzın gerisindeki <b>yutağa</b> doğru itilmek üzere.',
     def: 'Besinlerin ağızdan yemek borusuna iletilmesini sağlar. Yutakta sindirim gerçekleşmez.',
     ok: 'Doğru! Yutakta sindirim gerçekleşmez; besin yemek borusuna iletilir.',
     why: { d: '<b>Yanlış.</b> Yutak yalnızca besinleri ağızdan yemek borusuna iletir. Yutakta sindirim gerçekleşmez.' } },
-  { key: 'yemek', org: 'eso', name: 'Yemek borusu', rail: 'Y. borusu', ans: 3, cam: [292, 284, 1.6],
+  { key: 'yemek', org: 'eso', name: 'Yemek borusu', rail: 'Y. borusu', ans: 3, cam: [268, 273, 3.2],
     ctx: () => 'Lokma yutaktan geçti; şimdi <b>yemek borusunun</b> girişinde.',
     def: 'Besinlerin yutaktan mideye kas hareketleriyle iletilmesini sağlar. Yemek borusunda sindirim gerçekleşmez.',
     ok: 'Doğru! Yemek borusu besini kas hareketleriyle mideye iletir; sindirim olmaz.',
     why: { 0: '<b>Yanlış.</b> Kas hareketi var ama besini parçalamaz, yalnızca mideye doğru iter. Yemek borusunda sindirim gerçekleşmez.', d: '<b>Yanlış.</b> Yemek borusu besinleri kas hareketleriyle mideye iletir. Yemek borusunda sindirim gerçekleşmez.' } },
-  { key: 'mide', org: 'mide', name: 'Mide', rail: 'Mide', ans: 2, cam: [332, 428, 2.1],
+  { key: 'mide', org: 'mide', name: 'Mide', rail: 'Mide', ans: 2, cam: [284, 471, 3.6],
     ctx: () => 'Lokma <b>mideye</b> ulaştı. Parçalar mideye doldukça midenin dolduğu hissedilir.',
     def: 'Yemek borusundan gelen besinler midedeki kasların kasılıp gevşemesiyle fiziksel sindirime uğrar. Mide öz suyundaki enzimlerle proteinlerin kimyasal sindirimi başlar. Besinler buradan ince bağırsağa gönderilir.',
     ok: 'Doğru! Midede hem fiziksel hem kimyasal sindirim olur.',
     why: { 0: '<b>Eksik.</b> Kasların kasılıp gevşemesi fizikseldir; mide öz suyundaki enzimler de proteinlerin kimyasal sindirimini başlatır.', 1: '<b>Eksik.</b> Enzimler proteinleri kimyasal olarak sindirir; midedeki kasların kasılıp gevşemesi de fiziksel sindirimdir.', 3: '<b>Yanlış.</b> Midede hem fiziksel hem kimyasal sindirim olur; besinler bulamaç hâline gelir.' } },
-  { key: 'ince', org: 'ince', name: 'İnce bağırsak', rail: 'İnce b.', ans: 2, cam: [298, 520, 1.75],
+  { key: 'ince', org: 'ince', name: 'İnce bağırsak', rail: 'İnce b.', ans: 2, cam: [254, 537, 2.45],
     ctx: () => '<b>Bulamaç</b> hâline gelen besin ince bağırsağa geçti. Yardımcı organlar (karaciğer ve pankreas) göreve hazır.',
     def: 'Besinlerin fiziksel ve kimyasal sindirimi burada tamamlanır. Sindirimi tamamlanan besinler, ince bağırsağın iç yüzeyinde bulunan villuslar sayesinde emilerek kana geçer. Villuslar, girintili çıkıntılı yapısı sayesinde ince bağırsağın iç yüzeyini genişleterek temas yüzeyini artırır. Böylece emilimin hızlı olmasını sağlar.',
     ok: 'Doğru! Fiziksel ve kimyasal sindirim ince bağırsakta tamamlanır.',
     why: { 0: '<b>Eksik.</b> Safra sıvısı yağların fiziksel sindirimine yardım eder ama pankreas öz suyuyla kimyasal sindirim de burada tamamlanır.', 1: '<b>Eksik.</b> Kimyasal sindirim burada tamamlanır; safra sıvısı da yağların fiziksel sindirimine yardım eder.', 3: '<b>Yanlış.</b> İnce bağırsakta fiziksel ve kimyasal sindirim tamamlanır, ardından besinler emilerek kana geçer.' } },
-  { key: 'kalin', org: 'kalin', name: 'Kalın bağırsak', rail: 'Kalın b.', ans: 3, cam: [290, 630, 1.75],
+  { key: 'kalin', org: 'kalin', name: 'Kalın bağırsak', rail: 'Kalın b.', ans: 3, cam: [260, 639, 2.75],
     ctx: () => 'İnce bağırsakta sindirilmeyen besinler (<b>posa</b>) kalın bağırsağa geldi.',
     def: 'İnce bağırsaktan gelen ve sindirilmeyen besinlerin bir süre depolandıktan sonra anüse gönderildiği yerdir. Sindirilmeyen besinlerden geriye kalan suyun, bazı mineral ve vitaminlerin emilimi burada gerçekleşir.',
     ok: 'Doğru! Kalın bağırsakta sindirim olmaz; su, bazı mineral ve vitaminler emilir.',
     why: { 1: '<b>Yanlış.</b> Su sindirilmez, emilir! Kalın bağırsakta sindirim gerçekleşmez; su, bazı mineral ve vitaminler emilir.', d: '<b>Yanlış.</b> Kalın bağırsakta sindirim olmaz. Geriye kalan su, bazı mineral ve vitaminlerin emilimi burada gerçekleşir.' } },
-  { key: 'anus', org: 'anus', name: 'Anüs', rail: 'Anüs', ans: 3, cam: [298, 728, 2.4],
+  { key: 'anus', org: 'anus', name: 'Anüs', rail: 'Anüs', ans: 3, cam: [260, 744, 4.6],
     ctx: () => 'Posa, sindirim sisteminin <b>son kısmına</b> ulaştı.',
     def: 'Sindirim sisteminin son kısmıdır. Sindirilmeyen besinlerin vücuttan uzaklaştırılmasında görevlidir.',
     ok: 'Doğru! Anüste sindirim olmaz; sindirilmeyen besinler vücuttan uzaklaştırılır.',
     why: { d: '<b>Yanlış.</b> Anüste sindirim olmaz. Sindirilmeyen besinlerin vücuttan uzaklaştırılmasında görevlidir.' } }
 ];
-const OVERVIEW = [272, 396, .93], AUXCAM = [262, 430, 1.75];
+const OVERVIEW = [260, 390, .98], AUXCAM = [251, 453, 3.0];
 const AUXTXT = {
   liver: { name: 'Karaciğer', txt: 'Sindirime yardımcı organlardan biri olan karaciğerin salgıladığı safra sıvısı, karaciğerin altında bulunan safra kesesinde toplanır. Karaciğerden salgılanıp ince bağırsağa gönderilen safra sıvısı yağların fiziksel sindirimine yardımcı olur.', tag: 'Yağların fiziksel sindirimine yardım' },
   gall: { name: 'Safra kesesi', txt: 'Karaciğerin altında bulunur. Karaciğerin salgıladığı safra sıvısı burada toplanır. Burada toplanan sıvı, bir kanal yardımıyla ince bağırsağa gönderilir.', tag: 'Safrayı toplar ve gönderir' },
   panc: { name: 'Pankreas', txt: 'Sindirime yardımcı olan diğer organ pankreastır. Pankreas, ürettiği pankreas öz suyunu bir kanal yardımıyla ince bağırsağa gönderir. Pankreas öz suyu besinlerin kimyasal sindirimine yardımcı olur.', tag: 'Kimyasal sindirime yardım' }
 };
 
-/* ---------------- Rota (besinin izlediği yol) ---------------- */
+/* ---------------- Servier figürü (görsel pikseli -> sahne koordinatı) ---------------- */
+// digestive_full.webp (698x2580) sahnede x=155.3, y=3 konumunda 0.3 ölçekle durur.
+// Aşağıdaki tüm yol/çokgen koordinatları GÖRSEL PİKSELİ cinsindendir; mp()/pts() ile sahneye çevrilir.
+const IMG = { src: 'assets/img/digestive_full.webp', w: 698, h: 2580, s: .3, x: 155.3, y: 3 };
+const W = (x, y) => [IMG.x + x * IMG.s, IMG.y + y * IMG.s];
+function mp(d) { let i = 0; return d.replace(/-?\d*\.?\d+/g, n => ((i++ % 2 === 0) ? IMG.x + n * IMG.s : IMG.y + n * IMG.s).toFixed(2)); }
+const pts = a => a.map(([x, y]) => W(x, y).map(v => v.toFixed(1)).join(',')).join(' ');
+const polyD = a => 'M' + pts(a).replace(/ /g, 'L') + 'Z';
+
+/* ---------------- Rota (besinin izlediği yol; görseldeki gerçek kanal) ---------------- */
 function wave(x0, x1, y, a) { const dx = (x1 - x0) / 4; return `Q${x0 + dx / 2},${y + a} ${x0 + dx},${y} T${x0 + 2 * dx},${y} T${x0 + 3 * dx},${y} T${x1},${y}`; }
-const SI_ROWS = `C248,516 262,524 280,522 C292,521 298,540 296,560 C295,575 290,585 280,585 ${wave(280, 212, 585, 5)} A12.5,12.5 0 0 0 212,610 ${wave(212, 365, 610, -5)} A12.5,12.5 0 0 1 365,635 ${wave(365, 212, 635, 5)} A12.5,12.5 0 0 0 212,660 ${wave(212, 365, 660, -5)} A12.5,12.5 0 0 1 365,685 ${wave(365, 208, 685, 5)} C200,685 195,682 190,680`;
-const START = '228,134';
-const SEG = [
-  'C252,128 278,124 288,140 C293,152 293,172 292,190',
-  'C290,240 284,280 285,320 C286,350 292,368 304,382',
-  'C320,396 338,406 342,428',
-  'C348,456 330,478 300,480 C288,480 278,476 270,472 C256,474 246,486 247,500',
-  SI_ROWS,
-  'C182,682 172,682 170,672 L170,575 C170,552 180,543 200,543 L380,540 C396,540 404,550 404,566 L404,690 C404,712 392,726 368,730 C340,734 322,720 306,726',
-  'C296,730 290,738 289,748 L288,770 L288,806'
+const SI_ROWS = `C172,1760 200,1786 262,1788 C312,1790 350,1792 360,1812 C372,1858 262,1878 232,1912 C216,1932 222,1950 244,1952 ${wave(244, 505, 1952, -12)} C548,1954 552,2030 505,2032 ${wave(505, 190, 2032, 12)} C148,2034 148,2110 195,2112 ${wave(195, 515, 2112, -12)} C560,2114 562,2194 515,2196 ${wave(515, 215, 2196, 12)} C196,2197 182,2201 168,2206`;
+const START = '200,496';
+const SEG_I = [
+  'C262,486 330,484 358,502 C378,518 378,562 377,600',                                   // ağız -> yutak -> yemek borusu girişi
+  'C377,810 377,1030 377,1240',                                                         // yemek borusu
+  'C378,1300 398,1378 425,1438 C446,1488 455,1540 455,1590',                            // mide girişi -> mide ortası
+  'C432,1652 352,1662 310,1650 C280,1642 262,1607 220,1605 C180,1603 157,1626 160,1662 C162,1690 165,1702 168,1712', // mide çıkışı -> onikiparmak
+  SI_ROWS,                                                                              // ince bağırsak kıvrımları -> kör bağırsak girişi
+  'C140,2216 112,2240 90,2230 C62,2216 56,2172 57,2120 L58,1820 C60,1770 80,1746 115,1748 C170,1752 202,1790 262,1815 C322,1840 382,1840 432,1825 C482,1810 520,1760 555,1720 C580,1695 607,1702 612,1732 L612,2250 C612,2310 590,2345 540,2356 C490,2366 440,2366 410,2346 C385,2326 370,2290 345,2295 C325,2300 330,2360 338,2410', // çıkan-enine-inen kolon, kıvrım
+  'C345,2460 355,2520 360,2562 L362,2622'                                               // rektum -> anüs
 ];
-const ROUTE = 'M' + START + ' ' + SEG.join(' ');
-const COLON = 'M170,712 L170,575 C170,552 180,543 200,543 L380,540 C396,540 404,550 404,566 L404,690 C404,712 392,726 368,730 C340,734 322,720 306,726 C296,730 290,738 289,748';
-const SI_TUBE = 'M270,472 C256,474 246,486 247,500 ' + SI_ROWS;
-const ESO_C = 'M292,190 ' + SEG[1];
+const SEG = SEG_I.map(mp);
+const START_W = W(...START.split(',').map(Number)).map(v => v.toFixed(2)).join(',');
+const ROUTE = 'M' + START_W + ' ' + SEG.join(' ');
+const ESO_C = mp('M377,600 ' + SEG_I[1]);
+const BILE_FLOW = mp('M150,1468 C190,1474 214,1486 225,1512 C233,1560 233,1640 223,1688 C212,1708 190,1713 168,1712');
+const PANC_FLOW = mp('M332,1762 C326,1728 296,1706 262,1706 C228,1708 196,1714 168,1712');
 
-/* ---------------- Gövde ve organ yolları ---------------- */
-const BODY = 'M238,182 C237,205 236,225 232,240 C200,250 140,252 104,268 C80,280 72,300 74,330 C76,350 84,362 92,372 C96,430 100,500 112,560 C120,610 104,660 104,700 C104,735 112,760 120,778 L420,778 C428,760 436,735 436,700 C436,660 420,610 428,560 C440,500 444,430 448,372 C456,362 464,350 466,330 C468,300 460,280 436,268 C400,252 340,250 314,240 C312,225 312,205 314,190 C318,182 330,170 336,158 C346,140 350,110 346,82 C342,40 312,16 272,16 C236,16 210,34 202,58 C199,68 198,78 194,86 C190,94 182,102 176,110 C175,114 180,117 188,117 C190,120 189,124 190,126 C192,129 194,131 195,132 C193,134 190,137 191,140 C192,146 195,150 196,156 C198,164 206,170 218,172 C226,174 234,176 238,182 Z';
-const STOM = 'M300,380 C306,360 326,346 350,348 C378,350 394,376 392,410 C390,450 372,480 338,490 C312,497 288,490 270,478 L268,464 C290,468 312,460 322,440 C330,422 326,402 312,392 C306,388 302,385 300,380 Z';
-const LIVER = 'M118,372 C128,340 190,326 262,328 C318,330 362,336 384,350 C390,356 386,362 376,364 C350,370 326,376 308,388 C290,402 276,426 252,442 C226,458 176,458 146,446 C122,436 112,404 118,372 Z';
-const GALL = 'M226,438 C236,434 244,442 244,454 C244,466 236,472 229,470 C221,467 219,458 220,450 C221,444 222,440 226,438 Z';
-const PANC = 'M258,494 C258,483 276,481 296,486 C326,492 356,482 382,474 C396,470 404,480 396,488 C372,504 330,506 298,508 C278,510 258,508 258,494 Z';
-const CAV = 'M195,122 C214,113 250,110 278,112 C290,114 294,124 292,136 C290,148 282,156 268,158 C248,160 222,156 204,150 C197,146 194,136 195,122 Z';
-const PHAR = 'M276,106 C288,102 298,108 299,122 C300,140 300,165 299,194 L285,194 C285,170 285,150 284,138 C283,128 280,118 272,112 Z';
-const TONGUE = 'M204,142 C212,136 232,130 256,130 C276,130 288,138 289,150 C289,158 282,162 272,162 L214,156 C207,154 203,148 204,142 Z';
-const BILE_FLOW = 'M232,452 C240,446 248,446 251,452 C253,468 254,484 248,499';
-const PANC_FLOW = 'M386,480 C356,490 326,496 298,498 C280,499 264,499 249,500';
-
-function teeth(up) {
-  const T = [[199, 5.5, 9], [205, 5.5, 9], [211, 6.5, 8.5], [218, 7, 8.5], [226, 8.5, 9], [235.5, 9.5, 9.5], [246, 10, 10]];
-  return T.map(([x, w, h]) => {
-    if (up) { const y = 121 - (x - 199) * .06, b = y + h; return `<path d="M${x},${y} L${x},${b - 2.4} Q${x},${b} ${x + 2.4},${b} L${x + w / 2 - 1},${b} Q${x + w / 2},${b - (w > 8 ? 1.3 : 0)} ${x + w / 2 + 1},${b} L${x + w - 2.4},${b} Q${x + w},${b} ${x + w},${b - 2.4} L${x + w},${y} Z"/>`; }
-    const y = 139 + (x - 199) * .02, tp = y - h; return `<path d="M${x},${y} L${x},${tp + 2.4} Q${x},${tp} ${x + 2.4},${tp} L${x + w / 2 - 1},${tp} Q${x + w / 2},${tp + (w > 8 ? 1.3 : 0)} ${x + w / 2 + 1},${tp} L${x + w - 2.4},${tp} Q${x + w},${tp} ${x + w},${tp + 2.4} L${x + w},${y} Z"/>`;
-  }).join('');
-}
-function ribs() {
-  let s = '';
-  for (let i = 0; i < 7; i++) { const y = 286 + i * 21; s += `<path d="M266,${y} C238,${y - 5} 168,${y + 2} ${126 + i * 3},${y + 36 + i * 3}"/><path d="M274,${y} C302,${y - 5} 372,${y + 2} ${414 - i * 3},${y + 36 + i * 3}"/>`; }
-  return s;
-}
+/* ---------------- Organ bölgeleri (vurgulama için kırpma çokgenleri, görsel pikseli) ---------------- */
+const POLY = {
+  mouthU: [[60, 452], [130, 446], [220, 444], [300, 448], [352, 456], [368, 480], [365, 505], [340, 490], [230, 484], [140, 492], [128, 522], [82, 527], [64, 492]],
+  jaw: [[82, 527], [128, 522], [140, 492], [230, 484], [340, 490], [365, 505], [362, 560], [356, 606], [300, 626], [240, 644], [120, 644], [68, 616], [70, 560]],
+  phar: [[338, 318], [388, 328], [410, 380], [410, 604], [344, 604], [352, 560], [365, 505], [368, 480], [352, 456]],
+  eso: [[344, 594], [410, 594], [410, 1246], [344, 1246]],
+  liver: [[4, 1431], [8, 1323], [23, 1269], [77, 1225], [192, 1211], [308, 1219], [431, 1242], [538, 1265], [570, 1290], [540, 1318], [492, 1336], [431, 1378], [400, 1416], [369, 1432], [323, 1439], [254, 1455], [212, 1478], [192, 1523], [154, 1562], [92, 1615], [46, 1654], [18, 1632], [8, 1546]],
+  gall: [[74, 1440], [110, 1426], [160, 1424], [210, 1446], [220, 1480], [206, 1504], [150, 1510], [95, 1504], [74, 1476]],
+  duct: [[212, 1484], [242, 1494], [242, 1700], [206, 1732], [192, 1712], [220, 1690], [218, 1502]],
+  pancH: [[198, 1652], [240, 1643], [300, 1653], [337, 1700], [327, 1762], [287, 1792], [230, 1787], [196, 1747]],
+  pancT: [[580, 1550], [620, 1554], [630, 1600], [606, 1624], [582, 1606]],
+  mide: [[381, 1431], [415, 1344], [477, 1329], [554, 1336], [610, 1376], [625, 1454], [621, 1554], [594, 1648], [540, 1702], [462, 1717], [346, 1714], [276, 1694], [260, 1646], [276, 1598], [340, 1548], [400, 1498], [385, 1460]],
+  stoIn: [[298, 1615], [345, 1558], [410, 1498], [520, 1488], [582, 1510], [588, 1600], [562, 1662], [470, 1702], [350, 1702], [288, 1682]],
+  ince: [[136, 1902], [231, 1912], [346, 1928], [462, 1898], [540, 1862], [546, 2270], [521, 2312], [464, 2300], [379, 2256], [336, 2262], [300, 2296], [205, 2292], [200, 2210], [150, 2160], [138, 2085]],
+  duod: [[130, 1600], [175, 1581], [270, 1581], [287, 1625], [207, 1634], [198, 1700], [202, 1740], [176, 1760], [138, 1746], [128, 1660]],
+  kalinO: [[0, 1760], [35, 1710], [120, 1698], [200, 1740], [300, 1783], [440, 1760], [505, 1696], [560, 1666], [645, 1686], [680, 1760], [698, 2000], [698, 2230], [670, 2314], [600, 2374], [520, 2404], [430, 2400], [428, 2434], [288, 2434], [230, 2302], [130, 2306], [12, 2288], [0, 2150]],
+  kalinI: [[100, 1842], [138, 1868], [231, 1912], [346, 1927], [462, 1897], [538, 1860], [540, 2268], [521, 2312], [464, 2300], [379, 2256], [336, 2260], [300, 2295], [205, 2290], [200, 2210], [150, 2160], [138, 2085], [136, 1900]],
+  anus: [[286, 2432], [428, 2432], [414, 2520], [382, 2566], [366, 2592], [344, 2582], [320, 2525]]
+};
+const CLIP = {
+  mouthU: polyD(POLY.mouthU), jaw: polyD(POLY.jaw), phar: polyD(POLY.phar), eso: polyD(POLY.eso), liver: polyD(POLY.liver),
+  gall: polyD(POLY.gall) + polyD(POLY.duct), panc: polyD(POLY.pancH) + polyD(POLY.pancT), mide: polyD(POLY.mide), stoIn: polyD(POLY.stoIn),
+  ince: polyD(POLY.ince) + polyD(POLY.duod), kalin: polyD(POLY.kalinO) + polyD(POLY.kalinI), anus: polyD(POLY.anus)
+};
+const IMG_EL = (clip, extra = '') => `<image href="${IMG.src}" x="${IMG.x}" y="${IMG.y}" width="${IMG.w * IMG.s}" height="${IMG.h * IMG.s}" preserveAspectRatio="none"${clip ? ` clip-path="url(#c_${clip})"` : ''}${extra}/>`;
+const JAW_PIV = W(350, 478), PHAR_C = W(377, 520), STO_C = W(455, 1590), GALL_C = W(140, 1465);
 
 /* ---------------- Sembol/gradyan tanımları ---------------- */
 const DEFS = `
-<radialGradient id="gBody" cx="50%" cy="40%" r="70%"><stop offset="0" stop-color="#2a74b0" stop-opacity=".26"/><stop offset=".65" stop-color="#123c66" stop-opacity=".2"/><stop offset="1" stop-color="#0a2544" stop-opacity=".42"/></radialGradient>
-<linearGradient id="gRim" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b5fcff"/><stop offset=".45" stop-color="#35eefc" stop-opacity=".6"/><stop offset="1" stop-color="#35eefc" stop-opacity=".22"/></linearGradient>
-<pattern id="pGrid" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M16 0H0V16" fill="none" stroke="#7fd8ff" stroke-opacity=".06" stroke-width="1"/></pattern>
-<linearGradient id="gSheen" x1="0" y1="0" x2="1" y2=".6"><stop offset="0" stop-color="#fff" stop-opacity=".13"/><stop offset=".3" stop-color="#fff" stop-opacity="0"/></linearGradient>
-<linearGradient id="gScan" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#35eefc" stop-opacity="0"/><stop offset=".55" stop-color="#35eefc" stop-opacity=".16"/><stop offset="1" stop-color="#35eefc" stop-opacity="0"/></linearGradient>
 <radialGradient id="gSpec"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
-<linearGradient id="gShade" x1="0" y1="0" x2="0" y2="1"><stop offset=".4" stop-color="#2a0010" stop-opacity="0"/><stop offset="1" stop-color="#2a0010" stop-opacity=".5"/></linearGradient>
-<radialGradient id="gLip" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#ffb8c1"/><stop offset=".5" stop-color="#ff7a8a"/><stop offset="1" stop-color="#d0405a"/></radialGradient>
-<radialGradient id="gCav" cx=".55" cy=".45" r=".7"><stop offset="0" stop-color="#a02c4c"/><stop offset=".7" stop-color="#5e1430"/><stop offset="1" stop-color="#3a0818"/></radialGradient>
-<radialGradient id="gTongue" cx=".42" cy=".25" r=".8"><stop offset="0" stop-color="#ffc0ca"/><stop offset=".45" stop-color="#f47c92"/><stop offset="1" stop-color="#c03f5c"/></radialGradient>
-<linearGradient id="gTooth" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#eef3f9"/><stop offset="1" stop-color="#bfcddc"/></linearGradient>
-<linearGradient id="gEso" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a8324d"/><stop offset=".3" stop-color="#ff9aa8"/><stop offset=".6" stop-color="#ec6f86"/><stop offset="1" stop-color="#9c2c48"/></linearGradient>
-<radialGradient id="gSto" cx=".42" cy=".3" r=".8"><stop offset="0" stop-color="#ffd0d7"/><stop offset=".32" stop-color="#ff8a9a"/><stop offset=".72" stop-color="#d94a66"/><stop offset="1" stop-color="#a02a4c"/></radialGradient>
-<radialGradient id="gLiv" cx=".35" cy=".28" r=".85"><stop offset="0" stop-color="#e0857a"/><stop offset=".35" stop-color="#b5473f"/><stop offset=".78" stop-color="#7d2420"/><stop offset="1" stop-color="#5a1714"/></radialGradient>
-<radialGradient id="gGall" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#d4ffb0"/><stop offset=".45" stop-color="#7ed957"/><stop offset="1" stop-color="#2f8020"/></radialGradient>
-<radialGradient id="gPanc" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#fff2cc"/><stop offset=".45" stop-color="#ffcf7a"/><stop offset="1" stop-color="#d48f2a"/></radialGradient>
-<pattern id="pPanc" width="7" height="6" patternUnits="userSpaceOnUse"><circle cx="3.5" cy="3" r="2.3" fill="none" stroke="#b9781f" stroke-opacity=".35" stroke-width=".8"/></pattern>
-<radialGradient id="gCec" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#ffb3a6"/><stop offset=".5" stop-color="#e07c70"/><stop offset="1" stop-color="#a24444"/></radialGradient>
-<radialGradient id="gMes" cx=".5" cy=".45" r=".6"><stop offset="0" stop-color="#9a3443" stop-opacity=".42"/><stop offset=".75" stop-color="#5a1424" stop-opacity=".25"/><stop offset="1" stop-color="#3a0c18" stop-opacity="0"/></radialGradient>
 <radialGradient id="gApSkin" cx=".33" cy=".28" r=".85"><stop offset="0" stop-color="#ff9b8f"/><stop offset=".35" stop-color="#f0353c"/><stop offset=".75" stop-color="#b3141f"/><stop offset="1" stop-color="#7a0b16"/></radialGradient>
 <radialGradient id="gApFlesh" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#fffdf0"/><stop offset=".5" stop-color="#f8efc0"/><stop offset="1" stop-color="#ddc979"/></radialGradient>
 <linearGradient id="gApShade" x1="0" y1="0" x2="0" y2="1"><stop offset=".55" stop-color="#3a0008" stop-opacity="0"/><stop offset="1" stop-color="#3a0008" stop-opacity=".45"/></linearGradient>
@@ -376,14 +387,14 @@ const DEFS = `
 <radialGradient id="gChyme" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="#f8e8bb"/><stop offset=".6" stop-color="#dcb874"/><stop offset="1" stop-color="#b48743"/></radialGradient>
 <radialGradient id="gPosa" cx=".4" cy=".35" r=".75"><stop id="po1" offset="0" stop-color="#c99a66"/><stop id="po2" offset=".6" stop-color="#93633a"/><stop id="po3" offset="1" stop-color="#5e3a1c"/></radialGradient>
 <radialGradient id="gFat" cx=".38" cy=".32" r=".8"><stop offset="0" stop-color="#fffff2"/><stop offset=".45" stop-color="#ffe56e"/><stop offset="1" stop-color="#e0ad00"/></radialGradient>
-<linearGradient id="gCap" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ff3b55"/><stop offset=".5" stop-color="#b04ad0"/><stop offset="1" stop-color="#5b6cff"/></linearGradient>
 <filter id="fSh" x="-20%" y="-20%" width="140%" height="150%"><feDropShadow dx="0" dy="3" stdDeviation="3" flood-color="#000" flood-opacity=".5"/></filter>
 <filter id="fGoo" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur in="SourceGraphic" stdDeviation="2.6" result="b"/><feColorMatrix in="b" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -9"/></filter>
 <filter id="fGlow" x="-200%" y="-200%" width="500%" height="500%"><feGaussianBlur stdDeviation="1.4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
 <filter id="fBlur2" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2"/></filter>
 <filter id="fBlur5" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
-<clipPath id="cBody"><path d="${BODY}"/></clipPath>
-<clipPath id="cSto"><path d="${STOM}"/></clipPath>
+${Object.keys(CLIP).map(k => `<clipPath id="c_${k}" clipPathUnits="userSpaceOnUse"><path d="${CLIP[k]}" clip-rule="evenodd"/></clipPath>`).join('')}
+<radialGradient id="gPool" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#d8f6ff" stop-opacity=".16"/><stop offset=".55" stop-color="#7fd8ff" stop-opacity=".07"/><stop offset="1" stop-color="#35eefc" stop-opacity="0"/></radialGradient>
+<linearGradient id="gEsoL" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#a8335a"/><stop offset=".22" stop-color="#c24a72"/><stop offset=".5" stop-color="#da8ea5"/><stop offset=".8" stop-color="#c24a72"/><stop offset="1" stop-color="#a8335a"/></linearGradient>
 <mask id="mBite" maskUnits="userSpaceOnUse" x="0" y="0" width="130" height="120"><rect width="130" height="120" fill="#fff"/><circle cx="100" cy="44" r="11"/><circle cx="99" cy="61" r="11.5"/><circle cx="94" cy="77" r="10"/></mask>
 <mask id="mFlesh" maskUnits="userSpaceOnUse" x="0" y="0" width="130" height="120"><circle cx="100" cy="44" r="11" fill="#fff"/><circle cx="99" cy="61" r="11.5" fill="#fff"/><circle cx="94" cy="77" r="10" fill="#fff"/><circle cx="106" cy="44" r="11"/><circle cx="105" cy="61" r="11.5"/><circle cx="100" cy="77" r="10"/></mask>
 <!-- besin parçaları (birim yarıçap 10) -->
@@ -409,155 +420,73 @@ const DEFS = `
 `;
 
 /* ---------------- Ana SVG ---------------- */
+// [anahtar, ad, ucX, ucY (görsel pikseli), etiket x, etiket y (sahne), hizalama]
 const lblDefs = [
-  ['mouth', 'Ağız', 199, 128, 150, 104, 'l'], ['yutak', 'Yutak', 297, 160, 350, 172, 'r'], ['eso', 'Yemek borusu', 289, 262, 352, 258, 'r'],
-  ['mide', 'Mide', 382, 420, 440, 398, 'r'], ['liver', 'Karaciğer', 160, 385, 84, 352, 'l'], ['gall', 'Safra kesesi', 230, 462, 150, 492, 'l'],
-  ['panc', 'Pankreas', 388, 486, 446, 506, 'r'], ['ince', 'İnce bağırsak', 228, 636, 128, 662, 'l'], ['kalin', 'Kalın bağırsak', 404, 604, 452, 596, 'r'],
-  ['anus', 'Anüs', 289, 766, 346, 772, 'r']
-];
+  ['mouth', 'Ağız', 190, 495, 168, 128, 'l'], ['yutak', 'Yutak', 381, 540, 318, 176, 'r'], ['eso', 'Yemek borusu', 377, 900, 318, 262, 'r'],
+  ['mide', 'Mide', 520, 1560, 382, 452, 'r'], ['liver', 'Karaciğer', 150, 1330, 150, 384, 'l'], ['gall', 'Safra kesesi', 140, 1465, 150, 446, 'l'],
+  ['panc', 'Pankreas', 265, 1700, 150, 502, 'l'], ['ince', 'İnce bağırsak', 330, 2040, 150, 628, 'l'], ['kalin', 'Kalın bağırsak', 612, 1980, 382, 596, 'r'],
+  ['anus', 'Anüs', 360, 2560, 300, 770, 'r']
+].map(([k, n, ix, iy, px, py, al]) => { const [ax, ay] = W(ix, iy); return [k, n, +ax.toFixed(1), +ay.toFixed(1), px, py, al]; });
 const MAIN = `
-<svg id="bsvg" viewBox="0 0 520 780" role="img" aria-label="Cam insan gövdesi içinde sindirim sistemi organları">
+<svg id="bsvg" viewBox="0 0 520 780" role="img" aria-label="Sindirim sistemi: baş, yemek borusu, karaciğer, mide, pankreas, ince ve kalın bağırsak (Servier Medical Art çizimi)">
 <defs>${DEFS}
 <path id="routeP" d="${ROUTE}"/><path id="esoC" d="${ESO_C}"/><path id="bileP" d="${BILE_FLOW}"/><path id="pancP" d="${PANC_FLOW}"/>
 </defs>
-<!-- cam gövde -->
-<g id="glass">
-  <path d="${BODY}" fill="url(#gBody)"/>
-  <path d="${BODY}" fill="url(#pGrid)"/>
-  <g clip-path="url(#cBody)">
-    <g fill="none" stroke="#e9eef6" stroke-opacity=".07" stroke-width="6" stroke-linecap="round">${ribs()}</g>
-    <path d="M270,282 L270,392" stroke="#e9eef6" stroke-opacity=".05" stroke-width="9" stroke-linecap="round"/>
-    <path d="M96,350 C150,298 232,318 270,332 C308,318 390,298 444,350" fill="none" stroke="#ff8a5c" stroke-opacity=".14" stroke-width="3"/>
-    <path d="M206,76 C212,71 221,71 227,76 C221,80 212,80 206,76 Z" fill="none" stroke="#9ff8ff" stroke-opacity=".35" stroke-width="1.4"/>
-    <path d="M320,94 C333,89 341,102 337,116 C334,125 326,127 321,122" fill="none" stroke="#9ff8ff" stroke-opacity=".3" stroke-width="2"/>
-    <rect class="scan" x="0" y="-60" width="520" height="60" fill="url(#gScan)"/>
-  </g>
+<!-- figürü koyu zemine oturtan ışık havuzu -->
+<ellipse cx="260" cy="392" rx="190" ry="440" fill="url(#gPool)" pointer-events="none"/>
+<!-- Servier figürü (tamamı) -->
+<g id="base">${IMG_EL('')}</g>
+<!-- organ vurguları: figürün organ bölgesine kırpılmış kopyaları (seçili organ parlak, diğerleri soluk) -->
+<g class="org" data-o="kalin">${IMG_EL('kalin')}</g>
+<g class="org" data-o="anus">${IMG_EL('anus')}</g>
+<g class="org" data-o="ince">${IMG_EL('ince')}</g>
+<g class="org" data-o="liver">${IMG_EL('liver')}</g>
+<g class="org" data-o="panc">${IMG_EL('panc')}</g>
+<g class="org" data-o="gall"><g id="gallB">${IMG_EL('gall')}</g></g>
+<g class="org" data-o="mide"><g id="stIn">${IMG_EL('mide')}<g clip-path="url(#c_stoIn)"><g id="bub"></g></g></g></g>
+<!-- yemek borusu: görselin üstünde aynı genişlikte dinamik (peristaltik) tüp -->
+<g class="org" data-o="eso">${IMG_EL('eso')}<g id="esoG">
+  <path id="esoBody" fill="#efd8df" stroke="#24161a" stroke-width=".7"/>
+  <path id="esoLum" fill="url(#gEsoL)" stroke="#3a1420" stroke-width=".5"/>
+  <path id="esoRing" fill="none" stroke="#7e2246" stroke-width=".7" stroke-opacity=".35"/>
+  <path id="esoPinch" fill="none" stroke="#5e1430" stroke-width="1.4" stroke-opacity=".85"/>
+  <path id="esoHi" fill="none" stroke="#ffe3ea" stroke-width="1.4" stroke-opacity=".5" stroke-linecap="round"/>
+</g></g>
+<g class="org" data-o="yutak"><g id="phar">${IMG_EL('phar')}</g></g>
+<!-- ağız: üst kısım sabit, alt çene (dil + alt dişler) döner -->
+<g class="org" data-o="mouth">${IMG_EL('mouthU')}
+  <path d="${CLIP.jaw}" fill="#4a1026"/>
+  <g id="jaw"><g id="tongue">${IMG_EL('jaw')}</g></g>
 </g>
-<!-- bağırsak paketi gölgesi -->
-<ellipse cx="288" cy="636" rx="112" ry="80" fill="url(#gMes)"/>
-<!-- kalın bağırsak -->
-<g class="org" data-o="kalin"><g filter="url(#fSh)">
-  <ellipse cx="171" cy="708" rx="17" ry="14" fill="url(#gCec)" stroke="#7c2c30" stroke-width="2"/>
-  <path d="${COLON}" fill="none" stroke="#6e2629" stroke-width="33" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="${COLON}" fill="none" stroke="#cf6a60" stroke-width="29" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="${COLON}" fill="none" stroke="#a84a46" stroke-width="29" stroke-linecap="butt" stroke-dasharray="1.8 12" stroke-opacity=".55"/>
-  <path d="${COLON}" fill="none" stroke="#f8b3a5" stroke-width="10" stroke-linecap="round" stroke-opacity=".5" transform="translate(-4,-4)"/>
-  <path d="${COLON}" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-opacity=".35" transform="translate(-7,-7)"/>
-</g></g>
-<!-- anüs -->
-<g class="org" data-o="anus"><g filter="url(#fSh)">
-  <path d="M289,744 L288,764" stroke="#6e2629" stroke-width="22" stroke-linecap="round"/>
-  <path d="M289,744 L288,764" stroke="#c75f58" stroke-width="18" stroke-linecap="round"/>
-  <path d="M286,744 L285,762" stroke="#f8b3a5" stroke-width="5" stroke-linecap="round" stroke-opacity=".5"/>
-  <ellipse cx="288" cy="768" rx="10" ry="4.6" fill="#6a1d2a" stroke="#ff9aa8" stroke-width="1.6"/>
-</g></g>
-<!-- karaciğer -->
-<g class="org" data-o="liver"><g filter="url(#fSh)">
-  <path d="${LIVER}" fill="url(#gLiv)"/>
-  <path d="${LIVER}" fill="url(#gShade)"/>
-  <path d="M300,332 C298,352 292,374 284,398" fill="none" stroke="#ffb3a8" stroke-opacity=".28" stroke-width="2"/>
-  <ellipse cx="190" cy="360" rx="44" ry="13" fill="url(#gSpec)" opacity=".35" transform="rotate(-8 190 360)"/>
-  <path d="${LIVER}" fill="none" stroke="#ffa497" stroke-opacity=".45" stroke-width="1.3"/>
-</g></g>
-<!-- safra kesesi + kanallar -->
-<g class="org" data-o="gall">
-  <g fill="none" stroke-linecap="round">
-    <path d="M258,420 C254,432 252,442 251,452 M240,442 C245,446 249,448 251,452 M251,452 C253,468 254,484 248,499" stroke="#2f6e22" stroke-width="5"/>
-    <path id="bileDuct" d="M258,420 C254,432 252,442 251,452 M240,442 C245,446 249,448 251,452 M251,452 C253,468 254,484 248,499" stroke="#8ee06a" stroke-width="3"/>
-  </g>
-  <g id="gallB" filter="url(#fSh)">
-    <path d="${GALL}" fill="url(#gGall)" stroke="#2f7020" stroke-width="1"/>
-    <ellipse cx="228" cy="446" rx="3" ry="5" fill="url(#gSpec)" opacity=".7" transform="rotate(-15 228 446)"/>
-  </g>
-</g>
-<!-- pankreas -->
-<g class="org" data-o="panc"><g filter="url(#fSh)">
-  <path d="${PANC}" fill="url(#gPanc)"/>
-  <path d="${PANC}" fill="url(#pPanc)"/>
-  <path d="${PANC}" fill="url(#gShade)" opacity=".7"/>
-  <path d="M386,480 C356,490 326,496 298,498 C280,499 264,499 252,500" fill="none" stroke="#b9781f" stroke-width="1.8" stroke-opacity=".75"/>
-  <ellipse cx="330" cy="491" rx="26" ry="3.4" fill="url(#gSpec)" opacity=".45"/>
-  <path d="${PANC}" fill="none" stroke="#fff0c4" stroke-opacity=".6" stroke-width="1"/>
-</g></g>
-<!-- ince bağırsak -->
-<g class="org" data-o="ince"><g filter="url(#fSh)">
-  <path d="${SI_TUBE}" fill="none" stroke="#8a2f3c" stroke-width="16.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="${SI_TUBE}" fill="none" stroke="#ea7a70" stroke-width="13.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="${SI_TUBE}" fill="none" stroke="#ffc6b8" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".55" transform="translate(-1.6,-2.2)"/>
-  <path d="${SI_TUBE}" fill="none" stroke="#fff" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" stroke-opacity=".4" transform="translate(-2.6,-3.4)"/>
-</g></g>
-<!-- yemek borusu (dinamik peristaltik tüp) -->
-<g class="org" data-o="eso"><g filter="url(#fSh)">
-  <path id="esoBody" fill="url(#gEso)" stroke="#8e2a43" stroke-width="1"/>
-  <path id="esoRing" fill="none" stroke="#9e3550" stroke-width=".8" stroke-opacity=".38"/>
-  <path id="esoPinch" fill="none" stroke="#6e1a30" stroke-width="1.5" stroke-opacity=".8"/>
-  <path id="esoHi" fill="none" stroke="#ffd5dc" stroke-width="2" stroke-opacity=".55" stroke-linecap="round"/>
-</g></g>
-<!-- mide -->
-<g class="org" data-o="mide"><g id="stIn"><g filter="url(#fSh)">
-  <path d="${STOM}" fill="url(#gSto)"/>
-  <path d="${STOM}" fill="url(#gShade)"/>
-  <g fill="none" stroke="#8f2340" stroke-opacity=".22" stroke-width="2" stroke-linecap="round">
-    <path d="M320,398 C338,410 352,432 354,462"/><path d="M334,378 C354,392 370,416 372,450"/><path d="M296,474 C320,480 346,478 362,468"/><path d="M350,360 C368,370 382,392 384,420"/>
-  </g>
-  <g clip-path="url(#cSto)"><g id="bub"></g></g>
-  <ellipse cx="346" cy="372" rx="20" ry="9" fill="url(#gSpec)" opacity=".55" transform="rotate(18 346 372)"/>
-  <ellipse cx="368" cy="420" rx="5" ry="16" fill="url(#gSpec)" opacity=".25"/>
-  <path d="${STOM}" fill="none" stroke="#ffd6dd" stroke-opacity=".55" stroke-width="1.3"/>
-  <path d="M268,462 L270,480" stroke="#7a1c36" stroke-width="5" stroke-linecap="round" opacity=".7"/>
-</g></g></g>
-<!-- yutak -->
-<g class="org" data-o="yutak"><g id="phar" filter="url(#fSh)">
-  <path d="${PHAR}" fill="url(#gEso)"/>
-  <path d="M289,112 C294,126 295,150 294,190" fill="none" stroke="#ffd5dc" stroke-opacity=".45" stroke-width="2" stroke-linecap="round"/>
-  <path d="${PHAR}" fill="none" stroke="#8e2a43" stroke-width="1"/>
-</g></g>
-<!-- ağız -->
-<g class="org" data-o="mouth"><g filter="url(#fSh)">
-  <path d="${CAV}" fill="url(#gCav)"/>
-  <path d="M197,119 C215,113 238,112 262,113 L262,118 C240,117 216,118 197,123 Z" fill="#ff9fb0"/>
-  <g id="jaw">
-    <path d="M197,138 C215,139 238,140 258,141 L258,147 C236,147 214,146 197,145 Z" fill="#ff9fb0"/>
-    <g id="tongue"><path d="${TONGUE}" fill="url(#gTongue)"/><path d="M220,136 C236,131 256,131 272,135" fill="none" stroke="#fff" stroke-opacity=".4" stroke-width="2" stroke-linecap="round"/><path d="M226,142 C244,139 262,140 276,145" fill="none" stroke="#b03a58" stroke-opacity=".35" stroke-width="1.2"/></g>
-    <g fill="url(#gTooth)" stroke="#9aaabd" stroke-width=".5">${teeth(false)}</g>
-    <path d="M185,135 C189,132 196,133 200,135 C200,140 196,145 191,145 C186,144 184,140 185,135 Z" fill="url(#gLip)"/>
-  </g>
-  <g fill="url(#gTooth)" stroke="#9aaabd" stroke-width=".5">${teeth(true)}</g>
-  <path d="M185,124 C187,118 195,117 200,121 C201,125 199,129 193,130 C188,130 185,128 185,124 Z" fill="url(#gLip)"/>
-  <ellipse cx="190" cy="121.5" rx="2.6" ry="1.1" fill="#fff" opacity=".55"/>
-</g></g>
 <!-- efekt katmanı (salgılar) -->
 <g id="fxBack" filter="url(#fGlow)"></g>
 <!-- camgöbeği iz -->
 <g class="trailG" pointer-events="none">
-  <path id="trailGlow" d="${ROUTE}" fill="none" stroke="#35eefc" stroke-width="7" stroke-opacity=".28" stroke-linecap="round" stroke-linejoin="round" filter="url(#fBlur2)" stroke-dasharray="0 99999"/>
-  <path id="trail" d="${ROUTE}" fill="none" stroke="#7ff8ff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0 99999"/>
+  <path id="trailGlow" d="${ROUTE}" fill="none" stroke="#35eefc" stroke-width="5" stroke-opacity=".3" stroke-linecap="round" stroke-linejoin="round" filter="url(#fBlur2)" stroke-dasharray="0 99999"/>
+  <path id="trail" d="${ROUTE}" fill="none" stroke="#7ff8ff" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="0 99999"/>
 </g>
 <!-- lokma -->
 <g id="bolus" opacity="0"><g id="halo"><circle r="16" fill="#35eefc" opacity=".12" filter="url(#fBlur2)"/></g><g id="pcs"></g><ellipse id="bhi" rx="4" ry="2" fill="#fff" opacity="0"/><g id="fats"></g></g>
 <g id="fxTop"></g>
-<!-- cam kenar parlaması -->
-<g pointer-events="none">
-  <path d="${BODY}" fill="url(#gSheen)"/>
-  <path d="${BODY}" fill="none" stroke="#35eefc" stroke-opacity=".22" stroke-width="7" filter="url(#fBlur2)"/>
-  <path d="${BODY}" fill="none" stroke="url(#gRim)" stroke-width="1.8"/>
-</g>
 <g id="labels"></g>
 </svg>`;
 
 /* ---------------- İkonlar ---------------- */
+// Organ simgeleri: Servier görselleri (ayrık organlar ya da tam figürden kırpılmış görünüm)
+const simg = (f, w, h, vb) => `<svg viewBox="${vb || `0 0 ${w} ${h}`}"><image href="assets/img/${f}" width="${w}" height="${h}"/></svg>`;
 const ICON = {
-  mouth: `<svg viewBox="0 0 48 48"><path d="M5,22 C11,13 19,15 24,19 C29,15 37,13 43,22 C34,24.5 14,24.5 5,22Z" fill="url(#gLip)"/><path d="M8,24 L40,24 L38,27 L10,27Z" fill="#fff" opacity=".95"/><path d="M5,24 C14,26.5 34,26.5 43,24 C39,35 31,38 24,38 C17,38 9,35 5,24Z" fill="url(#gLip)"/><ellipse cx="17" cy="31" rx="5" ry="1.8" fill="#fff" opacity=".45"/></svg>`,
-  yutak: `<svg viewBox="0 0 48 48"><path d="M10,8 C24,5 34,10 34,22 L34,44 L24,44 L24,24 C24,17 18,15 10,15Z" fill="url(#gEso)" stroke="#8e2a43"/><path d="M27,22 L27,42" stroke="#ffd5dc" stroke-opacity=".6" stroke-width="2" stroke-linecap="round"/></svg>`,
-  eso: `<svg viewBox="0 0 48 48"><rect x="17" y="3" width="14" height="42" rx="7" fill="url(#gEso)" stroke="#8e2a43"/><g stroke="#9e3550" stroke-opacity=".5"><path d="M17 12h14M17 18h14M17 24h14M17 30h14M17 36h14"/></g><path d="M21,7 L21,41" stroke="#ffd5dc" stroke-opacity=".6" stroke-width="2" stroke-linecap="round"/></svg>`,
-  mide: `<svg viewBox="0 0 48 48"><path d="M17,10 C20,5 27,3 33,6 C41,10 44,19 42,27 C40,37 33,43 23,43 C15,43 9,40 5,36 L7,29 C12,33 18,32 21,28 C25,24 24,17 19,14Z" fill="url(#gSto)" stroke="#a02a4c"/><ellipse cx="31" cy="12" rx="6" ry="3" fill="url(#gSpec)" opacity=".6" transform="rotate(25 31 12)"/></svg>`,
-  ince: `<svg viewBox="0 0 48 48"><g fill="none" stroke-linecap="round"><path d="M8,10 H38 A6,6 0 0 1 38,22 H10 A6,6 0 0 0 10,34 H38" stroke="#8a2f3c" stroke-width="8"/><path d="M8,10 H38 A6,6 0 0 1 38,22 H10 A6,6 0 0 0 10,34 H38" stroke="#ea7a70" stroke-width="6"/><path d="M8,9 H38 M10,21 H38 M10,33 H38" stroke="#ffc6b8" stroke-width="1.6" stroke-opacity=".7"/></g></svg>`,
-  kalin: `<svg viewBox="0 0 48 48"><g fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M10,42 V14 Q10,8 16,8 H32 Q38,8 38,14 V36 Q38,42 30,42 H26" stroke="#6e2629" stroke-width="11"/><path d="M10,42 V14 Q10,8 16,8 H32 Q38,8 38,14 V36 Q38,42 30,42 H26" stroke="#cf6a60" stroke-width="9"/><path d="M10,42 V14 Q10,8 16,8 H32 Q38,8 38,14 V36 Q38,42 30,42 H26" stroke="#a84a46" stroke-width="9" stroke-dasharray="1.5 5" stroke-linecap="butt"/><path d="M8,40 V14 Q8,6 16,6 H30" stroke="#f8b3a5" stroke-width="2.4" stroke-opacity=".6"/></g></svg>`,
-  anus: `<svg viewBox="0 0 48 48"><path d="M24,4 L24,32" stroke="#6e2629" stroke-width="16" stroke-linecap="round"/><path d="M24,4 L24,32" stroke="#c75f58" stroke-width="12" stroke-linecap="round"/><path d="M21,6 L21,30" stroke="#f8b3a5" stroke-width="3" stroke-linecap="round" stroke-opacity=".6"/><ellipse cx="24" cy="38" rx="10" ry="5" fill="#6a1d2a" stroke="#ff9aa8" stroke-width="2"/></svg>`,
-  liver: `<svg viewBox="0 0 48 48"><path d="M4,22 C6,12 20,9 32,10 C40,11 46,14 45,18 C41,20 36,21 32,24 C27,29 23,36 16,38 C9,40 3,34 4,22Z" fill="url(#gLiv)" stroke="#5a1714"/><ellipse cx="15" cy="17" rx="8" ry="3" fill="url(#gSpec)" opacity=".4"/></svg>`,
-  gall: `<svg viewBox="0 0 48 48"><path d="M28,6 C28,14 26,16 26,18" stroke="#8ee06a" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M20,16 C30,13 36,22 34,32 C33,40 26,44 20,42 C13,40 11,31 13,24 C14,20 16,17 20,16Z" fill="url(#gGall)" stroke="#2f7020"/><ellipse cx="20" cy="23" rx="3" ry="5" fill="url(#gSpec)" opacity=".7"/></svg>`,
-  panc: `<svg viewBox="0 0 48 48"><path d="M4,28 C4,21 12,20 18,22 C26,24 34,18 41,15 C46,14 47,19 44,22 C36,30 24,33 14,34 C8,35 4,33 4,28Z" fill="url(#gPanc)" stroke="#c48420"/><path d="M4,28 C4,21 12,20 18,22 C26,24 34,18 41,15 C46,14 47,19 44,22 C36,30 24,33 14,34 C8,35 4,33 4,28Z" fill="url(#pPanc)"/></svg>`
+  mouth: simg('mouth.webp', 899, 1388),
+  yutak: simg('digestive_full.webp', 698, 2580, '40 170 420 470'),
+  eso: simg('digestive_full.webp', 698, 2580, '200 560 360 700'),
+  mide: simg('dg_stomach.webp', 606, 670),
+  ince: simg('dg_smallint.webp', 678, 669),
+  kalin: simg('dg_colon.webp', 447, 658),
+  anus: simg('digestive_full.webp', 698, 2580, '200 2230 330 360'),
+  liver: simg('dg_liver.webp', 678, 564),
+  gall: simg('dg_gallbladder.webp', 577, 640),
+  panc: simg('dg_pancreas.webp', 606, 375)
 };
+const AUXIMG = { liver: simg('liver.webp', 1384, 1147), gall: simg('dg_gallbladder.webp', 577, 640), panc: simg('pancreas.webp', 1384, 585) };
 const OIC = {
   fiz: `<svg viewBox="0 0 24 24"><circle cx="8" cy="8" r="4.3" fill="#ffbb3d"/><circle cx="16.5" cy="7.5" r="3" fill="#ffcf73"/><circle cx="14.5" cy="16" r="4.6" fill="#ffbb3d"/><circle cx="6" cy="17" r="2.6" fill="#ffd98f"/></svg>`,
   kim: `<svg viewBox="0 0 24 24" fill="none" stroke="#c6a8ff" stroke-width="2.2" stroke-linejoin="round"><path d="M7 3.5l4 2.3v4.6l-4 2.3-4-2.3V5.8zM17 11.3l4 2.3v4.6l-4 2.3-4-2.3v-4.6z"/><path d="M11 10.4l2 1.2"/></svg>`,
@@ -611,6 +540,7 @@ ui.body.innerHTML = `
     <div class="vtags" id="vtags"></div>
     <div class="vinfo hide" id="vinfo"><div><small>Parça sayısı</small><b id="viN">1</b></div><div class="sz"><small>Parça boyutu</small><div class="zd-meter"><i id="viS" style="width:100%"></i></div></div><div><small>Durum</small><div class="stt" id="viT">Bütün lokma</div></div></div>
     <div class="vzoom" id="vzoom">YAKINLAŞTIRMA <b>×1.0</b></div>
+    <div class="pip" id="pip" aria-hidden="true"><div class="pc"><img id="pipImg" alt=""></div><div class="pt"><b id="pipT"></b><small id="pipS"></small></div></div>
     <div class="lens" id="lens" aria-hidden="true">
       <div class="tag">VİLLUSLAR · YAKIN GÖRÜNÜM</div>
       <div class="ring"><svg id="lsvg" viewBox="0 0 300 300"></svg></div>
@@ -703,7 +633,21 @@ function applyFocus() {
   for (const k in LBL) LBL[k].g.classList.toggle('show', all || on.includes(k) || aux.includes(k));
   const cap = S.tab === 'yard' ? 'YARDIMCI ORGANLAR · KARACİĞER · PANKREAS' : (S.stop >= 1 && S.phase !== 'done' ? `DURAK ${S.stop}/7 · ${STOPS[S.stop].name.toLocaleUpperCase('tr')}` : (S.phase === 'done' ? 'YOLCULUK TAMAMLANDI · AĞIZ → ANÜS' : 'SİNDİRİM SİSTEMİ · GENEL GÖRÜNÜM'));
   $('#vcap span').textContent = cap;
+  updPip();
 }
+/* ---------------- Yakın plan (gerçekçi organ görseli) ---------------- */
+const PIP = {
+  1: ['mouth.webp', 'AĞIZ · YAKIN PLAN', 'Dişler, dil ve damak'],
+  4: ['stomach_section.webp', 'MİDE · KESİT', 'Kaslı duvar, iç kıvrımlar'],
+  5: ['smallint.webp', 'İNCE BAĞIRSAK', 'Kıvrımlı uzun kanal']
+};
+function updPip() {
+  const p = PIP[S.stop], el = $('#pip');
+  const show = !!p && S.tab === 'yol' && S.phase !== 'select' && S.phase !== 'done' && !LV.on && !$('#lens').classList.contains('show');
+  if (p && el.dataset.k !== String(S.stop)) { el.dataset.k = S.stop; $('#pipImg').src = 'assets/img/' + p[0]; $('#pipT').textContent = p[1]; $('#pipS').textContent = p[2]; }
+  el.classList.toggle('show', show);
+}
+function pipPulse(k) { const el = $('#pip'); el.classList.remove('chew', 'churn'); void el.offsetWidth; el.classList.add(k); }
 function camFor() { if (S.tab === 'yard') return AUXCAM; if (S.stop >= 1 && S.phase !== 'done') return STOPS[S.stop].cam; return OVERVIEW; }
 
 /* ---------------- Görünüm etiketleri (fiziksel/kimyasal) ---------------- */
@@ -768,18 +712,21 @@ const ESO_N = 60, ESO = []; let ESO_L = 0;
 function drawEso() {
   const inE = S.bolusS > B[0] - 2 && S.bolusS < B[1] + 6 && S.stop === 3;
   const sb = inE ? S.bolusS - B[0] : -9999, pin = S.esoPinch;
-  const L = [], R = []; let ring = '', pinch = '', hi = '';
+  const L = [], R = [], LL = [], LR = []; let ring = '', pinch = '', hi = '';
   ESO.forEach((q, i) => {
     const ds = q.s - sb;
-    let w = 12.5;
+    let w = 15;   // görseldeki yemek borusu dış genişliği (≈50 px × 0.3)
     if (inE) w += 8.5 * Math.exp(-ds * ds / 128) - (3.2 + 4.8 * pin) * Math.exp(-(ds + 19) * (ds + 19) / 60) - 2.6 * pin * Math.exp(-(ds + 44) * (ds + 44) / 90);
-    const h = w / 2, l = [q.x + q.nx * h, q.y + q.ny * h], r = [q.x - q.nx * h, q.y - q.ny * h];
-    L.push(l); R.push(r);
+    const h = w / 2, hl = w * .29;
+    L.push([q.x + q.nx * h, q.y + q.ny * h]); R.push([q.x - q.nx * h, q.y - q.ny * h]);
+    const l = [q.x + q.nx * hl, q.y + q.ny * hl], r = [q.x - q.nx * hl, q.y - q.ny * hl];
+    LL.push(l); LR.push(r);
     if (i % 3 === 1 && i < ESO_N - 2) { const seg = `M${l[0].toFixed(1)},${l[1].toFixed(1)}L${r[0].toFixed(1)},${r[1].toFixed(1)}`; if (inE && Math.abs(ds + 19) < 11) pinch += seg; else ring += seg; }
-    hi += (i ? 'L' : 'M') + (q.x + q.nx * w * .26).toFixed(1) + ',' + (q.y + q.ny * w * .26).toFixed(1);
+    hi += (i ? 'L' : 'M') + (q.x + q.nx * w * .13).toFixed(1) + ',' + (q.y + q.ny * w * .13).toFixed(1);
   });
-  const d = 'M' + L.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('L') + 'L' + R.reverse().map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('L') + 'Z';
-  $('#esoBody').setAttribute('d', d); $('#esoRing').setAttribute('d', ring); $('#esoPinch').setAttribute('d', pinch); $('#esoHi').setAttribute('d', hi);
+  const outl = (A, Bv) => 'M' + A.map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('L') + 'L' + Bv.reverse().map(p => p[0].toFixed(1) + ',' + p[1].toFixed(1)).join('L') + 'Z';
+  $('#esoBody').setAttribute('d', outl(L, R)); $('#esoLum').setAttribute('d', outl(LL, LR));
+  $('#esoRing').setAttribute('d', ring); $('#esoPinch').setAttribute('d', pinch); $('#esoHi').setAttribute('d', hi);
 }
 
 /* ---------------- Parçacıklar ---------------- */
@@ -910,7 +857,7 @@ function renderCard() {
 /* ---------------- Yardımcı organlar sekmesi ---------------- */
 pYard.innerHTML = `<div class="sh"><div class="ic">${ICON.liver}</div><div><small>Bilgi bankası</small><h3>Yardımcı organlar</h3></div></div>
   <p class="lead">Karaciğer ve pankreas besinlerin geçtiği organlardan değildir; salgılarını kanallarla <b>ince bağırsağa</b> göndererek sindirime yardımcı olurlar.</p>
-  <div class="aux">${['liver', 'gall', 'panc'].map(k => `<div class="auxc"><div class="ic">${ICON[k]}</div><div><h4>${AUXTXT[k].name}</h4><p>${AUXTXT[k].txt}</p><span class="zd-chip ${k === 'panc' ? 'purple' : k === 'gall' ? 'green' : 'amber'} tg">${AUXTXT[k].tag}</span></div></div>`).join('')}</div>`;
+  <div class="aux">${['liver', 'gall', 'panc'].map(k => `<div class="auxc"><div class="ic">${AUXIMG[k]}</div><div><h4>${AUXTXT[k].name}</h4><p>${AUXTXT[k].txt}</p><span class="zd-chip ${k === 'panc' ? 'purple' : k === 'gall' ? 'green' : 'amber'} tg">${AUXTXT[k].tag}</span></div></div>`).join('')}</div>`;
 $$('#tabs button').forEach(b => b.onclick = () => {
   if (S.tab === b.dataset.tab) return; ZD.sfx('click'); ZD.hideHand(); S.tab = b.dataset.tab;
   $$('#tabs button').forEach(x => { x.classList.toggle('on', x === b); x.setAttribute('aria-selected', x === b); });
@@ -1010,14 +957,14 @@ const ACT = {
     b.onclick = async () => {
       if (S.a.busy || S.a.done) return; S.a.busy = true; b.disabled = true; b.removeAttribute('data-primary');
       const g = S.gen; ZD.sfx('swallow');
-      tween(260, t => $('#tongue').setAttribute('transform', `translate(${5 * t},${-5 * t}) rotate(${-4 * t} 250 145)`), E.out)
-        .then(() => tween(500, t => $('#tongue').setAttribute('transform', `translate(${5 * (1 - t)},${-5 * (1 - t)}) rotate(${-4 * (1 - t)} 250 145)`), E.io));
+      tween(260, t => $('#tongue').setAttribute('transform', `translate(${1.2 * t},${-1.6 * t})`), E.out)
+        .then(() => tween(500, t => $('#tongue').setAttribute('transform', `translate(${1.2 * (1 - t)},${-1.6 * (1 - t)})`), E.io));
       tween(500, t => { S.spread = lerp(1, .42, t); S.sx = lerp(1.6, 1, t); S.sy = lerp(.7, 1, t); });
       const ph = $('#phar');
       const pr = travel(B[0], 1500, E.io);
       await sleep(550); if (g !== S.gen) return;
       flashTag('ilet', 'İLETİM · YUTAKTA SİNDİRİM YOK');
-      await tween(700, t => { const k = Math.sin(t * Math.PI); ph.setAttribute('transform', `translate(292 150) scale(${1 - .14 * k} 1) translate(-292 -150)`); });
+      await tween(700, t => { const k = Math.sin(t * Math.PI); ph.setAttribute('transform', `translate(${PHAR_C[0]} ${PHAR_C[1]}) scale(${1 - .14 * k} 1) translate(${-PHAR_C[0]} ${-PHAR_C[1]})`); });
       await pr; if (g !== S.gen) return; ph.removeAttribute('transform');
       setInfo(S.pieces.length, S.info.size, 'Lokma (yutuldu)');
       actDone('Lokma yutaktan geçerek yemek borusunun girişine ulaştı. Parça sayısı ve boyutu değişmedi: sindirim olmadı.');
@@ -1113,24 +1060,25 @@ const ACT = {
 };
 
 /* ---- Ağız: çiğneme ---- */
-const JAW_REST = -3;
-function setJaw(a) { $('#jaw').setAttribute('transform', `rotate(${a.toFixed(2)} 305 112)`); }
+const JAW_REST = 0;
+function setJaw(a) { $('#jaw').setAttribute('transform', `rotate(${a.toFixed(2)} ${JAW_PIV[0]} ${JAW_PIV[1]})`); }
 async function chew(n) {
   const g = S.gen;
-  await tween(110, t => setJaw(lerp(JAW_REST, -9, t)), E.out); if (g !== S.gen) return;
-  await tween(120, t => setJaw(lerp(-9, -.4, t)), E.inq); if (g !== S.gen) return;
+  await tween(110, t => setJaw(lerp(JAW_REST, -6.5, t)), E.out); if (g !== S.gen) return;
+  await tween(120, t => setJaw(lerp(-6.5, -.5, t)), E.inq); if (g !== S.gen) return;
   ZD.sfx('squish'); ZD.sfx('tap');
   const N = [1, 3, 6, 10, 15, 22][n], R = 12 / Math.sqrt(N) * 1.12;
   splitTo(N, R); S.swV = 2.5;
   crumbs(6, S.fk === 'tost' ? '#e8b25c' : S.fk === 'yumurta' ? '#ffffff' : '#f6eaa8');
   setInfo(N, R / 12, n < 5 ? 'Çiğneniyor' : 'Çiğnenmiş lokma');
-  await tween(280, t => setJaw(lerp(-.4, JAW_REST, t)), E.back);
+  pipPulse('chew');
+  await tween(280, t => setJaw(lerp(-.5, JAW_REST, t)), E.back);
 }
 async function saliva() {
   const g = S.gen; ZD.sfx('drip');
   const P = S.pieces;
   for (let i = 0; i < 46; i++) {
-    const tgt = P[(Math.random() * P.length) | 0], from = { x: rnd(205, 280), y: rnd(114, 119) };
+    const tgt = P[(Math.random() * P.length) | 0], [fx0, fy0] = W(rnd(150, 330), rnd(466, 478)), from = { x: fx0, y: fy0 };
     const b0 = bolusPos();
     bezParticle(fxTop, { a: from, k: { x: from.x + rnd(-8, 8), y: from.y + 6 }, b: { x: b0.x + tgt.x, y: b0.y + tgt.y }, dur: rnd(.7, 1.1), delay: i * .03, r: rnd(.55, .95), color: '#9ff8ff', fadeOut: .8 });
   }
@@ -1155,12 +1103,13 @@ async function churn(n) {
   // kabarcık + mide öz suyu
   for (let i = 0; i < 14; i++) bubble(i * .06);
   for (let i = 0; i < 22; i++) {
-    const a = rnd(0, 6.28), from = { x: 342 + Math.cos(a) * 46, y: 425 + Math.sin(a) * 50 }, b0 = bolusPos();
+    const a = rnd(0, 6.28), from = { x: STO_C[0] + 4 + Math.cos(a) * 40, y: STO_C[1] - 8 + Math.sin(a) * 30 }, b0 = bolusPos();
     bezParticle(fxBack, { a: from, k: { x: (from.x + b0.x) / 2 + rnd(-10, 10), y: (from.y + b0.y) / 2 + rnd(-10, 10) }, b: { x: b0.x + rnd(-10, 10), y: b0.y + rnd(-10, 10) }, dur: rnd(.8, 1.2), delay: i * .025, r: rnd(.8, 1.3), color: '#c6a8ff', fadeOut: .7 });
   }
   setTimeout(() => ZD.sfx('bubble'), 200); setTimeout(() => ZD.sfx('bubble'), 420);
   S.swV = 5;
-  const sq = tween(820, (e, t) => { const k = Math.sin(t * Math.PI) * Math.exp(-t * 1.2) + .25 * Math.sin(t * Math.PI * 3) * (1 - t); st.setAttribute('transform', `translate(338 425) scale(${(1 - .08 * k).toFixed(4)} ${(1 + .05 * k).toFixed(4)}) rotate(${(3 * k).toFixed(3)}) translate(-338 -425)`); }, E.lin);
+  const sq = tween(820, (e, t) => { const k = Math.sin(t * Math.PI) * Math.exp(-t * 1.2) + .25 * Math.sin(t * Math.PI * 3) * (1 - t); st.setAttribute('transform', `translate(${STO_C[0]} ${STO_C[1]}) scale(${(1 - .07 * k).toFixed(4)} ${(1 + .045 * k).toFixed(4)}) rotate(${(2.5 * k).toFixed(3)}) translate(${-STO_C[0]} ${-STO_C[1]})`); }, E.lin);
+  pipPulse('churn');
   if (n === 1) { splitTo(30, 2.6); setInfo(30, 2.6 / 12, 'Parçalanıyor'); }
   if (n === 2) { splitTo(38, 2.2); setInfo(38, 2.2 / 12, 'Parçalanıyor'); }
   if (n === 3) {
@@ -1171,20 +1120,21 @@ async function churn(n) {
   await sq; if (g !== S.gen) return; st.removeAttribute('transform');
 }
 function bubble(delay) {
-  const x0 = rnd(300, 382), y0 = rnd(452, 478), r = rnd(1.2, 3.4), c = sv('circle', { r, fill: 'rgba(255,255,255,.14)', stroke: '#fff', 'stroke-opacity': .7, 'stroke-width': .6 }, bubG);
+  const [x0, y0] = W(rnd(330, 575), rnd(1640, 1690)), r = rnd(1, 2.6), c = sv('circle', { r, fill: 'rgba(255,255,255,.14)', stroke: '#fff', 'stroke-opacity': .7, 'stroke-width': .6 }, bubG);
   const ph = rnd(0, 6), life = rnd(1.1, 1.8); c.setAttribute('opacity', 0);
-  addFx({ el: c, t: -delay, upd(p) { if (p.t < 0) return; const u = p.t / life; c.setAttribute('cx', (x0 + Math.sin(p.t * 6 + ph) * 3).toFixed(2)); c.setAttribute('cy', (y0 - u * 70).toFixed(2)); c.setAttribute('opacity', (u < .15 ? u / .15 : 1 - u).toFixed(2)); if (u >= 1) return false; } });
+  addFx({ el: c, t: -delay, upd(p) { if (p.t < 0) return; const u = p.t / life; c.setAttribute('cx', (x0 + Math.sin(p.t * 6 + ph) * 3).toFixed(2)); c.setAttribute('cy', (y0 - u * 46).toFixed(2)); c.setAttribute('opacity', (u < .15 ? u / .15 : 1 - u).toFixed(2)); if (u >= 1) return false; } });
 }
 
 /* ---- İnce bağırsak: safra, pankreas, emilim ---- */
 async function bile() {
   const g = S.gen, gb = $('#gallB'); ZD.sfx('drip');
   // karaciğer -> safra kesesi
-  for (let i = 0; i < 18; i++) { const a = { x: rnd(160, 270), y: rnd(352, 418) }; bezParticle(fxBack, { a, k: { x: (a.x + 232) / 2, y: Math.max(a.y, 440) }, b: { x: 232 + rnd(-3, 3), y: 452 + rnd(-4, 4) }, dur: rnd(.8, 1.1), delay: i * .04, r: rnd(.9, 1.4), color: '#a6ff7a', fadeOut: .8 }); }
-  tween(1100, t => gb.setAttribute('transform', `translate(232 454) scale(${1 + .12 * t}) translate(-232 -454)`), E.out);
+  const [gx, gy] = GALL_C, gT = sc => `translate(${gx} ${gy}) scale(${sc}) translate(${-gx} ${-gy})`;
+  for (let i = 0; i < 18; i++) { const [ax, ay] = W(rnd(40, 340), rnd(1262, 1420)), a = { x: ax, y: ay }; bezParticle(fxBack, { a, k: { x: (a.x + gx) / 2, y: Math.max(a.y, gy - 6) }, b: { x: gx + rnd(-4, 4), y: gy + rnd(-3, 3) }, dur: rnd(.8, 1.1), delay: i * .04, r: rnd(.9, 1.4), color: '#a6ff7a', fadeOut: .8 }); }
+  tween(1100, t => gb.setAttribute('transform', gT(1 + .12 * t)), E.out);
   if (!(await sleep(1250)) || g !== S.gen) return;
   ZD.sfx('squish');
-  tween(500, t => gb.setAttribute('transform', `translate(232 454) scale(${1.12 - .22 * t}) translate(-232 -454)`), E.io).then(() => tween(500, t => gb.setAttribute('transform', `translate(232 454) scale(${.9 + .1 * t}) translate(-232 -454)`), E.back));
+  tween(500, t => gb.setAttribute('transform', gT(1.12 - .22 * t)), E.io).then(() => tween(500, t => gb.setAttribute('transform', gT(.9 + .1 * t)), E.back));
   await new Promise(res => { for (let i = 0; i < 20; i++) pathParticle(bileP, fxBack, { dur: 1.1, delay: i * .04, r: rnd(1, 1.5), color: '#a6ff7a', onEnd: i === 19 ? res : null }); });
   if (g !== S.gen) return;
   // yağ damlaları küçük damlacıklara ayrılır
@@ -1262,31 +1212,20 @@ function posaColor(d) {
 const LV = { on: false, blocks: [], queue: [], total: 0, absorbed: 0, t: 0, next: 0, res: null, villi: [] };
 (function buildLens() {
   const l = $('#lsvg');
-  const V = [[30, 114], [80, 100], [130, 110], [180, 96], [230, 108], [280, 102]];
-  LV.villi = V.map(([x, y]) => ({ x, y }));
-  const vil = V.map(([xc, yt], i) => `<g class="vil">
-    <path d="M${xc - 19},246 C${xc - 19},200 ${xc - 16},${yt + 40} ${xc - 16},${yt + 15} C${xc - 16},${yt - 5} ${xc + 16},${yt - 5} ${xc + 16},${yt + 15} C${xc + 16},${yt + 40} ${xc + 19},200 ${xc + 19},246 Z" fill="url(#lgVil)" stroke="#ffd1c6" stroke-opacity=".55" stroke-width="1.2"/>
-    <path d="M${xc - 8},250 C${xc - 9},200 ${xc - 8},${yt + 30} ${xc - 6},${yt + 16} C${xc - 4},${yt + 6} ${xc + 4},${yt + 6} ${xc + 6},${yt + 16} C${xc + 8},${yt + 30} ${xc + 9},200 ${xc + 8},250" fill="none" stroke="url(#gCap)" stroke-width="2.6" stroke-linecap="round"/>
-    <path d="M${xc - 8},${yt + 60} L${xc + 8},${yt + 52} M${xc - 8},${yt + 95} L${xc + 8},${yt + 86} M${xc - 8},${yt + 128} L${xc + 8},${yt + 120}" stroke="#d64b9a" stroke-width="1.2" stroke-opacity=".75"/>
-    <ellipse cx="${xc - 8}" cy="${yt + 34}" rx="3.5" ry="16" fill="url(#gSpec)" opacity=".35"/></g>`).join('');
+  // villi.webp (1290x1385): sağdaki villus kılcal damar ağı ile; mercekte 0.26 ölçekle, x=-35, y=2
+  const VS = .26, VX = -35, VY = 2, V = (x, y) => [VX + x * VS, VY + y * VS];
+  LV.villi = [{ x: V(940, 0)[0], top: V(0, 262)[1], core: 24 }];
+  LV.surf = y => { const t = clamp((y - LV.villi[0].top) / 130, 0, 1); return 22 + 36 * Math.sqrt(t); };
   l.innerHTML = `<defs>
-    <radialGradient id="lgLum" cx=".5" cy=".3" r=".8"><stop offset="0" stop-color="#6a2244"/><stop offset=".7" stop-color="#3a0f26"/><stop offset="1" stop-color="#1f0613"/></radialGradient>
-    <linearGradient id="lgVil" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c4525a"/><stop offset=".35" stop-color="#ffb8aa"/><stop offset=".7" stop-color="#ec7d72"/><stop offset="1" stop-color="#a8434a"/></linearGradient>
-    <linearGradient id="lgWall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e57a70"/><stop offset="1" stop-color="#7a2834"/></linearGradient>
     <radialGradient id="lgVig" cx=".5" cy=".5" r=".5"><stop offset=".72" stop-color="#000" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".55"/></radialGradient>
     <linearGradient id="lgGlass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset=".4" stop-color="#fff" stop-opacity="0"/></linearGradient>
   </defs>
-  <rect width="300" height="300" fill="url(#lgLum)"/>
-  <g opacity=".35">${Array.from({ length: 16 }, (_, i) => `<circle cx="${(i * 67) % 290 + 5}" cy="${(i * 41) % 150 + 10}" r="${1 + (i % 3)}" fill="#ffb3c8"/>`).join('')}</g>
-  <g>${vil}</g>
-  <path d="M0,236 C10,246 20,248 30,244 C50,236 60,250 80,246 C100,242 110,250 130,246 C150,240 160,250 180,244 C200,240 210,250 230,246 C250,242 260,250 280,244 C290,242 296,244 300,246 L300,300 L0,300Z" fill="url(#lgWall)"/>
-  <path d="M0,256 H300" stroke="#ff3b55" stroke-width="7" stroke-linecap="round"/><path class="flowA" d="M0,256 H300" stroke="#ffb3be" stroke-width="2" opacity=".8"/>
-  <path d="M0,276 H300" stroke="#5b6cff" stroke-width="8" stroke-linecap="round"/><path class="flowA" d="M0,276 H300" stroke="#c9d0ff" stroke-width="2" opacity=".8"/>
+  <rect width="300" height="300" fill="#fbe9e4"/>
+  <image href="assets/img/villi.webp" x="${VX}" y="${VY}" width="${1290 * VS}" height="${1385 * VS}"/>
   <g id="lvB"></g>
   <g font-family="Lexend, system-ui, sans-serif" font-size="10.5" font-weight="700">
-    <g transform="translate(150,62)"><rect x="-26" y="-11" width="52" height="19" rx="9.5" fill="rgba(8,22,40,.85)" stroke="#35eefc"/><text text-anchor="middle" y="3" fill="#eaffff">villus</text><path d="M-4,8 L-14,36" stroke="#35eefc" stroke-width="1.2" stroke-dasharray="2 2"/></g>
-    <g transform="translate(236,176)"><rect x="-40" y="-11" width="80" height="19" rx="9.5" fill="rgba(8,22,40,.85)" stroke="#35eefc"/><text text-anchor="middle" y="3" fill="#eaffff">kılcal damar</text></g>
-    <g transform="translate(78,292)"><text text-anchor="middle" fill="#ffd6dc" font-size="9.5">kan damarları</text></g>
+    <g transform="translate(118,40)"><rect x="-26" y="-11" width="52" height="19" rx="9.5" fill="rgba(8,22,40,.85)" stroke="#35eefc"/><text text-anchor="middle" y="3" fill="#eaffff">villus</text><path d="M26,2 L62,26" stroke="#35eefc" stroke-width="1.2" stroke-dasharray="2 2"/></g>
+    <g transform="translate(214,262)"><rect x="-40" y="-11" width="80" height="19" rx="9.5" fill="rgba(8,22,40,.85)" stroke="#35eefc"/><text text-anchor="middle" y="3" fill="#eaffff">kılcal damar</text></g>
   </g>
   <rect width="300" height="300" fill="url(#lgVig)"/>
   <path d="M40,70 A130,130 0 0 1 150,22" fill="none" stroke="url(#lgGlass)" stroke-width="10" stroke-linecap="round"/>`;
@@ -1297,35 +1236,33 @@ function lensOpen() {
   [['k', 'bK'], ['p', 'bP'], ['y', 'bY']].forEach(([k, s]) => { const n = Math.max(1, Math.round(f.amt[k] * 22)); for (let i = 0; i < n; i++) q.push(s); });
   LV.queue = ZD.shuffle(q); LV.total = q.length; LV.absorbed = 0; LV.t = 0; LV.next = .4; LV.blocks.forEach(b => b.el.remove()); LV.blocks = [];
   updLensCnt(); view.classList.add('lensOn'); $('#lens').classList.add('show'); $('#lens').setAttribute('aria-hidden', 'false'); $('#lensX').classList.remove('show');
-  LV.on = true; ZD.sfx('whoosh');
+  LV.on = true; ZD.sfx('whoosh'); updPip();
 }
 function lensRun() { return new Promise(res => { LV.res = res; }); }
-function lensClose() { view.classList.remove('lensOn'); $('#lens').classList.remove('show'); $('#lens').setAttribute('aria-hidden', 'true'); LV.on = false; LV.blocks.forEach(b => b.el.remove()); LV.blocks = []; $('#lensLine').setAttribute('opacity', 0); $('#lensDot').setAttribute('opacity', 0); if (LV.res) { const r = LV.res; LV.res = null; r(); } }
+function lensClose() { view.classList.remove('lensOn'); $('#lens').classList.remove('show'); $('#lens').setAttribute('aria-hidden', 'true'); LV.on = false; LV.blocks.forEach(b => b.el.remove()); LV.blocks = []; $('#lensLine').setAttribute('opacity', 0); $('#lensDot').setAttribute('opacity', 0); if (LV.res) { const r = LV.res; LV.res = null; r(); } updPip(); }
 function updLensCnt() { $('#lvCnt').innerHTML = `Kana geçen yapı taşı <b>${LV.absorbed}</b> / ${LV.total}`; }
 let lvSnd = 0;
 function lensTick(dt, t) {
   LV.t += dt; const lay = $('#lvB');
   while (LV.queue.length && LV.t > LV.next) {
-    const s = LV.queue.pop(), v = (Math.random() * LV.villi.length) | 0, vi = LV.villi[v], side = Math.random() < .5 ? -1 : 1;
+    const s = LV.queue.pop(), side = Math.random() < .5 ? -1 : 1, ty = LV.villi[0].top + rnd(18, 150);
     const el = sv('use', { href: '#' + s }, lay);
-    LV.blocks.push({ el, s, x: rnd(20, 280), y: rnd(-6, 30), st: 'drift', v, side, ty: vi.y + rnd(22, 70), o: 0, ph: rnd(0, 6) });
+    LV.blocks.push({ el, s, x: rnd(20, 280), y: rnd(-6, 26), st: 'drift', v: 0, side, ty, o: 0, ph: rnd(0, 6) });
     LV.next += 3.6 / LV.total;
   }
   for (let i = LV.blocks.length - 1; i >= 0; i--) {
     const b = LV.blocks[i], vi = LV.villi[b.v];
     b.o = Math.min(1, b.o + dt * 3);
     if (b.st === 'drift') {
-      const tx = vi.x + b.side * 17, dx = tx - b.x, dy = b.ty - b.y, d = Math.hypot(dx, dy);
+      const tx = vi.x + b.side * (LV.surf(b.ty) + 5), dx = tx - b.x, dy = b.ty - b.y, d = Math.hypot(dx, dy) || 1;
       const sp = 70; b.x += dx / d * sp * dt + Math.sin(t * 4 + b.ph) * .5; b.y += dy / d * sp * dt;
-      if (d < 3) b.st = 'in';
+      if (d < 3) { b.st = 'in'; b.ix = vi.x + b.side * vi.core * rnd(.3, .8); }
     } else if (b.st === 'in') {
-      const tx = vi.x + 8; b.x += (tx - b.x) * Math.min(1, dt * 7); b.y += 10 * dt;
-      if (Math.abs(tx - b.x) < .8) { b.st = 'down'; LV.absorbed++; updLensCnt(); lvSnd += 1; if (lvSnd % 2 === 0) ZD.sfx('pop'); }
+      const tx = b.ix; b.x += (tx - b.x) * Math.min(1, dt * 7); b.y += 10 * dt;
+      if (Math.abs(tx - b.x) < 1.6) { b.st = 'down'; LV.absorbed++; updLensCnt(); lvSnd += 1; if (lvSnd % 2 === 0) ZD.sfx('pop'); }
     } else if (b.st === 'down') {
-      b.y += 95 * dt; b.x = vi.x + 8 + Math.sin(b.y * .05) * .6; if (b.y >= 274) { b.st = 'flow'; b.y = 276; }
-    } else if (b.st === 'flow') {
-      b.x += 110 * dt; if (b.x > 300) b.o = Math.max(0, b.o - dt * 6);
-      if (b.x > 318) { b.el.remove(); LV.blocks.splice(i, 1); continue; }
+      b.y += 95 * dt; b.x += Math.sin(b.y * .05 + b.ph) * .25; if (b.y > 285) b.o = Math.max(0, b.o - dt * 5);
+      if (b.y > 318) { b.el.remove(); LV.blocks.splice(i, 1); continue; }
     }
     const sc = b.st === 'drift' || b.st === 'in' ? .62 : .5;
     b.el.setAttribute('transform', `translate(${b.x.toFixed(2)},${b.y.toFixed(2)}) scale(${sc})`); b.el.setAttribute('opacity', b.o.toFixed(2));

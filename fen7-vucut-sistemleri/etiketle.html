@@ -85,6 +85,14 @@
 .eg-info p{margin-top:8px}
 .eg-legend{display:none}
 
+/* görsel katmanı: saydam sıcak noktalar; vurgulanınca dış hattı parlar */
+.eg-view .hs,.eg-pc .hs{fill:rgba(255,255,255,0);stroke:none;transition:fill .25s}
+.eg-view .hs.hsl{fill:none;stroke:rgba(255,255,255,0);stroke-linecap:round;stroke-linejoin:round;pointer-events:stroke}
+.eg-view [data-org][filter] .hs:not(.hsl){fill:rgba(255,255,255,.2);stroke:#fff;stroke-width:2px;vector-effect:non-scaling-stroke}
+.eg-view [data-org][filter] .hs.hsl{stroke:rgba(255,255,255,.34)}
+.eg-view image{image-rendering:auto}
+.eg-view.cmp .lgd{display:none}
+
 /* sonuç sonrası */
 .zd-howto li strong{color:#fff;font-weight:700}
 .eg-done{font-size:13.5px;color:var(--muted);line-height:1.5;text-align:center}
@@ -111,7 +119,7 @@
 /* ---------- Telefon ---------- */
 @media (max-width:760px){
   .eg{grid-template-columns:1fr;height:auto;padding:2px 10px 14px;gap:12px}
-  .eg-view{aspect-ratio:840/615;height:auto;border-radius:14px}
+  .eg-view{aspect-ratio:var(--ar,840/615);height:auto;border-radius:14px}
   .eg-side{justify-content:flex-start;gap:10px}
   .eg-seg{order:5;grid-template-columns:repeat(4,1fr)}
   .eg-btns{grid-template-columns:1fr 1fr;gap:9px}
@@ -140,408 +148,271 @@ const W = 1000, H = 600;
 const $ = ZD.$, $$ = ZD.$$, clamp = ZD.clamp;
 
 /* ======================================================================
-   Renk / SVG yardımcıları
+   Sahne yardımcıları (Servier Medical Art görselleri + etkileşim katmanı)
+   Görseller tasarım koordinatına (1000×600) yerleştirilir; sıcak noktalar,
+   etiket uçları ve akış yolları görselin piksel koordinatından dönüştürülür.
    ====================================================================== */
-function hx(c){ c = c.replace('#',''); return [0,2,4].map(i => parseInt(c.substr(i,2),16)); }
-function mix(a,b,t){ const A = hx(a), B = hx(b); return '#' + A.map((v,i) => Math.round(v + (B[i]-v)*t).toString(16).padStart(2,'0')).join(''); }
+const IMGD = 'assets/img/';
+// görsel pikseli → tasarım koordinatı
+function TF(s, x, y){ const f = (X, Y) => [+(x + X*s).toFixed(1), +(y + Y*s).toFixed(1)]; f.s = s; f.x = x; f.y = y; return f; }
+// Catmull-Rom → kübik Bezier (yumuşak dış hat / yol)
+function smooth(P, closed){
+  const n = P.length, g = i => closed ? P[(i + n) % n] : P[Math.max(0, Math.min(n - 1, i))];
+  let d = `M${P[0][0]},${P[0][1]}`;
+  for (let i = 0; i < (closed ? n : n - 1); i++){
+    const p0 = g(i-1), p1 = g(i), p2 = g(i+1), p3 = g(i+2);
+    const c1 = [p1[0] + (p2[0]-p0[0])/6, p1[1] + (p2[1]-p0[1])/6], c2 = [p2[0] - (p3[0]-p1[0])/6, p2[1] - (p3[1]-p1[1])/6];
+    d += ` C${c1[0].toFixed(1)},${c1[1].toFixed(1)} ${c2[0].toFixed(1)},${c2[1].toFixed(1)} ${p2[0]},${p2[1]}`;
+  }
+  return closed ? d + 'Z' : d;
+}
+const poly = (T, pts) => pts.map(([X, Y]) => T(X, Y));
+const lineD = (T, pts) => 'M' + poly(T, pts).map(q => q.join(',')).join(' L');
 
 function K(p){
   const u = id => `url(#${p}${id})`;
   const G = [];
-  const vol = (id, c1, c2, cx = .36, cy = .3) => {
-    G.push(`<radialGradient id="${p}${id}" cx="${cx}" cy="${cy}" r=".8" fx="${cx-.05}" fy="${cy-.07}"><stop offset="0" stop-color="${mix(c1,'#ffffff',.5)}"/><stop offset=".28" stop-color="${c1}"/><stop offset=".8" stop-color="${c2}"/><stop offset="1" stop-color="${mix(c2,'#000000',.42)}"/></radialGradient>`);
-    return u(id);
-  };
   const raw = s => { G.push(s); };
-  const blob = (d, fill, edge, extra = '') =>
-    `<path d="${d}" fill="${fill}" stroke="${edge}" stroke-width="1.6" stroke-linejoin="round"/>${extra}<path d="${d}" fill="none" stroke="${u('rim')}" stroke-width="2.4" stroke-linejoin="round"/>`;
-  const spec = (cx, cy, rx, ry, rot = 0, o = .6) =>
-    `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${u('spec')}" opacity="${o}" transform="rotate(${rot} ${cx} ${cy})"/>`;
-  const tube = (d, w, c1, c2) => {
-    const dk = mix(c2,'#000000',.38), lt = mix(c1,'#ffffff',.6);
-    return `<path d="${d}" fill="none" stroke="${dk}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`+
-      `<path d="${d}" fill="none" stroke="${c2}" stroke-width="${(w*.8).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>`+
-      `<path d="${d}" fill="none" stroke="${c1}" stroke-width="${(w*.48).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round" transform="translate(${(-w*.09).toFixed(2)} ${(-w*.09).toFixed(2)})"/>`+
-      `<path d="${d}" fill="none" stroke="${lt}" stroke-width="${Math.max(1,w*.15).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round" opacity=".8" transform="translate(${(-w*.2).toFixed(2)} ${(-w*.2).toFixed(2)})"/>`;
+  const img = (f, x, y, w, h, ex = '') => `<image href="${IMGD}${f}" x="${x}" y="${y}" width="${w}" height="${h}" preserveAspectRatio="xMidYMid meet" ${ex}/>`;
+  // görsel arkasında yumuşak ışık havuzu
+  const pool = (cx, cy, rx, ry) => `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${u('pool')}"/>`;
+  // sıcak nokta biçimleri (glow/seçim bu biçimlerin dış hattına uygulanır)
+  const E = (T, X, Y, rx, ry, rot = 0) => { const [cx, cy] = T(X, Y); return `<ellipse class="hs" cx="${cx}" cy="${cy}" rx="${(rx*T.s).toFixed(1)}" ry="${(ry*T.s).toFixed(1)}"${rot ? ` transform="rotate(${rot} ${cx} ${cy})"` : ''}/>`; };
+  const Pg = (T, pts) => `<path class="hs" d="${smooth(poly(T, pts), true)}"/>`;
+  const Ln = (T, pts, w) => `<path class="hs hsl" d="${smooth(poly(T, pts), false)}" stroke-width="${(w*T.s).toFixed(1)}"/>`;
+  const og = (id, inner) => `<g data-org="${id}">${inner}</g>`;
+  // büyüteç: kaynak noktadan yakın plan görsele
+  const lens = o => {
+    const { cx, cy, r } = o, [sx, sy] = o.src;
+    const dx = sx - cx, dy = sy - cy, d = Math.hypot(dx, dy), a0 = Math.atan2(dy, dx), da = Math.acos(r / d);
+    const t = s => [cx + r*Math.cos(a0 + s*da), cy + r*Math.sin(a0 + s*da)];
+    const st = q => { const L = Math.hypot(q[0]-sx, q[1]-sy); return [sx + (q[0]-sx)/L*o.sr, sy + (q[1]-sy)/L*o.sr]; };
+    const [t1, t2] = [t(1), t(-1)], [s1, s2] = [st(t1), st(t2)];
+    const f = v => v.toFixed(1);
+    raw(`<clipPath id="${p}${o.id}c"><circle cx="${cx}" cy="${cy}" r="${r - 1}"/></clipPath>`);
+    return `<g class="lens"><circle cx="${sx}" cy="${sy}" r="${o.sr}" fill="#35eefc" fill-opacity=".12" stroke="#35eefc" stroke-width="2" stroke-opacity=".95"/>` +
+      `<path d="M${f(s1[0])},${f(s1[1])} L${f(t1[0])},${f(t1[1])} M${f(s2[0])},${f(s2[1])} L${f(t2[0])},${f(t2[1])}" stroke="#35eefc" stroke-opacity=".42" stroke-width="1.4" fill="none"/>` +
+      `<circle cx="${cx}" cy="${cy}" r="${r}" fill="${u('mg')}"/>` +
+      `<g clip-path="${u(o.id + 'c')}">${img(o.img, o.ix, o.iy, o.iw, o.ih)}</g>` +
+      `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#35eefc" stroke-width="3" filter="${u('gl')}"/>` +
+      `<path d="M${f(cx - r*.8)},${f(cy - r*.45)} A${r - 6},${r - 6} 0 0 1 ${f(cx + r*.1)},${f(cy - r + 6.5)}" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/></g>`;
   };
-  const body = (d, o = 1, top = false) =>
-    `<g opacity="${o}" mask="${u(top ? 'fm2' : 'fm')}"><path d="${d}" fill="${u('bodyF')}"/><path d="${d}" fill="${u('grid')}"/><path d="${d}" fill="${u('bodyG')}"/>`+
-    `<path d="${d}" fill="none" stroke="#35eefc" stroke-opacity=".32" stroke-width="8" filter="${u('blur')}"/><path d="${d}" fill="none" stroke="${u('bodyR')}" stroke-width="1.8"/></g>`;
+  // akan parçacıklar
+  const flow = (id, d, n, dur, el, rev) => {
+    let o = `<path id="${p}${id}" d="${d}" fill="none"/>`;
+    for (let i = 0; i < n; i++) o += el.replace('/>', `><animateMotion dur="${dur}s" begin="-${(i*dur/n).toFixed(2)}s" repeatCount="indefinite" rotate="auto"${rev ? ' keyPoints="1;0" keyTimes="0;1" calcMode="linear"' : ''}><mpath href="#${p}${id}"/></animateMotion></ellipse>`);
+    return o;
+  };
   const defs = () => `<defs>
-    <filter id="${p}ds" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000610" flood-opacity=".55"/></filter>
-    <filter id="${p}blur" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3"/></filter>
     <filter id="${p}gl" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    <filter id="${p}hl" x="-60%" y="-60%" width="220%" height="220%"><feMorphology in="SourceAlpha" operator="dilate" radius="2" result="d"/><feGaussianBlur in="d" stdDeviation="6" result="b"><animate attributeName="stdDeviation" values="3;11;3" dur="1.1s" repeatCount="indefinite"/></feGaussianBlur><feFlood flood-color="#c6a8ff"/><feComposite in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    <filter id="${p}sel" x="-60%" y="-60%" width="220%" height="220%"><feMorphology in="SourceAlpha" operator="dilate" radius="2" result="d"/><feGaussianBlur in="d" stdDeviation="7" result="b"/><feFlood flood-color="#35eefc"/><feComposite in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    <filter id="${p}ok" x="-60%" y="-60%" width="220%" height="220%"><feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/><feGaussianBlur in="d" stdDeviation="8" result="b"/><feFlood flood-color="#2fe39b"/><feComposite in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    <radialGradient id="${p}spec"><stop offset="0" stop-color="#fff" stop-opacity=".95"/><stop offset=".45" stop-color="#fff" stop-opacity=".3"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
-    <linearGradient id="${p}rim" x1="0" y1="0" x2=".85" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".85"/><stop offset=".32" stop-color="#fff" stop-opacity=".2"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".25"/></linearGradient>
-    <linearGradient id="${p}bodyF" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1d4166" stop-opacity=".55"/><stop offset="1" stop-color="#0c2136" stop-opacity=".4"/></linearGradient>
-    <radialGradient id="${p}bodyG" cx=".5" cy=".42" r=".6"><stop offset="0" stop-color="#3d8fd6" stop-opacity=".2"/><stop offset="1" stop-color="#3d8fd6" stop-opacity="0"/></radialGradient>
-    <linearGradient id="${p}bodyR" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#5ff4ff" stop-opacity=".95"/><stop offset=".5" stop-color="#35eefc" stop-opacity=".25"/><stop offset="1" stop-color="#5ff4ff" stop-opacity=".95"/></linearGradient>
-    <pattern id="${p}grid" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M16 0H0V16" fill="none" stroke="#7fd8ff" stroke-opacity=".08" stroke-width="1"/></pattern>
-    <linearGradient id="${p}fade" x1="0" y1="0" x2="0" y2="1"><stop offset=".86" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
-    <linearGradient id="${p}fade2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset=".1" stop-color="#fff"/><stop offset=".86" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
-    <linearGradient id="${p}fadeT" gradientUnits="userSpaceOnUse" x1="0" y1="-12" x2="0" y2="40"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient>
-    <mask id="${p}ft" maskUnits="userSpaceOnUse" x="-20" y="-20" width="1040" height="640"><rect x="-20" y="-20" width="1040" height="640" fill="${u('fadeT')}"/></mask>
-    <mask id="${p}fm2" maskUnits="userSpaceOnUse" x="-20" y="-20" width="1040" height="640"><rect x="-20" y="-20" width="1040" height="640" fill="${u('fade2')}"/></mask>
-    <mask id="${p}fm" maskUnits="userSpaceOnUse" x="-20" y="-20" width="1040" height="640"><rect x="-20" y="-20" width="1040" height="640" fill="${u('fade')}"/></mask>
+    <filter id="${p}hl" filterUnits="userSpaceOnUse" x="-200" y="-200" width="1400" height="1000"><feMorphology in="SourceAlpha" operator="dilate" radius="2" result="d"/><feGaussianBlur in="d" stdDeviation="6" result="b"><animate attributeName="stdDeviation" values="3;11;3" dur="1.1s" repeatCount="indefinite"/></feGaussianBlur><feFlood flood-color="#c6a8ff"/><feComposite in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="${p}sel" filterUnits="userSpaceOnUse" x="-200" y="-200" width="1400" height="1000"><feMorphology in="SourceAlpha" operator="dilate" radius="2" result="d"/><feGaussianBlur in="d" stdDeviation="7" result="b"/><feFlood flood-color="#35eefc"/><feComposite in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="${p}ok" filterUnits="userSpaceOnUse" x="-200" y="-200" width="1400" height="1000"><feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/><feGaussianBlur in="d" stdDeviation="8" result="b"/><feFlood flood-color="#2fe39b"/><feComposite in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <radialGradient id="${p}pool"><stop offset="0" stop-color="#d6ebff" stop-opacity=".2"/><stop offset=".55" stop-color="#7fb8ff" stop-opacity=".08"/><stop offset="1" stop-color="#7fb8ff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="${p}mg" cx=".5" cy=".42" r=".6"><stop offset="0" stop-color="#2a3f5c"/><stop offset="1" stop-color="#0a1524"/></radialGradient>
     ${G.join('')}</defs>`;
-  return { p, u, vol, raw, blob, spec, tube, body, defs };
+  return { p, u, raw, img, pool, E, Pg, Ln, og, lens, flow, defs };
 }
-const og = (k, id, inner, shadow = true) => `<g data-org="${id}">${shadow ? `<g filter="${k.u('ds')}">${inner}</g>` : inner}</g>`;
-
-/* Profil baş + önden gövde silueti */
-const HB = 'M500,14 C536,12 556,36 554,72 C553,100 543,120 532,134 C526,144 526,162 532,180 C560,200 620,206 650,220 C668,230 676,250 674,276 L650,302 C656,350 642,410 640,452 C640,500 660,545 664,620 L336,620 C340,545 360,500 360,452 C358,410 344,350 350,302 L326,276 C324,250 332,232 350,224 C380,210 440,206 458,196 C466,188 468,176 468,162 C462,156 454,154 448,150 C442,146 440,140 443,134 C438,130 440,125 436,121 C433,118 433,114 436,111 L432,106 C424,105 417,99 421,92 C425,86 431,78 433,70 C434,62 434,54 437,48 C446,26 470,15 500,14 Z';
-const FACE = `<path d="M443,64 C448,60 455,60 459,64 C454,67 448,67 443,64Z" fill="#35eefc" opacity=".28"/><path d="M520,70 C531,66 537,80 533,92 C530,100 523,100 521,95" fill="none" stroke="#35eefc" stroke-opacity=".3" stroke-width="2" stroke-linecap="round"/>`;
 
 /* ======================================================================
-   SET 1 · SİNDİRİM
+   SET 1 · SİNDİRİM — digestive_full.webp (698×2580)
    ====================================================================== */
-function serp(xa, xb, y0, rows, dy, amp){
-  let d = `M${xa},${y0}`, y = y0, a = xa, b = xb;
-  for (let r = 0; r < rows; r++){
-    const n = 4;
-    for (let i = 1; i <= n; i++){
-      const x = a + (b-a)*i/n, cx = a + (b-a)*(i-.5)/n, am = amp * (.65 + .35*Math.sin(i*1.7 + r*2.3));
-      d += ` Q${cx.toFixed(1)},${(y + ((i+r)%2 ? am : -am)).toFixed(1)} ${x.toFixed(1)},${y}`;
-    }
-    if (r < rows-1){
-      const yn = y + dy, s = Math.sign(b-a), bx = b + s*dy*.75;
-      d += ` C${bx.toFixed(1)},${y} ${bx.toFixed(1)},${yn} ${b},${yn}`;
-      y = yn; [a,b] = [b,a];
-    }
-  }
-  return d;
-}
+const T_SIN = TF(596/2580, 500 - 698*596/2580/2, 2);
 function artSindirim(p){
-  const k = K(p), { u, vol, blob, spec, tube } = k;
-  const gLv = vol('lv','#c2574e','#7d2420'), gSt = vol('st','#ff8a9a','#d94a66'), gGb = vol('gb','#8ee365','#3c9a2a',.4,.35),
-        gPn = vol('pn','#ffcf7a','#e5a23a'), gTg = vol('tg','#ff8a9a','#c9405a'), gLp = vol('lp','#ff8a98','#d84a60'),
-        gMs = vol('ms','#e98e84','#9b3f42',.5,.35), gAn = vol('an','#d0676a','#6e1f22'), gOc = vol('oc','#5a1426','#22050d',.4,.5);
-  const PH = 'M514,92 C524,98 526,118 522,136 C520,146 516,156 514,166';
-  const ES = 'M514,166 C512,200 508,236 508,262 C508,286 520,302 548,312';
-  const LV = 'M372,312 C396,292 470,288 522,296 C534,298 538,304 530,310 C508,326 478,350 452,366 C428,381 402,392 386,388 C371,384 365,362 365,342 C365,330 367,320 372,312 Z';
-  const GB = 'M448,358 C460,352 474,360 474,374 C474,390 466,398 458,397 C449,396 444,386 445,374 C445,366 446,361 448,358 Z';
-  const ST = 'M548,312 C560,296 596,292 618,306 C642,322 648,362 636,390 C624,414 590,426 556,424 C538,423 522,420 510,416 L508,402 C526,404 544,402 556,394 C572,382 576,356 566,338 C560,328 552,322 548,312 Z';
-  const PN = 'M490,430 C505,420 540,424 566,424 C592,423 612,414 628,418 C636,422 634,434 622,438 C600,444 572,442 548,444 C526,446 506,448 496,444 C489,440 488,434 490,430 Z';
-  const DU = 'M509,409 C496,410 486,420 487,436 C488,452 520,464 556,468 C568,470 578,476 576,486';
-  const SI = serp(576, 424, 486, 5, 15, 5.2) + ' L410,548';
-  const CO = 'M410,556 C398,553 395,538 397,518 L400,484 C401,468 412,462 432,462 L570,460 C592,460 604,468 604,486 L605,524 C606,546 594,558 570,561 C545,564 515,560 505,568 L501,582';
-  let s = k.body(HB) + FACE;
-  // yutak + yemek borusu
-  s += og(k,'yutak', tube(PH,14,'#ffb0bc','#e2566e'));
-  s += og(k,'yemek', tube(ES,12,'#ffa6b3','#e2566e') + `<path d="${ES}" fill="none" stroke="#7a1f33" stroke-opacity=".35" stroke-width="12" stroke-dasharray="1.5 7"/>`);
-  // pankreas (midenin arkasında)
-  s += og(k,'pankreas', blob(PN, gPn, '#a8661a', `<path d="M497,437 C540,433 590,429 625,426" fill="none" stroke="#b8741c" stroke-opacity=".5" stroke-width="8" stroke-dasharray="3 4" stroke-linecap="round"/>`) + spec(600,423,16,4,-8,.5));
-  // mide
-  s += og(k,'mide', blob(ST, gSt, '#9c2a45',
-    `<path d="M560,318 C590,312 620,326 628,352 M572,334 C600,334 618,350 622,372 M576,360 C598,368 610,384 606,400 M570,388 C584,398 590,408 584,416 M540,412 C552,410 562,404 566,398" fill="none" stroke="#9c2a45" stroke-opacity=".38" stroke-width="2.2" stroke-linecap="round"/>`) + spec(596,314,24,10,-12,.75) + spec(628,350,5,18,-10,.35));
-  // safra kesesi (karaciğerin altında)
-  s += og(k,'safra', blob(GB, gGb, '#2b7a1e') + `<path d="M462,392 C472,404 484,410 494,416" fill="none" stroke="#5fbf3a" stroke-width="3" stroke-linecap="round"/>` + spec(457,384,5,8,-20,.75));
-  // karaciğer
-  s += og(k,'karaciger', blob(LV, gLv, '#5a1612',
-    `<path d="M468,292 C466,318 460,342 452,364" fill="none" stroke="#ffd0c8" stroke-opacity=".22" stroke-width="2"/><path d="M380,330 C410,320 440,316 470,318" fill="none" stroke="#3e0c0a" stroke-opacity=".25" stroke-width="3" stroke-linecap="round"/>`) + spec(412,316,40,10,-8,.6) + spec(500,302,18,4,-4,.45));
-  // ince bağırsak
-  s += og(k,'ince', `<path d="M416,478 C440,470 562,468 588,478 C598,500 598,540 588,556 C560,563 440,563 416,556 C406,540 406,498 416,478 Z" fill="${gMs}" stroke="#6e2427" stroke-width="1.4"/>` +
-    tube(DU,12,'#ffc2b4','#e46d68') + tube(SI,12,'#ffc2b4','#e46d68') + spec(500,488,60,5,0,.35));
-  // kalın bağırsak
-  s += og(k,'kalin', tube(CO,25,'#f7a597','#b84d4a') + `<path d="${CO}" fill="none" stroke="#6a1e1c" stroke-opacity=".42" stroke-width="25" stroke-dasharray="2.4 12"/>` +
-    `<path d="${CO}" fill="none" stroke="#ffd9d2" stroke-opacity=".35" stroke-width="3" stroke-linecap="round" transform="translate(-5 -5)"/>`);
-  // anüs
-  s += og(k,'anus', `<ellipse cx="501" cy="587" rx="11" ry="6" fill="${gAn}" stroke="#4a0f12" stroke-width="1.5"/><ellipse cx="501" cy="588" rx="4.5" ry="2" fill="#250508"/><ellipse cx="497" cy="584.5" rx="4" ry="1.5" fill="#fff" opacity=".45"/>`);
-  // ağız
-  s += og(k,'agiz', `<path d="M441,110 C462,102 492,98 512,100 C522,101 526,110 524,122 L521,136 C505,140 480,140 462,136 C450,133 443,124 441,116 Z" fill="${gOc}" stroke="#ff9aa8" stroke-opacity=".5" stroke-width="1.2"/>` +
-    `<path d="M445,121 C452,110 485,108 508,114 C520,118 522,130 515,136 C495,140 466,137 452,131 C446,128 444,124 445,121 Z" fill="${gTg}" stroke="#8f2238" stroke-width="1.2"/>` + spec(474,116,16,3.5,-4,.6) +
-    `<rect x="439" y="106" width="7" height="5.5" rx="1.6" fill="#f6fbff"/><rect x="440" y="121" width="7" height="5.5" rx="1.6" fill="#e9f1fa"/>` +
-    `<ellipse cx="437" cy="110" rx="5.5" ry="3.3" fill="${gLp}"/><ellipse cx="437.5" cy="120" rx="5.5" ry="3.7" fill="${gLp}"/>`, true);
-  // lokma animasyonu
-  s += `<path id="${p}esp" d="${PH} ${ES.replace('M514,166','L514,166')}" fill="none"/><ellipse rx="6" ry="4.5" fill="#ffe1a8" stroke="#b07a32" stroke-width="1" opacity=".9"><animateMotion dur="6s" repeatCount="indefinite" rotate="auto"><mpath href="#${p}esp"/></animateMotion><animate attributeName="opacity" values="0;.95;.95;0" keyTimes="0;.08;.9;1" dur="6s" repeatCount="indefinite"/></ellipse>`;
+  const k = K(p), T = T_SIN, { E, Pg, Ln, og } = k;
+  let s = k.pool(500, 330, 190, 330);
+  s += k.img('digestive_full.webp', T.x.toFixed(1), T.y, (698*T.s).toFixed(1), 596);
+  // lokma: ağız → yutak → yemek borusu → mide
+  s += k.flow('esp', lineD(T, [[150,525],[260,520],[345,535],[378,575],[377,700],[376,900],[376,1100],[378,1215],[420,1300],[470,1420]]), 1, 6,
+    `<ellipse rx="5" ry="3.6" fill="#ffe1a8" stroke="#b07a32" stroke-width="1" opacity=".95"/>`);
+  // sıcak noktalar (görselin üstünde, saydam)
+  s += og('karaciger', Pg(T, [[20,1262],[150,1218],[380,1226],[555,1268],[545,1322],[430,1378],[330,1420],[235,1440],[170,1540],[70,1640],[12,1600],[6,1420]]));
+  s += og('mide', Pg(T, [[395,1430],[452,1342],[560,1352],[612,1450],[608,1630],[520,1712],[400,1715],[285,1690],[268,1625],[330,1585],[392,1520]]));
+  s += og('pankreas', E(T, 268, 1718, 78, 52, 8));
+  s += og('ince', Pg(T, [[160,1905],[330,1880],[500,1880],[560,1960],[560,2230],[480,2300],[330,2300],[210,2280],[150,2160],[140,2000]]));
+  s += og('kalin', Ln(T, [[115,2235],[85,2080],[80,1900],[95,1790],[160,1745],[300,1775],[420,1780],[520,1705],[600,1690],[612,1800],[610,2050],[598,2260],[540,2360],[420,2350],[340,2350],[345,2480],[358,2535]], 92));
+  s += og('anus', E(T, 360, 2552, 32, 30));
+  s += og('safra', E(T, 135, 1462, 58, 40));
+  s += og('yemek', E(T, 376, 950, 30, 262));
+  s += og('yutak', Pg(T, [[352,350],[395,345],[402,450],[400,600],[398,688],[352,688],[350,600]]));
+  s += og('agiz', Pg(T, [[100,470],[220,450],[350,455],[360,530],[330,595],[220,615],[140,610],[105,560]]));
   return { defs: k.defs(), body: s };
 }
 
 /* ======================================================================
-   SET 2 · SOLUNUM
+   SET 2 · SOLUNUM — resp_all.webp (1140×1400), alveol büyüteci alveoli.webp
    ====================================================================== */
-function tree(x, y, ang, len, w, depth, acc){
-  const r = ang*Math.PI/180, x2 = x + Math.cos(r)*len, y2 = y + Math.sin(r)*len;
-  acc.seg.push([x,y,x2,y2,w]);
-  if (depth <= 0){ acc.tips.push([x2,y2]); return; }
-  tree(x2,y2,ang-27,len*.74,w*.66,depth-1,acc);
-  tree(x2,y2,ang+25,len*.72,w*.66,depth-1,acc);
-}
+const T_SOL = TF(.5, 215, -20);
+const DIYAFRAM = 'M352,580 C364,555 394,543 425,544 C463,545 494,557 515,557 C537,557 572,542 605,542 C640,543 667,557 679,580';
 function artSolunum(p){
-  const k = K(p), { u, vol, blob, spec, tube, raw } = k;
-  const gL = vol('lg','#ffb0c4','#d9577e'), gLr = vol('lgr','#ffa6bc','#cf4d75',.6,.3), gDi = vol('di','#ff9a6c','#c4512a',.5,.2),
-        gNs = vol('ns','#ffb4c2','#c9405a',.4,.4), gLx = vol('lx','#f4f8ff','#8fa6c4'), gAl = vol('al','#ffc0d0','#d9577e',.35,.3),
-        gMg = vol('mg','#2a0f22','#0a0611',.5,.5);
-  raw(`<pattern id="${p}sp" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="3" fill="none" stroke="#8a2346" stroke-opacity=".22" stroke-width="1"/><circle cx="0" cy="0" r="2.2" fill="#fff" fill-opacity=".07"/></pattern>`);
-  const LL = 'M474,262 C452,248 420,254 400,280 C378,308 366,360 364,410 C362,445 366,470 380,478 C400,486 440,470 470,462 C484,458 490,446 490,430 L490,300 C490,282 486,270 474,262 Z';
-  const LR = 'M530,264 C550,252 580,258 598,284 C618,312 630,360 632,410 C634,440 628,462 614,468 C596,474 566,462 548,456 C556,440 560,424 552,412 C540,400 530,394 528,380 L528,300 C528,282 528,270 530,264 Z';
-  raw(`<clipPath id="${p}cl"><path d="${LL}"/><path d="${LR}"/></clipPath><clipPath id="${p}mag"><circle cx="820" cy="470" r="70"/></clipPath>`);
-  const PH = 'M510,84 C522,92 524,116 520,136 C518,148 515,154 514,160';
-  const TR = 'M514,190 L511,270';
-  const BL = 'M511,270 C500,276 488,286 470,300', BR = 'M511,270 C522,277 534,287 550,300';
-  const DI = 'M362,516 C370,484 405,470 440,476 C468,481 486,492 500,492 C514,492 532,482 562,476 C598,470 630,484 638,516 L638,530 C606,512 578,508 552,514 C530,518 514,524 500,524 C486,524 470,518 448,514 C420,508 390,512 362,530 Z';
-  let s = k.body(HB) + FACE;
-  // kaburgalar (arka planda)
-  let rib = '';
-  for (let i = 0; i < 6; i++){ const y = 262 + i*38;
-    rib += `<path d="M496,${y} C470,${y-8} 404,${y-6} 378,${y+22} C366,${y+34} 362,${y+48} 364,${y+60}" /><path d="M504,${y} C530,${y-8} 596,${y-6} 622,${y+22} C634,${y+34} 638,${y+48} 636,${y+60}" />`; }
-  s += `<g fill="none" stroke="#e9eef6" stroke-opacity=".13" stroke-width="9" stroke-linecap="round">${rib}</g>`;
-  // yemek borusu (silik, etiketsiz)
-  s += `<path d="M522,160 L520,300" stroke="#ff9aa8" stroke-opacity=".22" stroke-width="10" stroke-linecap="round" fill="none"/>`;
-  // ağız boşluğu silik
-  s += `<path d="M445,121 C452,110 485,108 508,114 C520,118 522,130 515,136 C495,140 466,137 452,131 C446,128 444,124 445,121 Z" fill="#ff8a9a" opacity=".22"/><ellipse cx="437" cy="110" rx="5.5" ry="3.3" fill="#ff7a8a" opacity=".5"/><ellipse cx="437.5" cy="120" rx="5.5" ry="3.7" fill="#ff7a8a" opacity=".5"/>`;
-  // burun
-  s += og(k,'burun', blob('M430,92 C446,82 480,77 506,81 C518,83 522,92 520,102 C504,105 470,105 444,103 C436,102 430,98 430,92 Z', gNs, '#8f2238',
-    `<path d="M448,88 C462,83 480,84 492,90 M450,97 C466,92 484,93 498,99" fill="none" stroke="#ffd6de" stroke-opacity=".55" stroke-width="2" stroke-linecap="round"/>`) + spec(462,85,16,3,-4,.6));
-  // yutak
-  s += og(k,'yutak', tube(PH,15,'#ffb0bc','#e2566e'));
-  // akciğerler
-  s += og(k,'akciger', blob(LL, gL, '#8f2246', `<path d="${LL}" fill="${u('sp')}"/><path d="M392,340 C420,345 450,352 488,350 M372,420 C410,400 450,380 488,330" fill="none" stroke="#8f2246" stroke-opacity=".4" stroke-width="2"/>`) +
-    blob(LR, gLr, '#8f2246', `<path d="${LR}" fill="${u('sp')}"/><path d="M630,400 C600,380 570,340 532,300" fill="none" stroke="#8f2246" stroke-opacity=".4" stroke-width="2"/>`) +
-    spec(420,290,22,9,-35,.55) + spec(578,284,20,8,30,.5) + spec(380,400,5,30,4,.25));
-  // bronşçuklar (akciğer içinde)
-  const acc = { seg: [], tips: [] };
-  [[210,30,6],[160,36,6.4],[122,40,6.6],[96,46,6.6]].forEach(([a,l,w]) => tree(470,300,a,l,w,3,acc));
-  [[330,30,6],[20,34,6.2],[60,40,6.4],[84,44,6.4]].forEach(([a,l,w]) => tree(550,300,a,l,w,3,acc));
-  const hil = acc.seg.filter(q => q[4] > 2.5).map(([x1,y1,x2,y2,w]) => `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="#fff" stroke-opacity=".8" stroke-width="${(w*.3).toFixed(1)}"/>`).join('');
-  const segs = (col, add, op = 1) => acc.seg.map(([x1,y1,x2,y2,w]) => `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke="${col}" stroke-width="${(w+add).toFixed(1)}" stroke-opacity="${op}"/>`).join('');
-  s += og(k,'bronscuk', `<g clip-path="${u('cl')}" stroke-linecap="round">${segs('#9a5a6e',2.4)}${segs('#fbe6ee',0)}<g transform="translate(-1 -1)">${hil}</g>` +
-    acc.tips.map(([x,y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="3.2" fill="${gAl}" stroke="#a63a60" stroke-width=".8"/>`).join('') + `</g>`, false);
-  // bronşlar
-  const ring = (d, w) => tube(d, w, '#f4f9ff', '#a9bdd6') + `<path d="${d}" fill="none" stroke="#6f86a6" stroke-opacity=".55" stroke-width="${w-1}" stroke-dasharray="1.6 3.6"/>`;
-  s += og(k,'brons', ring(BL,13) + ring(BR,12));
-  // soluk borusu
-  s += og(k,'soluk', ring(TR,19));
-  // gırtlak
-  s += og(k,'girtlak', blob('M499,157 L529,155 C534,166 532,178 526,190 L505,192 C499,182 496,169 499,157 Z', gLx, '#5d7391',
-    `<path d="M505,158 L514,171 L523,157 M503,178 L527,177" fill="none" stroke="#5d7391" stroke-opacity=".6" stroke-width="1.6"/>`) + spec(508,164,4,7,-10,.6));
-  // diyafram
-  let fib = ''; for (let i = 0; i <= 14; i++){ const x = 372 + i*18.5; fib += `M${x},${(500 - 22*Math.sin(Math.PI*i/14)).toFixed(1)} L${x+2},${(526 - 12*Math.sin(Math.PI*i/14)).toFixed(1)} `; }
-  s += og(k,'diyafram', blob(DI, gDi, '#7a2a10', `<path d="${fib}" fill="none" stroke="#7a2a10" stroke-opacity=".3" stroke-width="1.6"/>`) + spec(440,481,30,3.5,4,.5) + spec(566,480,30,3.5,-4,.5));
-  // hava akışı
-  s += `<path d="M432,94 C470,88 505,86 516,100 C524,122 520,148 515,176 L511,268 C500,276 488,286 470,300" fill="none" stroke="#bff8ff" stroke-opacity=".75" stroke-width="2.2" stroke-dasharray="3 10" stroke-linecap="round" class="eg-air"><animate attributeName="stroke-dashoffset" from="26" to="0" dur="1.2s" repeatCount="indefinite"/></path>`;
-  // büyüteç: alveol
-  s += `<circle cx="605" cy="430" r="12" fill="none" stroke="#35eefc" stroke-width="2" stroke-opacity=".9"/><path d="M613,421 L775,413 M612,440 L760,516" stroke="#35eefc" stroke-opacity=".38" stroke-width="1.4" fill="none"/>`;
-  const AL = [[812,462,14],[836,452,15],[858,468,14],[846,492,15],[820,490,14],[862,500,11],[832,515,13],[800,482,11],[804,506,10]];
-  let al = `<circle cx="820" cy="470" r="70" fill="${gMg}"/><g clip-path="${u('mag')}">` +
-    `<circle cx="820" cy="470" r="70" fill="#ff7aa0" opacity=".08"/>` + tube('M760,402 C780,420 795,440 812,462', 11, '#f8eaf0', '#c7a2b2') +
-    `<path d="M884,440 C862,446 868,470 850,476 C836,480 840,500 826,506 C812,512 812,528 800,536" fill="none" stroke="#ff3b55" stroke-width="3" stroke-linecap="round"/>` +
-    AL.map(([x,y,r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${gAl}" stroke="#a63a60" stroke-width="1.2"/><ellipse cx="${x-r*.35}" cy="${y-r*.4}" rx="${r*.38}" ry="${r*.22}" fill="#fff" opacity=".55"/>`).join('') +
-    `<path d="M768,520 C790,508 790,486 806,474 C822,462 826,440 846,434 C860,430 866,420 880,418" fill="none" stroke="#5b6cff" stroke-width="3" stroke-linecap="round"/>` +
-    `<path d="M770,450 C790,462 800,478 812,476 M868,520 C852,516 846,500 836,498" fill="none" stroke="#b25fe0" stroke-width="2" stroke-linecap="round" opacity=".85"/>` + `</g>`;
-  s += og(k,'alveol', al, false);
-  s += `<circle cx="820" cy="470" r="70" fill="none" stroke="#35eefc" stroke-width="3" filter="${u('gl')}"/><circle cx="820" cy="470" r="66" fill="none" stroke="#fff" stroke-opacity=".12" stroke-width="2"/><path d="M772,430 A60,60 0 0 1 840,412" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="3" stroke-linecap="round"/>`;
+  const k = K(p), T = T_SOL, { E, Pg, Ln, og, raw, u } = k;
+  raw(`<linearGradient id="${p}bf" gradientUnits="userSpaceOnUse" x1="0" y1="562" x2="0" y2="606"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
+    <mask id="${p}bm" maskUnits="userSpaceOnUse" x="0" y="-40" width="1000" height="660"><rect x="0" y="-40" width="1000" height="660" fill="${u('bf')}"/></mask>`);
+  let s = k.pool(500, 300, 330, 330);
+  s += `<g mask="${u('bm')}">${k.img('resp_all.webp', T.x, T.y, 1140*T.s, 1400*T.s)}</g>`;
+  // diyafram (görselde yok): ince yarı saydam kubbe
+  s += `<path d="${DIYAFRAM}" fill="none" stroke="#ff9a7a" stroke-opacity=".55" stroke-width="7" stroke-linecap="round"/><path d="${DIYAFRAM}" fill="none" stroke="#ffd9cc" stroke-opacity=".7" stroke-width="1.6" stroke-linecap="round" transform="translate(0 -2)"/>`;
+  // hava akışı: burun → yutak → gırtlak → soluk borusu → bronş
+  s += `<path d="${lineD(T, [[352,300],[420,262],[500,268],[530,300],[540,380],[535,450],[545,520],[572,600],[572,840],[640,895],[675,960]])}" fill="none" stroke="#bff8ff" stroke-opacity=".8" stroke-width="2.2" stroke-dasharray="3 10" stroke-linecap="round" stroke-linejoin="round"><animate attributeName="stroke-dashoffset" from="26" to="0" dur="1.2s" repeatCount="indefinite"/></path>`;
+  // büyüteç: alveoller (bronşçuk ucundaki hava keseleri)
+  s += k.lens({ id: 'al', cx: 735, cy: 150, r: 82, src: T(705, 735), sr: 9, img: 'alveoli.webp', ix: 735 - 690*.235, iy: 150 - 1000*.235, iw: 955*.235, ih: 1388*.235 });
+  // sıcak noktalar
+  s += og('akciger', Pg(T, [[495,655],[530,690],[535,1080],[505,1095],[400,1110],[330,1130],[312,1050],[322,900],[355,790],[420,700]]) + Pg(T, [[660,660],[740,690],[800,760],[845,900],[860,1120],[800,1125],[700,1110],[690,1060],[655,960],[620,790],[630,690]]));
+  s += og('diyafram', `<path class="hs hsl" d="${DIYAFRAM}" stroke-width="16"/>`);
+  s += og('bronscuk', E(T, 760, 985, 75, 60, -30));
+  s += og('brons', Ln(T, [[600,850],[540,868],[515,890]], 34) + Ln(T, [[598,850],[640,885],[665,925]], 34));
+  s += og('soluk', E(T, 572, 690, 30, 150));
+  s += og('girtlak', E(T, 532, 480, 30, 58));
+  s += og('yutak', Pg(T, [[505,282],[545,290],[568,330],[565,420],[545,440],[520,420],[505,360]]));
+  s += og('burun', Pg(T, [[345,295],[380,245],[460,235],[510,262],[520,300],[480,320],[400,322],[355,318]]));
+  s += og('alveol', `<circle class="hs" cx="${(735 - 690*.235 + 760*.235).toFixed(1)}" cy="${(150 - 1000*.235 + 1150*.235).toFixed(1)}" r="34"/>`);
   return { defs: k.defs(), body: s };
 }
 
 /* ======================================================================
-   SET 3 · BOŞALTIM
+   SET 3 · BOŞALTIM — kidneys_vessels.webp (böbrek + aort/alt ana toplardamar)
+   üstte, urinary.webp'in alt bölümü (üreterler, idrar kesesi, üretra) altta
    ====================================================================== */
+const T_KV = TF(.26673, 314.6, 84), T_UR = TF(.53346, 279, -129.35);
 function artBosaltim(p){
-  const k = K(p), { u, vol, blob, spec, tube, raw } = k;
-  const gK = vol('kd','#d9636c','#7a1f2c'), gPv = vol('pv','#ffe2a0','#e0a63a'), gBl = vol('bl','#ffd47a','#e19a24',.4,.32);
-  raw(`<linearGradient id="${p}vfade" gradientUnits="userSpaceOnUse" x1="0" y1="430" x2="0" y2="500"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
-    <mask id="${p}vm" maskUnits="userSpaceOnUse" x="0" y="-20" width="1000" height="640"><rect x="0" y="-20" width="1000" height="640" fill="${u('vfade')}"/></mask>
-    <linearGradient id="${p}tfade" gradientUnits="userSpaceOnUse" x1="0" y1="-10" x2="0" y2="40"><stop offset="0" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#fff"/></linearGradient>`);
-  const TB = 'M292,-10 L708,-10 C704,80 668,180 664,250 C662,320 686,380 690,440 C694,500 684,560 680,620 L320,620 C316,560 306,500 310,440 C314,380 338,320 336,250 C332,180 296,80 292,-10 Z';
-  const KB = 'M0,-60 C30,-62 42,-30 36,-14 C33,-8 22,-8 20,0 C22,8 33,8 36,14 C42,30 30,62 0,60 C-28,58 -40,30 -40,0 C-40,-30 -28,-58 0,-60 Z';
-  let s = k.body(TB, 1, true);
-  // omurga, kaburga, kalça kemiği (silik)
-  let sp = ''; for (let y = -6; y < 420; y += 27) sp += `<rect x="484" y="${y}" width="32" height="21" rx="8"/>`;
-  s += `<g fill="#e9eef6" opacity=".07">${sp}</g>`;
-  s += `<g fill="none" stroke="#e9eef6" stroke-opacity=".1" stroke-width="9" stroke-linecap="round"><path d="M490,30 C440,26 380,40 352,80"/><path d="M510,30 C560,26 620,40 648,80"/><path d="M490,70 C446,70 392,86 372,128"/><path d="M510,70 C554,70 608,86 628,128"/></g>`;
-  s += `<g fill="#e9eef6" opacity=".07"><path d="M470,410 C430,380 360,372 344,420 C336,450 360,500 420,520 C440,500 452,460 470,440 Z"/><path d="M530,410 C570,380 640,372 656,420 C664,450 640,500 580,520 C560,500 548,460 530,440 Z"/></g>`;
-  // damarlar
-  const vein = (d,w) => tube(d,w,'#8a97ff','#3b49d6'), art = (d,w) => tube(d,w,'#ff7085','#d8213d');
-  const IVC = 'M482,-10 L482,392', AO = 'M520,-10 L520,380';
-  const IVl = 'M482,392 C470,414 418,430 406,466 L398,520', IVr = 'M482,392 C496,420 600,428 606,470 L612,520';
-  const AOl = 'M520,380 C506,404 440,420 424,460 L414,520', AOr = 'M520,380 C534,404 578,420 588,460 L596,520';
-  const RVl = 'M482,228 C460,232 436,238 410,244', RVr = 'M482,218 C520,216 560,224 590,228';
-  const RAl = 'M520,214 C490,218 448,226 410,234', RAr = 'M520,206 C548,206 570,212 590,218';
-  s += `<g mask="${u('vm')}">${vein(IVl,12)}${vein(IVr,12)}${art(AOl,11)}${art(AOr,11)}</g>`;
-  s += `<g mask="${u('ft')}">` + og(k,'toplar', vein(IVC,20) + vein(RVl,9) + vein(RVr,9), false);
-  s += og(k,'atar', art(AO,17) + art(RAl,7) + art(RAr,7), false) + `</g>`;
-  // kan akışı
-  s += `<path id="${p}ao" d="${AO}" fill="none"/><path id="${p}ivc" d="${IVC}" fill="none"/>`;
-  for (let i = 0; i < 4; i++){
-    s += `<ellipse rx="3.6" ry="2.4" fill="#ffd3da" opacity=".9"><animateMotion dur="5s" begin="-${i*1.25}s" repeatCount="indefinite" rotate="auto"><mpath href="#${p}ao"/></animateMotion></ellipse>`;
-    s += `<ellipse rx="3.6" ry="2.4" fill="#cfd5ff" opacity=".9"><animateMotion dur="6s" begin="-${i*1.5}s" repeatCount="indefinite" rotate="auto" keyPoints="1;0" keyTimes="0;1" calcMode="linear"><mpath href="#${p}ivc"/></animateMotion></ellipse>`;
-  }
-  // böbrekler
-  const kid = (tx,ty,sx) => `<g transform="translate(${tx} ${ty}) scale(${sx} ${Math.abs(sx)})">` + blob(KB, gK, '#4e0f18',
-    `<path d="M-30,-40 L-14,-44 L6,-12 Z M-38,-12 L-34,4 L-2,-2 Z M-36,16 L-26,34 L2,8 Z M-24,42 L-8,46 L8,14 Z" fill="#5a0d1c" fill-opacity=".45" stroke="#ff9aa8" stroke-opacity=".2" stroke-width="1"/>` +
-    `<path d="M24,-14 C10,-18 -2,-12 -6,-4 C-8,4 -2,12 10,16 C16,17 22,15 24,14 Z" fill="${gPv}" stroke="#b9801f" stroke-width="1"/><circle cx="-8" cy="-14" r="4" fill="${gPv}"/><circle cx="-12" cy="2" r="4" fill="${gPv}"/><circle cx="-6" cy="16" r="4" fill="${gPv}"/>`) +
-    spec(-14,-38,12,7,-25,.6) + `</g>`;
-  s += og(k,'bobrek', kid(388,238,1.06) + kid(612,222,-1.06));
-  // üreterler
-  const UL = 'M410,252 C424,300 440,390 472,470', UR = 'M590,236 C578,300 562,390 528,470';
-  s += og(k,'ureter', tube(UL,7.5,'#ffe7ad','#f2b84a') + tube(UR,7.5,'#ffe7ad','#f2b84a'));
-  s += `<path id="${p}ul" d="${UL}" fill="none"/><path id="${p}ur" d="${UR}" fill="none"/>`;
-  for (let i = 0; i < 3; i++) ['ul','ur'].forEach((id,j) => { s += `<ellipse rx="2.6" ry="1.8" fill="#fff4b0"><animateMotion dur="3.6s" begin="-${i*1.2 + j*.6}s" repeatCount="indefinite" rotate="auto"><mpath href="#${p}${id}"/></animateMotion></ellipse>`; });
-  // mesane
-  const BLD = 'M500,448 C540,446 562,470 560,500 C558,530 532,546 500,546 C468,546 442,530 440,500 C438,470 460,446 500,448 Z';
-  s += og(k,'mesane', blob(BLD, gBl, '#9a5f08',
-    `<path d="M449,508 C468,500 486,512 502,506 C518,500 536,510 551,503 C548,528 528,542 500,542 C472,542 452,528 449,508 Z" fill="#ffe06a" fill-opacity=".6"/>` +
-    `<path d="M452,478 C470,470 486,476 500,472 M548,478 C530,470 514,476 500,472 M446,500 C470,492 530,492 554,500" fill="none" stroke="#a8650a" stroke-opacity=".3" stroke-width="1.6"/>`) + spec(478,464,20,8,-20,.75));
-  // üretra
-  s += og(k,'uretra', tube('M500,544 L500,588', 7.5, '#ffe7ad', '#f2b84a'));
+  const k = K(p), { E, Pg, Ln, og, raw, u } = k, A = T_KV, B = T_UR;
+  // üst görselde üreter uçları 780. pikselde kesilir (böbrekler kesilmez); alt görsel aynı noktadan devam eder
+  const cut = A(0, 780)[1], [l1] = A(445, 0), [l2] = A(505, 0), [r1] = A(885, 0), [r2] = A(945, 0);
+  raw(`<clipPath id="${p}kvc"><rect x="0" y="0" width="1000" height="${cut}"/><rect x="0" y="${cut}" width="${l1}" height="80"/><rect x="${l2}" y="${cut}" width="${r1 - l2}" height="80"/><rect x="${r2}" y="${cut}" width="${1000 - r2}" height="80"/></clipPath>` +
+    `<clipPath id="${p}urc"><rect x="0" y="${cut - 1.5}" width="1000" height="${620 - cut}"/></clipPath>`);
+  let s = k.pool(500, 300, 300, 330);
+  s += `<g clip-path="${u('kvc')}">${k.img('kidneys_vessels.webp', A.x, A.y, (1390*A.s).toFixed(1), (848*A.s).toFixed(1))}</g>`;
+  s += `<g clip-path="${u('urc')}">${k.img('urinary.webp', B.x, B.y, (795*B.s).toFixed(1), (1356*B.s).toFixed(1))}</g>`;
+  // kan akışı: aort aşağı, alt ana toplardamar yukarı
+  s += k.flow('ao', lineD(A, [[742,60],[742,570]]), 4, 5, `<ellipse rx="3.6" ry="2.4" fill="#ffd3da" opacity=".9"/>`);
+  s += k.flow('iv', lineD(A, [[612,60],[612,570]]), 4, 6, `<ellipse rx="3.6" ry="2.4" fill="#cfe9ff" opacity=".9"/>`, true);
+  // idrar: üreterlerde aşağı
+  const UL = lineD(A, [[474.5,470],[474.5,780]]) + ' L' + poly(B, [[300,850],[282,900],[268,940]]).map(q => q.join(',')).join(' L');
+  const UR = lineD(A, [[914.5,420],[914.5,780]]) + ' L' + poly(B, [[511,850],[522,900],[535,945]]).map(q => q.join(',')).join(' L');
+  s += k.flow('ul', UL, 3, 3.6, `<ellipse rx="2.6" ry="1.8" fill="#fff4b0"/>`) + k.flow('ur', UR, 3, 3.6, `<ellipse rx="2.6" ry="1.8" fill="#fff4b0"/>`);
+  // sıcak noktalar
+  s += og('bobrek', Pg(A, [[300,30],[460,70],[495,250],[430,330],[460,470],[440,700],[300,830],[120,790],[30,600],[20,350],[110,120]]) + Pg(A, [[1090,30],[930,70],[895,250],[960,330],[930,470],[950,700],[1090,830],[1270,790],[1360,600],[1370,350],[1280,120]]));
+  s += og('mesane', Pg(B, [[240,1010],[320,955],[480,950],[560,1000],[560,1110],[480,1210],[400,1240],[300,1205],[235,1100]]));
+  s += og('uretra', E(B, 398, 1295, 32, 60));
+  s += og('ureter', Ln(A, [[474.5,470],[474.5,780]], 60) + Ln(B, [[302,790],[300,850],[282,900],[266,945]], 30) + Ln(A, [[914.5,420],[914.5,780]], 60) + Ln(B, [[523,790],[511,850],[522,900],[536,945]], 30));
+  s += og('toplar', Pg(A, [[560,50],[668,50],[668,580],[560,580]]));
+  s += og('atar', Pg(A, [[686,50],[798,50],[798,580],[686,580]]));
   return { defs: k.defs(), body: s };
 }
 
 /* ======================================================================
-   SET 4 · DOLAŞIM (çift dolaşım şeması)
+   SET 4 · DOLAŞIM — bloodstream.webp (küçük ve büyük dolaşım şeması),
+   vücut hücreleri büyüteci gas_systemic.webp
    ====================================================================== */
+const T_DOL = TF(596/1390, 500 - 755*596/1390/2, 2);
 function artDolasim(p){
-  const k = K(p), { u, vol, blob, spec, tube, raw } = k;
-  const gL = vol('lg','#ffb0c4','#d9577e'), gH = vol('ht','#ff5a70','#a3122e',.38,.25), gBb = vol('bb','#8a96ff','#2a35b8',.4,.3),
-        gRb = vol('rb','#ff7488','#b0102c',.4,.3), gC = vol('cl','#f8d3b6','#c98b6c',.38,.3), gN = vol('nu','#c08ae0','#6c3aa0');
-  raw(`<linearGradient id="${p}lc" gradientUnits="userSpaceOnUse" x1="374" y1="0" x2="626" y2="0"><stop offset="0" stop-color="#5b6cff"/><stop offset=".5" stop-color="#b04cc8"/><stop offset="1" stop-color="#ff3b55"/></linearGradient>
-    <linearGradient id="${p}bc" gradientUnits="userSpaceOnUse" x1="690" y1="0" x2="310" y2="0"><stop offset="0" stop-color="#ff3b55"/><stop offset=".5" stop-color="#b04cc8"/><stop offset="1" stop-color="#5b6cff"/></linearGradient>`);
-  const LL = 'M470,48 C448,36 414,44 398,66 C380,92 372,130 374,160 C376,174 390,178 408,172 C432,166 458,160 474,156 C482,154 486,146 486,136 L486,64 C486,56 480,52 470,48 Z';
-  const LR = 'M530,48 C552,36 586,44 602,66 C620,92 628,130 626,160 C624,174 610,178 592,172 C568,166 542,160 526,156 C518,154 514,146 514,136 L514,64 C514,56 520,52 530,48 Z';
-  raw(`<clipPath id="${p}lcp"><path d="${LL}"/><path d="${LR}"/></clipPath>`);
-  const BODY = 'M465,-12 L535,-12 L537,14 C580,26 660,30 700,52 C716,62 722,84 720,110 L712,300 C708,400 714,500 716,620 L284,620 C286,500 292,400 288,300 L280,110 C278,84 284,62 300,52 C340,30 420,26 463,14 Z';
-  const PA = 'M484,248 C482,222 470,196 452,170', PV = 'M548,170 C532,196 520,222 518,248';
-  const AO = 'M536,252 C548,212 598,200 680,202 C745,204 770,236 770,290 L770,440 C770,488 740,505 690,506';
-  const VC = 'M310,506 C260,505 230,488 230,440 L230,290 C230,236 262,206 330,204 C400,202 440,226 458,256';
-  const C1 = 'M690,506 C660,480 620,474 584,488 S504,476 462,492 S384,484 310,506',
-        C2 = 'M690,506 C646,508 604,516 562,506 S482,500 440,512 S356,514 310,506',
-        C3 = 'M690,506 C660,532 614,540 576,526 S494,540 452,528 S362,532 310,506';
-  let s = k.body(BODY, .75, true);
-  // akciğerler + kılcal ağ
-  const ca = { seg: [], tips: [] };
-  [[-95,30,4.2],[-128,28,3.8],[-62,26,3.6],[-160,22,3.2]].forEach(([a,l,w]) => tree(452,170,a,l,w,3,ca));
-  [[-85,30,4.2],[-52,28,3.8],[-118,26,3.6],[-20,22,3.2]].forEach(([a,l,w]) => tree(548,170,a,l,w,3,ca));
-  const net = ca.seg.map(([x1,y1,x2,y2,w]) => `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" stroke-width="${w.toFixed(1)}"/>`).join('');
-  let mesh = '';
-  for (let y = 52; y <= 176; y += 11) for (let x = 378; x <= 626; x += 13){ const o = ((x*7 + y*13) % 9) - 4; mesh += `M${x},${y+o*.6} q4,-4 8,${o*.5} `; }
-  s += og(k,'akciger', blob(LL, gL, '#8f2246') + blob(LR, gL, '#8f2246') +
-    `<g clip-path="${u('lcp')}"><path d="${mesh}" fill="none" stroke="${u('lc')}" stroke-width="1.3" stroke-opacity=".55" stroke-linecap="round"/><g stroke="#3a0c2a" stroke-opacity=".45" stroke-linecap="round" transform="translate(.8 1)">${net}</g><g stroke="${u('lc')}" stroke-linecap="round">${net}</g>` +
-    ca.tips.map(([x,y]) => `<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="2" fill="${u('lc')}"/>`).join('') + `</g>` + spec(420,72,20,8,-35,.6) + spec(580,72,20,8,35,.6));
-  // damarlar
-  const oxy = (d,w) => tube(d,w,'#ff7085','#d8213d'), dox = (d,w) => tube(d,w,'#8a97ff','#3b49d6');
-  s += og(k,'toplar', dox(VC,17) + dox(PA,13), false);
-  s += og(k,'atar', oxy(AO,17) + oxy(PV,13), false);
-  // vücut hücreleri
-  let cells = '';
-  const cell = (x,y,r) => `<g><path d="M${x-r},${y} C${x-r},${y-r*.9} ${x-r*.5},${y-r} ${x},${y-r} C${x+r*.7},${y-r} ${x+r},${y-r*.6} ${x+r},${y} C${x+r},${y+r*.8} ${x+r*.6},${y+r} ${x},${y+r} C${x-r*.7},${y+r} ${x-r},${y+r*.7} ${x-r},${y} Z" fill="${gC}" stroke="#9c6248" stroke-width="1.3"/><circle cx="${x+2}" cy="${y+2}" r="${r*.32}" fill="${gN}"/><ellipse cx="${x-r*.38}" cy="${y-r*.45}" rx="${r*.35}" ry="${r*.18}" fill="#fff" opacity=".5"/></g>`;
-  for (let i = 0; i < 7; i++) cells += cell(350 + i*50, 462 + (i%2)*4, 19);
-  for (let i = 0; i < 6; i++) cells += cell(375 + i*50, 552 - (i%2)*4, 19);
-  s += og(k,'hucre', cells);
-  // kılcal damarlar
-  const cap = d => `<path d="${d}" fill="none" stroke="#1a0a24" stroke-opacity=".6" stroke-width="7" stroke-linecap="round"/><path d="${d}" fill="none" stroke="${u('bc')}" stroke-width="5" stroke-linecap="round"/><path d="${d}" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="1.4" transform="translate(-1 -1.5)"/>`;
-  s += og(k,'kilcal', cap(C1) + cap(C2) + cap(C3));
-  // kalp
-  const HT = 'M-50,-42 C-58,-72 -18,-80 0,-60 C18,-80 60,-72 56,-38 C54,-2 38,40 6,74 C1,79 -5,79 -10,73 C-42,40 -56,-6 -50,-42 Z';
-  const SAG = 'M-40,-30 C-42,-50 -16,-54 -8,-38 L-6,30 C-6,44 -14,50 -22,40 C-34,24 -40,-4 -40,-30 Z';
-  const SOL = 'M7,-38 C14,-54 44,-50 43,-28 C42,0 32,30 12,52 C6,56 4,48 4,36 Z';
-  s += `<g data-org="kalp"><g filter="${u('ds')}" transform="translate(500 308)">` + blob(HT, gH, '#5e0716',
-    `<path d="M-4,-58 C-2,-20 -2,20 -2,70" fill="none" stroke="#5e0716" stroke-opacity=".35" stroke-width="2"/>`) +
-    `<g data-org="sag"><path d="${SAG}" fill="${gBb}" stroke="#3a0612" stroke-width="2.4"/><path d="${SAG}" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1" transform="translate(-1 -1)"/>${spec(-28,-30,6,10,10,.5)}</g>` +
-    `<g data-org="sol"><path d="${SOL}" fill="${gRb}" stroke="#3a0612" stroke-width="2.4"/><path d="${SOL}" fill="none" stroke="#fff" stroke-opacity=".18" stroke-width="1" transform="translate(-1 -1)"/>${spec(24,-30,7,10,-10,.5)}</g>` +
-    spec(-30,-56,16,6,-25,.7) + spec(34,-56,14,5,25,.55) + `</g></g>`;
-  // yön okları
-  const chev = (x,y,r,c='#fff') => `<path d="M-6,-4 L0,3 L6,-4" transform="translate(${x} ${y}) rotate(${r})" stroke="${c}" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>`;
-  s += chev(770,330,0) + chev(770,410,0) + chev(230,410,180) + chev(230,330,180) + chev(470,206,150) + chev(530,206,210) + chev(612,204,-90) + chev(370,206,90);
+  const k = K(p), T = T_DOL, { E, Pg, Ln, og } = k;
+  let s = k.pool(500, 300, 230, 330);
+  s += k.img('bloodstream.webp', T.x.toFixed(1), T.y, (755*T.s).toFixed(1), 596);
   // akan kan hücreleri
-  const paths = { pa: PA, pv: PV, ao: AO, vc: VC, c1: C1, c2: C2, c3: C3 };
-  for (const id in paths) s += `<path id="${p}${id}" d="${paths[id]}" fill="none"/>`;
-  const mov = (id, n, dur, fill, anim = '') => { let o = ''; for (let i = 0; i < n; i++) o += `<ellipse rx="4" ry="2.8" fill="${fill}" stroke="#000" stroke-opacity=".25" stroke-width=".6">${anim.replace(/BEGIN/g, -(i*dur/n).toFixed(2)+'s')}<animateMotion dur="${dur}s" begin="-${(i*dur/n).toFixed(2)}s" repeatCount="indefinite" rotate="auto"><mpath href="#${p}${id}"/></animateMotion></ellipse>`; return o; };
-  s += mov('ao',7,7,'#ffd0d7') + mov('vc',7,7,'#d2d7ff') + mov('pa',2,2.4,'#d2d7ff') + mov('pv',2,2.4,'#ffd0d7');
-  ['c1','c2','c3'].forEach((c,j) => { s += mov(c,3,4.5+j*.4,'#ff8a9a',`<animate attributeName="fill" values="#ffb3be;#d8a6ff;#b8c0ff" dur="${4.5+j*.4}s" begin="BEGIN" repeatCount="indefinite"/>`); });
+  const rb = `<ellipse rx="3.6" ry="2.5" fill="#ffd0d7" stroke="#7a0b1c" stroke-opacity=".5" stroke-width=".6"/>`, bb = `<ellipse rx="3.6" ry="2.5" fill="#e6f1ff" stroke="#1b3a6a" stroke-opacity=".5" stroke-width=".6"/>`;
+  s += k.flow('ao', lineD(T, [[392,545],[372,470],[372,395],[400,345],[460,325],[520,340],[552,400],[552,700],[552,1040],[552,1225]]), 7, 7, rb);
+  s += k.flow('vc', lineD(T, [[180,1225],[180,900],[180,560],[205,545],[290,545]]), 6, 6, bb);
+  s += k.flow('pa', lineD(T, [[322,525],[322,430],[200,430],[92,430],[88,560]]), 3, 3, bb);
+  s += k.flow('pv', lineD(T, [[105,712],[300,712],[495,712],[495,525],[425,522]]), 4, 3.6, rb);
+  // vücut hücreleri büyüteci (sağ bacak kılcal ağı)
+  s += k.lens({ id: 'hc', cx: 812, cy: 478, r: 60, src: T(572, 1305), sr: 9, img: 'gas_systemic.webp', ix: 812 - 760*.17, iy: 478 - 470*.17, iw: 1386*.17, ih: 922*.17 });
+  // sıcak noktalar
+  s += og('akciger', Pg(T, [[60,560],[105,575],[110,700],[100,750],[20,745],[5,680],[20,600]]) + Pg(T, [[625,560],[660,570],[720,640],[715,745],[635,745],[620,690]]));
+  s += og('kilcal', Pg(T, [[160,1220],[205,1225],[260,1270],[255,1330],[220,1380],[140,1385],[100,1320],[120,1270]]) + Pg(T, [[285,775],[380,755],[470,770],[455,860],[380,905],[320,880]]));
+  s += og('toplar', Ln(T, [[180,1180],[180,900],[180,560],[230,545]], 44));
+  s += og('atar', Ln(T, [[372,440],[372,395],[400,345],[460,325],[520,340],[552,400],[552,700],[552,1100]], 46));
+  s += og('kalp', Pg(T, [[285,525],[330,500],[400,490],[440,505],[450,580],[430,660],[390,690],[330,670],[290,620],[275,560]]));
+  s += og('sag', Pg(T, [[292,535],[330,515],[372,520],[376,600],[372,665],[330,655],[300,620],[288,570]]));
+  s += og('sol', Pg(T, [[378,535],[420,525],[442,560],[436,630],[410,662],[382,660]]));
+  s += og('hucre', `<circle class="hs" cx="${(812 - 760*.17 + 830*.17).toFixed(1)}" cy="${(478 - 470*.17 + 540*.17).toFixed(1)}" r="28"/>`);
   // açıklama
-  s += `<g class="lgd" font-family="Lexend,system-ui,sans-serif" font-size="13" font-weight="600" fill="#cfe0f2"><rect x="752" y="22" width="222" height="68" rx="14" fill="#06121f" fill-opacity=".55" stroke="#35eefc" stroke-opacity=".25"/>` +
-       `<rect x="768" y="38" width="26" height="9" rx="4.5" fill="#ff3b55"/><text x="804" y="47">Oksijen oranı yüksek kan</text>` +
-       `<rect x="768" y="64" width="26" height="9" rx="4.5" fill="#5b6cff"/><text x="804" y="73">Oksijen oranı düşük kan</text></g>`;
+  s += `<g class="lgd" font-family="Lexend,system-ui,sans-serif" font-size="13" font-weight="600" fill="#cfe0f2"><rect x="700" y="22" width="232" height="68" rx="14" fill="#06121f" fill-opacity=".55" stroke="#35eefc" stroke-opacity=".25"/>` +
+       `<rect x="716" y="38" width="26" height="9" rx="4.5" fill="#f0553d"/><text x="752" y="47">Oksijen oranı yüksek kan</text>` +
+       `<rect x="716" y="64" width="26" height="9" rx="4.5" fill="#a9cbe0"/><text x="752" y="73">Oksijen oranı düşük kan</text></g>`;
   return { defs: k.defs(), body: s };
 }
-
 /* ======================================================================
    SET VERİLERİ (ders kitabıyla birebir)
-   a: yapı üzerindeki çapa noktası · b: etiket kutusunun merkezi (tasarım koordinatı 1000×600)
+   a: yapı üzerindeki çapa noktası (görsel pikselinden dönüştürülür) · b: etiket kutusunun merkezi (tasarım koordinatı 1000×600)
+   mob: telefonda gösterilen yatay kesit [başlangıç x, genişlik]
    ====================================================================== */
 const SETS = {
-  sindirim: { title: 'Sindirim Sistemi', short: 'Sindirim', art: artSindirim, items: [
-    { id:'agiz', name:'Ağız', a:[455,124], b:[215,120], hint:'Besinlerin vücuda alındığı ilk organdır; çiğneme ve karbohidratların kimyasal sindirimi burada başlar.',
+  sindirim: { title: 'Sindirim Sistemi', short: 'Sindirim', mob: [200,600], art: artSindirim, items: [
+    { id:'agiz', name:'Ağız', a:T_SIN(230,530), b:[300,110], hint:'Besinlerin vücuda alındığı ilk organdır; çiğneme ve karbohidratların kimyasal sindirimi burada başlar.',
       info:'Besinlerin vücuda alındığı ilk organdır. Çiğneme hareketleriyle besinlerin fiziksel sindirimi, tükürük salgısındaki enzimler yardımıyla karbohidratların kimyasal sindirimi gerçekleşir. Bu nedenle fiziksel ve kimyasal sindirim ağızda başlar.' },
-    { id:'yutak', name:'Yutak', a:[521,128], b:[790,100], hint:'Besinleri ağızdan yemek borusuna iletir; burada sindirim gerçekleşmez.',
+    { id:'yutak', name:'Yutak', a:T_SIN(378,480), b:[700,90], hint:'Besinleri ağızdan yemek borusuna iletir; burada sindirim gerçekleşmez.',
       info:'Besinlerin ağızdan yemek borusuna iletilmesini sağlar. Yutakta sindirim gerçekleşmez.' },
-    { id:'yemek', name:'Yemek borusu', a:[509,240], b:[215,225], hint:'Besinleri kas hareketleriyle mideye iletir; burada sindirim gerçekleşmez.',
+    { id:'yemek', name:'Yemek borusu', a:T_SIN(376,950), b:[700,210], hint:'Besinleri kas hareketleriyle mideye iletir; burada sindirim gerçekleşmez.',
       info:'Besinlerin yutaktan mideye kas hareketleriyle iletilmesini sağlar. Yemek borusunda sindirim gerçekleşmez.' },
-    { id:'mide', name:'Mide', a:[612,352], b:[800,300], hint:'Proteinlerin kimyasal sindirimi burada başlar; besinler bulamaç hâline gelir.',
+    { id:'mide', name:'Mide', a:T_SIN(480,1560), b:[700,330], hint:'Proteinlerin kimyasal sindirimi burada başlar; besinler bulamaç hâline gelir.',
       info:'Yemek borusundan gelen besinler, kasların kasılıp gevşemesiyle fiziksel sindirime uğrar. Mide öz suyundaki enzimlerle proteinlerin kimyasal sindirimi başlar. Bulamaç hâline gelen besinler buradan ince bağırsağa gönderilir.' },
-    { id:'karaciger', name:'Karaciğer', a:[410,350], b:[205,320], hint:'Salgıladığı sıvı ince bağırsağa gönderilir ve yağların fiziksel sindirimine yardımcı olur.',
+    { id:'karaciger', name:'Karaciğer', a:T_SIN(200,1300), b:[300,260], hint:'Salgıladığı sıvı ince bağırsağa gönderilir ve yağların fiziksel sindirimine yardımcı olur.',
       info:'Sindirime yardımcı bir organdır. Salgıladığı safra sıvısı ince bağırsağa gönderilir ve yağların fiziksel sindirimine yardımcı olur.' },
-    { id:'safra', name:'Safra kesesi', a:[459,394], b:[205,420], hint:'Karaciğerin salgıladığı sıvı burada toplanır, sonra bir kanalla ince bağırsağa gönderilir.',
+    { id:'safra', name:'Safra kesesi', a:T_SIN(135,1462), b:[300,345], hint:'Karaciğerin salgıladığı sıvı burada toplanır, sonra bir kanalla ince bağırsağa gönderilir.',
       info:'Karaciğerin salgıladığı safra sıvısı, karaciğerin altında bulunan safra kesesinde toplanır ve buradan bir kanal yardımıyla ince bağırsağa gönderilir.' },
-    { id:'pankreas', name:'Pankreas', a:[624,428], b:[805,440], hint:'Ürettiği öz suyu bir kanalla ince bağırsağa gönderir; kimyasal sindirime yardımcı olur.',
+    { id:'pankreas', name:'Pankreas', a:T_SIN(255,1720), b:[300,420], hint:'Ürettiği öz suyu bir kanalla ince bağırsağa gönderir; kimyasal sindirime yardımcı olur.',
       info:'Sindirime yardımcı bir organdır. Ürettiği pankreas öz suyunu bir kanal yardımıyla ince bağırsağa gönderir. Pankreas öz suyu protein, karbohidrat ve yağların kimyasal sindirimine yardımcı olur.' },
-    { id:'ince', name:'İnce bağırsak', a:[470,516], b:[215,500], hint:'Besinlerin emilerek kana geçtiği yerdir; fiziksel ve kimyasal sindirim burada tamamlanır.',
+    { id:'ince', name:'İnce bağırsak', a:T_SIN(300,2120), b:[300,505], hint:'Besinlerin emilerek kana geçtiği yerdir; fiziksel ve kimyasal sindirim burada tamamlanır.',
       info:'Besinlerin fiziksel ve kimyasal sindirimi burada tamamlanır. Sindirimi tamamlanan besinler, iç yüzeydeki villuslar sayesinde emilerek kana geçer. Villuslar iç yüzeyi genişleterek emilimin hızlı olmasını sağlar.' },
-    { id:'kalin', name:'Kalın bağırsak', a:[605,522], b:[805,522], hint:'Sindirilmeyen besinlerden geriye kalan su, bazı mineral ve vitaminler burada emilir.',
+    { id:'kalin', name:'Kalın bağırsak', a:T_SIN(600,2000), b:[700,450], hint:'Sindirilmeyen besinlerden geriye kalan su, bazı mineral ve vitaminler burada emilir.',
       info:'İnce bağırsaktan gelen ve sindirilmeyen besinlerin bir süre depolandıktan sonra anüse gönderildiği yerdir. Geriye kalan suyun, bazı mineral ve vitaminlerin emilimi burada gerçekleşir.' },
-    { id:'anus', name:'Anüs', a:[501,588], b:[790,585], hint:'Sindirim sisteminin son kısmıdır; sindirilmeyen besinler buradan uzaklaştırılır.',
+    { id:'anus', name:'Anüs', a:T_SIN(360,2556), b:[700,565], hint:'Sindirim sisteminin son kısmıdır; sindirilmeyen besinler buradan uzaklaştırılır.',
       info:'Sindirim sisteminin son kısmıdır. Sindirilmeyen besinlerin vücuttan uzaklaştırılmasında görevlidir.' }
   ]},
-  solunum: { title: 'Solunum Sistemi', short: 'Solunum', art: artSolunum, items: [
-    { id:'burun', name:'Burun', a:[456,92], b:[215,80], hint:'Solunum burada başlar; mukus havayı nemlendirir, kıllar toz ve mikropları tutar.',
+  solunum: { title: 'Solunum Sistemi', short: 'Solunum', mob: [80,840], art: artSolunum, items: [
+    { id:'burun', name:'Burun', a:T_SOL(430,270), b:[170,95], hint:'Solunum burada başlar; mukus havayı nemlendirir, kıllar toz ve mikropları tutar.',
       info:'Solunum sistemi burunla başlar. İç yüzeydeki mukus sıvısı kuru havayı nemlendirir, kılcal damarlar havayı ısıtır, kıllar havadaki toz ve mikropları tutarak havayı temizlemeye yardımcı olur.' },
-    { id:'yutak', name:'Yutak', a:[521,118], b:[790,100], hint:'Burun ve ağız boşluklarının arkasındadır; burundan gelen hava buradan gırtlağa geçer.',
+    { id:'yutak', name:'Yutak', a:T_SOL(535,330), b:[170,165], hint:'Burun ve ağız boşluklarının arkasındadır; burundan gelen hava buradan gırtlağa geçer.',
       info:'Burun ve ağız boşluklarının arkasında yer alan, soluk borusu ile yemek borusunu birleştiren esnek bir yapıdır. Burundan gelen hava buradan gırtlağa geçer.' },
-    { id:'girtlak', name:'Gırtlak', a:[520,174], b:[790,180], hint:'Esnek ve kıkırdak yapıdadır; içindeki ses telleri sesin oluşmasını sağlar.',
+    { id:'girtlak', name:'Gırtlak', a:T_SOL(535,480), b:[170,235], hint:'Esnek ve kıkırdak yapıdadır; içindeki ses telleri sesin oluşmasını sağlar.',
       info:'Yutak ile soluk borusu arasında bulunur. Esnek ve kıkırdak yapıdadır. Yapısındaki ses telleri sesin oluşmasını sağlar.' },
-    { id:'soluk', name:'Soluk borusu', a:[512,232], b:[215,215], hint:'Kıkırdak yapıdaki bu boru, alınan havanın akciğerlere ulaşmasını sağlar.',
+    { id:'soluk', name:'Soluk borusu', a:T_SOL(572,700), b:[170,320], hint:'Kıkırdak yapıdaki bu boru, alınan havanın akciğerlere ulaşmasını sağlar.',
       info:'Alınan havanın akciğerlere ulaşmasını sağlayan yapıdır. Kıkırdak yapıdadır ve gırtlak ile akciğerler arasında bulunur.' },
-    { id:'brons', name:'Bronş', a:[533,287], b:[790,262], hint:'Soluk borusunun iki kola ayrılmasıyla oluşur; her iki akciğere hava taşır.',
+    { id:'brons', name:'Bronş', a:T_SOL(635,880), b:[830,390], hint:'Soluk borusunun iki kola ayrılmasıyla oluşur; her iki akciğere hava taşır.',
       info:'Soluk borusunun akciğerlere doğru iki kola ayrılmasıyla oluşur. Her iki akciğere hava taşır.' },
-    { id:'bronscuk', name:'Bronşçuk', a:[0,0], b:[205,335], hint:'Akciğerlerin içinde dallanan küçük hava kanallarıdır; havayı hava keselerine iletir.',
+    { id:'bronscuk', name:'Bronşçuk', a:T_SOL(745,1000), b:[830,470], hint:'Akciğerlerin içinde dallanan küçük hava kanallarıdır; havayı hava keselerine iletir.',
       info:'Bronşların akciğerlerin içine doğru dallara ayrılmasıyla oluşan küçük hava kanallarıdır. Havanın alveollere iletilmesini sağlar.' },
-    { id:'alveol', name:'Alveol', a:[832,500], b:[820,578], hint:'Etrafı kılcal damarlarla çevrili hava keseleridir; havadaki oksijen burada kana geçer.',
+    { id:'alveol', name:'Alveol', a:[751.5,185.3], b:[880,60], hint:'Etrafı kılcal damarlarla çevrili hava keseleridir; havadaki oksijen burada kana geçer.',
       info:'Etrafı kılcal damarlarla çevrili hava keseleridir ve bronşçukların uçlarında bulunur. Havadaki oksijen kana, kandaki karbon dioksit havaya burada geçer.' },
-    { id:'akciger', name:'Akciğer', a:[384,446], b:[205,450], hint:'Göğüs kafesinin içindeki süngerimsi organdır; sağdaki parçası soldakinden büyüktür.',
+    { id:'akciger', name:'Akciğer', a:T_SOL(380,920), b:[170,430], hint:'Göğüs kafesinin içindeki süngerimsi organdır; sağdaki parçası soldakinden büyüktür.',
       info:'Göğüs kafesinin içinde yer alan, sağ ve sol olmak üzere iki parçadan oluşan süngerimsi yapıdaki organdır. Sağ akciğer sol akciğere göre daha büyüktür.' },
-    { id:'diyafram', name:'Diyafram', a:[410,498], b:[205,545], hint:'Göğüs boşluğu ile karın boşluğunu birbirinden ayıran kaslı yapıdır.',
+    { id:'diyafram', name:'Diyafram', a:[392,548], b:[170,545], hint:'Göğüs boşluğu ile karın boşluğunu birbirinden ayıran kaslı yapıdır.',
       info:'Göğüs boşluğu ile karın boşluğunu birbirinden ayıran kaslı yapıdır. Kaburgalar arasındaki kaslarla birlikte kasılıp gevşeyerek akciğerlerin genişleyip daralmasına yardımcı olur.' }
   ]},
-  bosaltim: { title: 'Boşaltım Sistemi', short: 'Boşaltım', art: artBosaltim, items: [
-    { id:'bobrek', name:'Böbrek', a:[648,230], b:[840,240], hint:'Kanı süzerek atık maddeleri ve fazla suyu ayırır; süzülen atıklar idrarı oluşturur.',
+  bosaltim: { title: 'Boşaltım Sistemi', short: 'Boşaltım', mob: [100,800], art: artBosaltim, items: [
+    { id:'bobrek', name:'Böbrek', a:T_KV(1280,420), b:[830,200], hint:'Kanı süzerek atık maddeleri ve fazla suyu ayırır; süzülen atıklar idrarı oluşturur.',
       info:'Böbrekler kanı süzerek (filtreleyerek) yararlı maddelerin tekrar kana geçmesini sağlar; fazla su, tuz, vitamin, hormon, üre gibi atık maddeleri kandan uzaklaştırır. Kandan süzülen bu atık maddeler idrarı oluşturur.' },
-    { id:'ureter', name:'Üreter', sub:'idrar borusu', a:[434,350], b:[190,340], hint:'Böbreklerde oluşan idrarı idrar kesesine ileten boru şeklindeki yapılardır.',
+    { id:'ureter', name:'Üreter', sub:'idrar borusu', a:T_UR(302,870), b:[170,330], hint:'Böbreklerde oluşan idrarı idrar kesesine ileten boru şeklindeki yapılardır.',
       info:'Böbreklerde oluşan idrarı idrar kesesine (mesane) ileten boru şeklindeki yapılardır.' },
-    { id:'mesane', name:'Mesane', sub:'idrar kesesi', a:[452,512], b:[195,525], hint:'İdrar vücut dışına atılıncaya kadar burada depolanır; kaslı bir yapıdır.',
+    { id:'mesane', name:'Mesane', sub:'idrar kesesi', a:T_UR(330,1100), b:[170,455], hint:'İdrar vücut dışına atılıncaya kadar burada depolanır; kaslı bir yapıdır.',
       info:'İdrarın vücut dışına atılıncaya kadar depolandığı yerdir. Kaslı bir yapıya sahip olan idrar kesesi belirli bir doluluğa ulaşınca boşaltım ihtiyacı oluşur.' },
-    { id:'uretra', name:'Üretra', sub:'idrar kanalı', a:[500,576], b:[800,575], hint:'İdrar kesesinde biriken idrar bu kanal yardımıyla vücuttan uzaklaştırılır.',
+    { id:'uretra', name:'Üretra', sub:'idrar kanalı', a:T_UR(397,1300), b:[830,560], hint:'İdrar kesesinde biriken idrar bu kanal yardımıyla vücuttan uzaklaştırılır.',
       info:'İdrar kesesinde biriktirilen idrar, bu kanal yardımıyla vücuttan uzaklaştırılır.' },
-    { id:'atar', name:'Atardamar', sub:'böbreğe gelen kan', a:[520,95], b:[810,95], hint:'Kalpten çıkan kanı taşıyan damardır; süzülecek kan böbreğe bu damarla gelir.',
+    { id:'atar', name:'Atardamar', sub:'böbreğe gelen kan', a:T_KV(742,90), b:[750,60], hint:'Kalpten çıkan kanı taşıyan damardır; süzülecek kan böbreğe bu damarla gelir.',
       info:'Kalpten çıkan kanı vücuda taşıyan damardır. Atık maddeleri içeren kan böbreğe atardamarla gelir ve böbrekte süzülür.' },
-    { id:'toplar', name:'Toplardamar', sub:'böbrekten dönen kan', a:[482,150], b:[190,150], hint:'Kanı toplayarak kalbe geri getiren damardır; böbrekte süzülen kan bu damarla döner.',
+    { id:'toplar', name:'Toplardamar', sub:'böbrekten dönen kan', a:T_KV(612,90), b:[250,60], hint:'Kanı toplayarak kalbe geri getiren damardır; böbrekte süzülen kan bu damarla döner.',
       info:'Vücuda dağılan kanı toplayarak tekrar kalbe getiren damardır. Böbrekte süzülerek atıklarından arındırılan kan toplardamarla böbrekten ayrılır.' }
   ]},
-  dolasim: { title: 'Dolaşım Sistemi', short: 'Dolaşım', art: artDolasim, items: [
-    { id:'kalp', name:'Kalp', a:[532,352], b:[640,405], hint:'Kasılıp gevşeyerek kanın damarlarda dolaşmasını sağlayan, özel kas dokusundan oluşan organdır.',
+  dolasim: { title: 'Dolaşım Sistemi', short: 'Dolaşım', mob: [120,760], art: artDolasim, items: [
+    { id:'kalp', name:'Kalp', a:T_DOL(390,678), b:[805,290], hint:'Kasılıp gevşeyerek kanın damarlarda dolaşmasını sağlayan, özel kas dokusundan oluşan organdır.',
       info:'Kasılıp gevşeme hareketiyle kanın damarlar içerisinde dolaşmasını sağlayan, özel kas dokusundan oluşan organdır.' },
-    { id:'akciger', name:'Akciğerler', a:[384,112], b:[200,95], hint:'Küçük kan dolaşımında kanın oksijen oranı burada artar, karbon dioksit oranı azalır.',
+    { id:'akciger', name:'Akciğerler', a:T_DOL(40,680), b:[195,320], hint:'Küçük kan dolaşımında kanın oksijen oranı burada artar, karbon dioksit oranı azalır.',
       info:'Küçük kan dolaşımında kalpten gelen kanın oksijen oranı akciğerlerde artar, karbon dioksit oranı azalır. Oksijenlenmiş kan toplardamarla kalbin sol tarafına döner.' },
-    { id:'atar', name:'Atardamar', a:[770,375], b:[882,375], hint:'Kalpten çıkan kanı vücuda taşıyan damardır.',
+    { id:'atar', name:'Atardamar', a:T_DOL(552,950), b:[805,400], hint:'Kalpten çıkan kanı vücuda taşıyan damardır.',
       info:'Kalpten çıkan kanı vücuda taşır. Kalpten akciğerlere giden atardamar hariç atardamarların tamamı oksijen oranı zengin kanı taşır.' },
-    { id:'toplar', name:'Toplardamar', a:[230,375], b:[118,375], hint:'Vücuda dağılan kanı toplayarak tekrar kalbe getiren damardır.',
+    { id:'toplar', name:'Toplardamar', a:T_DOL(180,950), b:[195,420], hint:'Vücuda dağılan kanı toplayarak tekrar kalbe getiren damardır.',
       info:'Vücuda dağılan kanı toplayarak tekrar kalbe getiren damardır. Akciğerlerden kalbe gelen toplardamar hariç toplardamarların tamamı oksijen oranı düşük kanı taşır.' },
-    { id:'kilcal', name:'Kılcal damarlar', a:[656,524], b:[862,574], hint:'Atar ve toplardamarları birbirine bağlayan ince damarlardır; kan ile hücreler arasında madde alışverişi sağlar.',
+    { id:'kilcal', name:'Kılcal damarlar', a:T_DOL(170,1320), b:[195,560], hint:'Atar ve toplardamarları birbirine bağlayan ince damarlardır; kan ile hücreler arasında madde alışverişi sağlar.',
       info:'Atardamarlarla toplardamarları birbirine bağlayan, bu damarlara göre daha ince yapıdaki damarlardır. Kan ile hücreler arasında madde alışverişini sağlar.' },
-    { id:'sag', name:'Kalbin sağ tarafı', a:[476,300], b:[340,300], hint:'Vücuttan dönen, oksijen oranı düşük kan buraya gelir ve buradan akciğerlere gönderilir.',
+    { id:'sag', name:'Kalbin sağ tarafı', a:T_DOL(325,600), b:[195,235], hint:'Vücuttan dönen, oksijen oranı düşük kan buraya gelir ve buradan akciğerlere gönderilir.',
       info:'Büyük kan dolaşımında vücuttan dönen, karbon dioksit oranı artmış kan toplardamarlarla kalbin sağ tarafına gelir. Bu kan kalbin sağ tarafındaki atardamarla akciğerlere gönderilir (küçük kan dolaşımı).' },
-    { id:'sol', name:'Kalbin sol tarafı', a:[524,300], b:[662,300], hint:'Akciğerlerden gelen oksijenli kan buraya gelir ve buradan tüm vücuda gönderilir.',
+    { id:'sol', name:'Kalbin sol tarafı', a:T_DOL(410,600), b:[805,200], hint:'Akciğerlerden gelen oksijenli kan buraya gelir ve buradan tüm vücuda gönderilir.',
       info:'Akciğerlerde oksijenlenen kan toplardamarla kalbin sol tarafına gelir. Oksijen oranı yüksek bu kan kalbin sol tarafındaki atardamarla tüm vücuda gönderilir (büyük kan dolaşımı).' },
-    { id:'hucre', name:'Vücut hücreleri', a:[372,556], b:[150,560], hint:'Kanın getirdiği oksijen burada kullanılır; kanın karbon dioksit oranı burada artar.',
+    { id:'hucre', name:'Vücut hücreleri', a:[823.9,489.9], b:[812,572], hint:'Kanın getirdiği oksijen burada kullanılır; kanın karbon dioksit oranı burada artar.',
       info:'Kan, hücrelere oksijen ve besin maddeleri taşır. Hücrelerde kullanılan kanın oksijen oranı azalırken karbon dioksit oranı artar; bu kan toplardamarlarla kalbe döner.' }
   ]}
 };
-// bronşçuk çapası: sol akciğerdeki yan dalın ortası (ağaç ile aynı geometri)
-(function(){ const r = 160*Math.PI/180; const x = 470 + Math.cos(r)*36, y = 300 + Math.sin(r)*36; const r2 = (160+25)*Math.PI/180;
-  SETS.solunum.items.find(i => i.id === 'bronscuk').a = [ +(x + Math.cos(r2)*14).toFixed(1), +(y + Math.sin(r2)*14).toFixed(1) ]; })();
 
 /* ======================================================================
    İkonlar
@@ -564,7 +435,8 @@ const ui = ZD.mount({
   crumb: ['7. Sınıf Fen Bilimleri','3. Ünite','Organları Etiketle'],
   stats: [{id:'time',label:'Süre',value:'0:00.0'},{id:'score',label:'Puan',value:0,cls:'cyan'},{id:'lbl',label:'Etiket',value:'0 / 0'},{id:'streak',label:'Seri',value:0,cls:'green'}],
   onHelp(){ if (!G){ const c = $('.eg-pc'); c && ZD.pointAt(c, { ms: 2200 }); ZD.toast('Etiketlemek istediğin sistemin kartına dokun.', '', 2400); return; } showHelp(true); },
-  onRestart(){ if (G) startSet(G.key, false); }
+  onRestart(){ if (G) startSet(G.key, false); },
+  credit: true
 });
 const kickerEl = $('.zd-title small'), crumbEl = $('.zd-crumb b');
 const fmtT = t => { t = Math.max(0,t); const m = Math.floor(t/60), s = Math.floor(t%60), d = Math.floor((t*10)%10); return `${m}:${String(s).padStart(2,'0')}.${d}`; };
@@ -595,7 +467,7 @@ function startSet(key, fromPicker){
         miss: {}, hinted: {}, score: 0, streak: 0, best: 0, pas: 3, ipucu: 2, done: false, review: false, sel: null };
   G.byId = Object.fromEntries(G.items.map(i => [i.id, i]));
   ui.body.innerHTML = `<div class="eg">
-    <div class="eg-view" id="egView" aria-label="${S.title} çizimi">
+    <div class="eg-view" id="egView" aria-label="${S.title} çizimi" style="--ar:${(S.mob || [80,840])[1]}/615">
       <svg class="art" id="egArt" aria-hidden="true">${art.defs}<g id="egWorld">${art.body}</g></svg>
       <svg class="eg-lines" id="egLines" aria-hidden="true"></svg>
       <div class="eg-boxes" id="egBoxes"></div>
@@ -806,7 +678,8 @@ let rafL = 0;
 function toScr([x, y]){ return [V.tx + x*V.S, V.ty + y*V.S]; }
 function fitBase(){
   const vw = G.view.clientWidth, vh = G.view.clientHeight;
-  V.cw = vw < 600 ? 840 : W; V.ox = vw < 600 ? 80 : 0;   // telefonda kenar boşlukları kırpılır
+  const m = G.S.mob || [80, 840];
+  V.cw = vw < 600 ? m[1] : W; V.ox = vw < 600 ? m[0] : 0;   // telefonda kenar boşlukları kırpılır (sete göre)
   V.s0 = Math.min(vw / V.cw, vh / H) * .985;
 }
 function resetView(anim){
