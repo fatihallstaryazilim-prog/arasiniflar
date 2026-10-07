@@ -282,3 +282,8 @@ img,svg{display:block}
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
+
+/* görsel kaynak notu */
+.zd-credit{margin:6px auto 0;max-width:1400px;padding:0 24px;font-size:11px;letter-spacing:.2px;color:var(--dim);text-align:center}
+.zd-credit a{color:var(--muted);text-decoration:none;border-bottom:1px dotted currentColor}
+.zd-credit a:hover{color:var(--cyan)}

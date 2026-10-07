@@ -96,6 +96,7 @@
 
   /* ---------------- Sayfa iskeleti ---------------- */
   let STAGE = null;
+  const CREDIT = 'Anatomik çizimler: <a href="https://smart.servier.com" target="_blank" rel="noopener">Servier Medical Art</a> · <a href="https://creativecommons.org/licenses/by/4.0/deed.tr" target="_blank" rel="noopener">CC BY 4.0</a> · uyarlanmıştır';
   function mount(o) {
     const app = typeof o.el === 'string' ? $(o.el) : (o.el || $('#app'));
     const crumb = (o.crumb || ['7. Sınıf Fen Bilimleri', '3. Ünite']).map((c, i, a) => i === a.length - 1 ? `<b>${c}</b>` : c).join(' &nbsp;›&nbsp; ');
@@ -119,7 +120,7 @@
           <div class="zd-body" id="zd-body"></div>
           <div class="zd-toast" id="zd-toast"><span class="ic"></span><span class="tx"></span></div>
         </section>
-      </div>`;
+      </div>${o.credit ? `<p class="zd-credit">${o.credit === true ? CREDIT : o.credit}</p>` : ''}`;
     STAGE = $('#zd-stage');
     const sb = $('[data-zd="sound"]', app);
     sb.onclick = () => { muted = !muted; store.set('muted', muted); sb.innerHTML = muted ? I.mute : I.sound; sb.classList.toggle('off', muted); if (!muted) sfx('click'); };
@@ -232,5 +233,5 @@
     });
   }
 
-  window.ZD = { I, mount, sfx, toast, modal, intro, result, confetti, pointAt, hideHand, drag, Timer, store, shuffle, clamp, lerp, wait, h, $, $$, get muted() { return muted; } };
+  window.ZD = { I, CREDIT, mount, sfx, toast, modal, intro, result, confetti, pointAt, hideHand, drag, Timer, store, shuffle, clamp, lerp, wait, h, $, $$, get muted() { return muted; } };
 })();
