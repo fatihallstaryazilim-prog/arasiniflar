@@ -573,7 +573,7 @@ const ORGS = $$('.org', svg);
 const pYol = $('#pYol'), pYard = $('#pYard');
 
 /* rota uzunlukları */
-const B = []; (function () { const tmp = sv('path', {}, svg.querySelector('defs')); let d = 'M' + START; SEG.forEach(s => { d += ' ' + s; tmp.setAttribute('d', d); B.push(tmp.getTotalLength()); }); tmp.remove(); })();
+const B = []; (function () { const tmp = sv('path', {}, svg.querySelector('defs')); let d = 'M' + START_W; SEG.forEach(s => { d += ' ' + s; tmp.setAttribute('d', d); B.push(tmp.getTotalLength()); }); tmp.remove(); })();
 const ROUTE_L = routeP.getTotalLength();
 
 /* etiketler */
