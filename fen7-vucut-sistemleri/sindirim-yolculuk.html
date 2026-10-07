@@ -292,7 +292,7 @@ const STOPS = [null,
     def: 'Yemek borusundan gelen besinler midedeki kasların kasılıp gevşemesiyle fiziksel sindirime uğrar. Mide öz suyundaki enzimlerle proteinlerin kimyasal sindirimi başlar. Besinler buradan ince bağırsağa gönderilir.',
     ok: 'Doğru! Midede hem fiziksel hem kimyasal sindirim olur.',
     why: { 0: '<b>Eksik.</b> Kasların kasılıp gevşemesi fizikseldir; mide öz suyundaki enzimler de proteinlerin kimyasal sindirimini başlatır.', 1: '<b>Eksik.</b> Enzimler proteinleri kimyasal olarak sindirir; midedeki kasların kasılıp gevşemesi de fiziksel sindirimdir.', 3: '<b>Yanlış.</b> Midede hem fiziksel hem kimyasal sindirim olur; besinler bulamaç hâline gelir.' } },
-  { key: 'ince', org: 'ince', name: 'İnce bağırsak', rail: 'İnce b.', ans: 2, cam: [254, 537, 2.45],
+  { key: 'ince', org: 'ince', name: 'İnce bağırsak', rail: 'İnce b.', ans: 2, cam: [254, 530, 2.45],
     ctx: () => '<b>Bulamaç</b> hâline gelen besin ince bağırsağa geçti. Yardımcı organlar (karaciğer ve pankreas) göreve hazır.',
     def: 'Besinlerin fiziksel ve kimyasal sindirimi burada tamamlanır. Sindirimi tamamlanan besinler, ince bağırsağın iç yüzeyinde bulunan villuslar sayesinde emilerek kana geçer. Villuslar, girintili çıkıntılı yapısı sayesinde ince bağırsağın iç yüzeyini genişleterek temas yüzeyini artırır. Böylece emilimin hızlı olmasını sağlar.',
     ok: 'Doğru! Fiziksel ve kimyasal sindirim ince bağırsakta tamamlanır.',
@@ -356,9 +356,9 @@ const POLY = {
   duct: [[212, 1484], [242, 1494], [242, 1700], [206, 1732], [192, 1712], [220, 1690], [218, 1502]],
   pancH: [[198, 1652], [240, 1643], [300, 1653], [337, 1700], [327, 1762], [287, 1792], [230, 1787], [196, 1747]],
   pancT: [[580, 1550], [620, 1554], [630, 1600], [606, 1624], [582, 1606]],
-  mide: [[381, 1431], [415, 1344], [477, 1329], [554, 1336], [610, 1376], [625, 1454], [621, 1554], [594, 1648], [540, 1702], [462, 1717], [346, 1714], [276, 1694], [260, 1646], [276, 1598], [340, 1548], [400, 1498], [385, 1460]],
+  mide: [[377, 1432], [440, 1390], [461, 1361], [507, 1331], [548, 1330], [590, 1350], [614, 1394], [625, 1454], [621, 1554], [594, 1648], [540, 1702], [462, 1717], [346, 1714], [276, 1694], [260, 1646], [276, 1598], [340, 1548], [400, 1505], [411, 1486], [402, 1457]],
   stoIn: [[298, 1615], [345, 1558], [410, 1498], [520, 1488], [582, 1510], [588, 1600], [562, 1662], [470, 1702], [350, 1702], [288, 1682]],
-  ince: [[136, 1902], [231, 1912], [346, 1928], [462, 1898], [540, 1862], [546, 2270], [521, 2312], [464, 2300], [379, 2256], [336, 2262], [300, 2296], [205, 2292], [200, 2210], [150, 2160], [138, 2085]],
+  ince: [[136, 1902], [231, 1912], [346, 1928], [462, 1898], [536, 1862], [536, 2270], [521, 2312], [464, 2300], [379, 2256], [336, 2262], [300, 2296], [205, 2292], [200, 2210], [150, 2160], [138, 2085]],
   duod: [[130, 1600], [175, 1581], [270, 1581], [287, 1625], [207, 1634], [198, 1700], [202, 1740], [176, 1760], [138, 1746], [128, 1660]],
   kalinO: [[0, 1760], [35, 1710], [120, 1698], [200, 1740], [300, 1783], [440, 1760], [505, 1696], [560, 1666], [645, 1686], [680, 1760], [698, 2000], [698, 2230], [670, 2314], [600, 2374], [520, 2404], [430, 2400], [428, 2434], [288, 2434], [230, 2302], [130, 2306], [12, 2288], [0, 2150]],
   kalinI: [[100, 1842], [138, 1868], [231, 1912], [346, 1927], [462, 1897], [538, 1860], [540, 2268], [521, 2312], [464, 2300], [379, 2256], [336, 2260], [300, 2295], [205, 2290], [200, 2210], [150, 2160], [138, 2085], [136, 1900]],
@@ -424,7 +424,7 @@ ${Object.keys(CLIP).map(k => `<clipPath id="c_${k}" clipPathUnits="userSpaceOnUs
 // [anahtar, ad, ucX, ucY (görsel pikseli), etiket x, etiket y (sahne), hizalama]
 const lblDefs = [
   ['mouth', 'Ağız', 190, 495, 168, 128, 'l'], ['yutak', 'Yutak', 381, 540, 318, 176, 'r'], ['eso', 'Yemek borusu', 377, 900, 318, 262, 'r'],
-  ['mide', 'Mide', 520, 1560, 382, 452, 'r'], ['liver', 'Karaciğer', 150, 1330, 150, 384, 'l'], ['gall', 'Safra kesesi', 140, 1465, 150, 446, 'l'],
+  ['mide', 'Mide', 520, 1560, 382, 452, 'r'], ['liver', 'Karaciğer', 150, 1330, 150, 402, 'l'], ['gall', 'Safra kesesi', 140, 1465, 150, 446, 'l'],
   ['panc', 'Pankreas', 265, 1700, 150, 502, 'l'], ['ince', 'İnce bağırsak', 330, 2040, 150, 628, 'l'], ['kalin', 'Kalın bağırsak', 612, 1980, 382, 596, 'r'],
   ['anus', 'Anüs', 360, 2560, 300, 770, 'r']
 ].map(([k, n, ix, iy, px, py, al]) => { const [ax, ay] = W(ix, iy); return [k, n, +ax.toFixed(1), +ay.toFixed(1), px, py, al]; });

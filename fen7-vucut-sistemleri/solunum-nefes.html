@@ -38,6 +38,7 @@
   .scene canvas{pointer-events:none}
   .scene svg text{font-family:var(--font)}
   .scene .part{transition:filter .2s}
+  .scene .figimg{filter:drop-shadow(0 0 18px rgba(53,238,252,.16)) drop-shadow(0 12px 24px rgba(0,0,0,.4))}
   .scene.pick .part{cursor:pointer}
   .scene.pick .part:hover{filter:url(#fHover)}
   .scene .part.sel{filter:url(#fSel)!important}
@@ -296,74 +297,82 @@ function cum(pts){const c=[0];for(let i=1;i<pts.length;i++)c.push(c[i-1]+Math.hy
 function rng(seed){return()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646;};}
 const P=(x,y)=>`${f1(x)} ${f1(y)}`;
 
+/* =====================  SERVİER FİGÜRÜ  ===================== */
+/* resp_body / resp_lungs / resp_airways: 1140×1400 aynı tuval, birebir hizalı. Görsel koordinatı → sahne */
+const FIG={x:62.5,y:-12,s:.5};FIG.w=1140*FIG.s;FIG.h=1400*FIG.s;
+const I=(x,y)=>[FIG.x+FIG.s*x,FIG.y+FIG.s*y];
+const IP=a=>a.map(([x,y])=>I(x,y));
+const PAIRS=a=>{const o=[];for(let i=0;i<a.length;i+=2)o.push([a[i],a[i+1]]);return o;};
+const polyD=pts=>'M'+pts.map(p=>P(p[0],p[1])).join('L')+'Z';
+/* akciğer katmanı ölçek merkezi: akciğer tepeleri hizasında soluk borusu ekseni (çatalın üstü) */
+const ORG=I(575,652), KX=.04, KY=.085;
+function mapPt(x,y,side,b){return side?[ORG[0]+(x-ORG[0])*(1+KX*b),ORG[1]+(y-ORG[1])*(1+KY*b)]:[x,y];}
+
+/* akciğer sınırları (görsel koordinatı; resp_lungs alfa kanalından) */
+const LUNGI={
+  R:PAIRS([493,653,454,667,431,681,414,695,400,709,388,723,378,737,369,751,362,765,355,779,349,793,344,807,339,821,335,835,332,849,329,863,327,877,324,891,320,905,317,919,315,933,314,947,313,961,312,975,312,989,311,1003,310,1017,310,1031,310,1045,311,1059,312,1073,314,1087,317,1101,322,1115,329,1129,340,1134,359,1129,389,1115,430,1101,522,1087,530,1073,530,1059,529,1045,529,1031,529,1017,530,1003,531,989,532,975,533,961,534,947,534,933,534,919,535,905,535,891,536,877,537,863,537,849,537,835,537,821,537,807,538,793,537,779,535,765,533,751,533,737,533,723,533,709,531,695,528,681,523,667,509,653]),
+  L:PAIRS([659,656,639,670,633,684,630,698,629,712,629,726,630,740,624,754,620,768,617,782,617,796,618,810,620,824,624,838,633,852,640,866,644,880,648,894,652,908,655,922,658,936,662,950,668,964,674,978,681,992,688,1006,693,1020,696,1034,697,1048,697,1062,695,1076,693,1090,692,1104,786,1118,823,1130,840,1130,858,1118,860,1104,861,1090,862,1076,862,1062,862,1048,862,1034,861,1020,861,1006,860,992,859,978,857,964,855,950,851,936,848,922,845,908,842,894,838,880,835,866,831,852,827,838,823,824,818,810,813,796,808,782,802,768,796,754,788,740,780,726,769,712,756,698,740,684,719,670,679,656])
+};
+/* 7 px genişletilmiş sınır: akciğer + içindeki bronş ağacı bu bölgede ölçeklenir */
+const LUNGD={
+  R:PAIRS([493,646,443,666,416,686,396,706,379,726,365,746,354,766,345,786,337,806,331,826,326,846,322,866,319,886,313,906,309,926,307,946,306,966,305,986,304,1006,303,1026,303,1046,304,1066,306,1086,312,1106,320,1126,340,1141,380,1126,439,1106,530,1086,538,1066,536,1046,536,1026,537,1006,539,986,540,966,541,946,541,926,542,906,543,886,544,866,544,846,544,826,544,806,545,786,543,766,539,746,540,726,540,706,537,686,529,666,509,646]),
+  L:PAIRS([659,649,633,669,625,689,622,709,622,729,619,749,612,769,610,789,611,809,614,829,624,849,634,869,640,889,645,909,649,929,655,949,663,969,673,989,682,1009,688,1029,690,1049,689,1069,686,1089,686,1109,801,1129,823,1137,840,1137,855,1129,867,1109,868,1089,869,1069,869,1049,869,1029,868,1009,867,989,865,969,861,949,856,929,852,909,848,889,843,869,837,849,831,829,825,809,818,789,809,769,800,749,789,729,774,709,754,689,729,669,679,649])
+};
+/* hava yolu bölgeleri (görsel koordinatı): kırpma + dokunma alanı */
+const AIRI={
+  burun:[[352,300],[356,264],[372,246],[400,236],[450,236],[492,240],[505,258],[510,292],[505,322],[470,327],[400,327],[362,326]],
+  burunHit:[[333,297],[340,283],[356,262],[372,246],[400,236],[450,236],[492,240],[505,258],[510,292],[505,322],[470,328],[400,328],[362,327],[348,320]],
+  yutak:[[500,262],[540,268],[560,285],[570,300],[574,360],[575,410],[572,470],[552,470],[548,430],[535,420],[522,400],[530,370],[518,350],[505,330],[505,300]],
+  girtlak:[[505,405],[530,400],[552,412],[552,470],[575,470],[580,500],[580,545],[530,548],[512,530],[500,470]],
+  solukU:[[526,540],[608,540],[608,656],[526,656]],
+  solukL:[[528,648],[610,648],[612,824],[528,824]],
+  brons:[[540,822],[612,822],[640,850],[668,880],[672,930],[640,935],[600,885],[575,872],[550,885],[520,920],[505,900],[515,870],[538,845]]
+};
+const AIR={};for(const k in AIRI)AIR[k]=IP(AIRI[k]);
+
 /* =====================  DİYAFRAM  ===================== */
-const DK0=[[-178,556],[-160,516],[-132,474],[-96,446],[-58,440],[-24,454],[0,459],[24,455],[60,446],[98,452],[134,480],[160,518],[178,558]];
-const DK1=[[-178,562],[-160,548],[-132,532],[-96,520],[-58,516],[-24,517],[0,518],[24,517],[60,516],[98,520],[134,534],[160,550],[178,564]];
-const thick=x=>9+7*(1-Math.min(1,Math.abs(x-CX)/178));
-const diaPts=b=>DK0.map((p,i)=>[CX+lerp(p[0],DK1[i][0],b),lerp(p[1],DK1[i][1],b)]);
+/* soluk vermede kubbeli (akciğer tabanlarının hemen altında, ortada yükselir); soluk almada iner ve düzleşir */
+const DK0=IP([[312,1184],[314,1160],[322,1142],[340,1137],[371,1128],[400,1116],[440,1103],[480,1098],[515,1095],[545,1084],[575,1062],[608,1070],[648,1096],[690,1118],[720,1118],[760,1118],[800,1126],[836,1135],[852,1142],[856,1160],[858,1186]]);
+const DK1=IP([[314,1206],[318,1186],[322,1178],[332,1180],[352,1174],[382,1160],[424,1144],[470,1137],[520,1131],[555,1140],[590,1146],[630,1148],[665,1148],[697,1148],[730,1152],[770,1159],[800,1164],[834,1176],[850,1178],[852,1190],[853,1208]]);
+const thick=x=>5+5*(1-Math.min(1,Math.abs(x-CX)/140));
+const diaPts=b=>DK0.map((p,i)=>[lerp(p[0],DK1[i][0],b),lerp(p[1],DK1[i][1],b)]);
 const DT0=crSample(diaPts(0),10);
 let DT=DT0, DB=DT0.map(p=>[p[0],p[1]+thick(p[0])]);
-const disp=x=>yAt(DT,x)-yAt(DT0,x);
-const wgt=y=>Math.pow(clamp((y-380)/82,0,1),1.4);
 function setDia(b){const t=diaPts(b);DT=crSample(t,10);DB=crSample(t.map(p=>[p[0],p[1]+thick(p[0])]),10);return t;}
 
-/* =====================  AKCİĞERLER  ===================== */
-const LUNG={
-  R:{side:-1,lat:[[-82,290],[-110,301],[-134,328],[-150,370],[-158,418],[-162,462],[-163,498]],base:[-157,-34],med:[[-30,446],[-28,424],[-34,398],[-40,368],[-48,334],[-62,304]]},
-  L:{side:1,lat:[[74,294],[98,303],[120,330],[134,372],[142,420],[146,464],[147,498]],base:[142,100],med:[[90,452],[72,441],[54,433],[40,416],[34,394],[38,362],[46,328],[60,302]]}
+/* =====================  BRONŞ AĞACI (görseldeki dallar boyunca)  ===================== */
+/* uçlar ve yollar resp_airways katmanındaki bronş/bronşçuk dallarının orta çizgisinden çıkarıldı */
+const BRI={R:[[575,848],[548,860],[525,872],[510,882]],L:[[575,848],[605,862],[640,880],[672,898]]};
+const CHI={
+  R:[[504,883,495,874,470,861,462,853,462,845,466,823,475,812,480,779,504,751,494,699,510,680,513,670],[500,888,498,908,487,930,474,943,470,958,453,976,446,1002,426,1014,402,1036,399,1074,403,1088],[504,883,462,853,463,834,467,821,475,812,480,778,469,745,470,730,461,708,456,680],[500,888,498,908,487,930,474,943,470,958,456,972,427,975,392,996,377,1010,372,1045],[500,888,498,908,487,930,474,943,470,958,456,972,427,975,392,996,378,1009,364,1009,347,993],[504,883,462,853,463,834,467,821,475,812,480,778,469,744,443,723,420,712],[500,888,498,908,487,930,474,943,470,958,453,976,444,1005,441,1050,459,1081],[504,883,461,853,452,853,431,862,417,873,412,878,407,896,400,903,356,914,333,939],[500,888,498,908,487,930,474,943,466,963,466,973,481,999,480,1017,485,1043,512,1075],[504,883,462,853,463,834,467,821,475,812,480,779,505,747,493,714],[504,883,462,853,466,818,456,798,438,776,422,763,379,769],[504,883,495,874,470,861,439,834,396,838,382,848,359,853,344,866,339,866],[500,888,498,908,487,930,474,943,466,963,466,973,485,1003,499,1009,520,1026],[500,888,498,908,487,930,474,943,470,958,453,976,446,1002,420,1019,416,1023,417,1028]],
+  L:[[682,896,705,894,721,874,721,861,710,841,708,822,690,794,690,765,680,742,678,727,648,682,648,677],[682,896,705,894,721,874,721,861,710,841,708,822,690,794,689,782,690,766,718,728,715,692],[682,896,705,894,721,874,721,861,710,841,708,822,690,794,690,765,680,742,678,727,669,721],[682,896,705,894,721,874,720,857,710,841,708,823,718,800,754,776,770,737],[682,896,705,894,721,874,721,861,710,841,708,822,688,793,656,784,632,767],[682,896,705,894,721,874,720,857,710,841,708,823,717,805,716,780,723,747],[682,896,710,894,756,942,811,951,832,937],[682,896,705,894,721,874,722,863,736,839,773,818,796,786],[682,896,705,894,713,886,721,874,718,851,705,833,674,828,656,818,638,815],[682,896,705,894,721,874,721,861,710,841,708,822,690,794,689,779,680,769],[682,896,705,894,724,872,746,871,763,891,774,896,825,889],[687,937,695,959,722,994,761,996,772,989,798,986,822,991,832,989],[687,937,695,959,721,995,717,1027,725,1054,724,1072,709,1099],[687,937,696,961,722,998,767,1047,766,1079,763,1082]]
 };
-function lungPts(L,b){
-  const s=L.side,pts=[],n=L.lat.length;
-  L.lat.forEach(([x,y],i)=>{const k=i/(n-1);const X=CX+x+s*9*b*(.35+.65*k);pts.push([X,y-3*b*(1-k)+disp(X)*wgt(y)]);});
-  for(let j=0;j<=6;j++){const t=j/6;const X=CX+lerp(L.base[0]+s*9*b,L.base[1],t);pts.push([X,yAt(DT,X)-3]);}
-  L.med.forEach(([x,y])=>{const X=CX+x;pts.push([X,y+disp(X)*wgt(y)]);});
-  return pts;
-}
-const HR=[CX-36,398], HL=[CX+42,400];
-function mapPt(x,y,side,b){if(!side)return[x,y];const hx=side<0?HR[0]:HL[0];const X=hx+(x-hx)*(1+.045*b);return[X,y+disp(X)*wgt(y)];}
-
-/* bronşçuk ağacı (göreli konumda, akciğer sınırı içinde üretilir) */
-const testCtx=document.createElement('canvas').getContext('2d');
-function buildTree(side,hil,lobars,seed){
-  const path=new Path2D(crPath(lungPts(side<0?LUNG.R:LUNG.L,0),true));
-  const inside=(x,y)=>[[0,0],[7,0],[-7,0],[0,7],[0,-7]].every(([a,c])=>testCtx.isPointInPath(path,x+a,y+c));
-  const R=rng(seed),segs=[],tips=[];
-  function grow(x,y,ang,len,lvl,chain){
-    let L=len,ex,ey,ok=false;
-    for(let k=0;k<4;k++){ex=x+Math.cos(ang)*L;ey=y+Math.sin(ang)*L;if(inside(ex,ey)){ok=true;break;}L*=.72;}
-    if(!ok)return false;
-    const bend=(R()-.5)*9,mx=(x+ex)/2-Math.sin(ang)*bend,my=(y+ey)/2+Math.cos(ang)*bend;
-    segs.push({x1:x,y1:y,cx:mx,cy:my,x2:ex,y2:ey,lvl});
-    const ch=chain.concat([[mx,my],[ex,ey]]);
-    if(lvl>=3){tips.push({x:ex,y:ey,chain:ch});return true;}
-    const sp=.36+R()*.2;
-    const a=grow(ex,ey,ang-sp,len*.68,lvl+1,ch),c=grow(ex,ey,ang+sp,len*.68,lvl+1,ch);
-    if(!a&&!c)tips.push({x:ex,y:ey,chain:ch});
-    return true;
-  }
-  lobars.forEach(([a,l])=>grow(hil[0],hil[1],a*DEG,l,1,[[hil[0],hil[1]]]));
-  return {segs,tips};
-}
-const TREE={R:buildTree(-1,HR,[[-118,52],[-168,50],[128,58],[158,40]],41),L:buildTree(1,HL,[[-62,52],[-12,44],[58,58],[96,40]],97)};
-const TIPS=[];['R','L'].forEach(k=>TREE[k].tips.forEach(t=>TIPS.push({...t,side:k==='R'?-1:1})));
+const TIPS=[];
+['R','L'].forEach(k=>CHI[k].forEach(f=>{const ch=IP(PAIRS(f)),t=ch[ch.length-1];TIPS.push({x:t[0],y:t[1],chain:ch,side:k==='R'?-1:1});}));
 
 /* =====================  KABURGALAR  ===================== */
-const RIBS=[0,1,2,3,4,5,6].map(i=>({y:302+i*30,w:[96,124,144,158,166,168,164][i],dr:[22,28,34,40,46,52,56][i]}));
+/* akciğerlerin dış kenarı (görsel koordinatı) → her kaburganın yanal ucu akciğerin biraz dışında */
+const LAT={R:PAIRS([484,655,447,671,423,687,406,703,391,719,379,735,369,751,361,767,353,783,347,799,341,815,337,831,333,847,329,863,327,879,323,895,319,911,316,927,314,943,313,959,312,975,312,991,311,1007,310,1023,310,1039,311,1055,312,1071,314,1087,318,1103,323,1119]),
+  L:PAIRS([689,658,725,674,747,690,764,706,777,722,787,738,796,754,803,770,809,786,815,802,821,818,826,834,831,850,835,866,839,882,843,898,846,914,849,930,853,946,857,962,859,978,860,994,861,1010,862,1026,862,1042,862,1058,862,1074,861,1090,860,1106,855,1122])};
+function latAt(k,yv){const yi=(yv-FIG.y)/FIG.s,a=LAT[k];let x=a[a.length-1][0];
+  if(yi<=a[0][1])x=a[0][0];else for(let i=1;i<a.length;i++)if(yi<=a[i][1]){x=lerp(a[i-1][0],a[i][0],(yi-a[i-1][1])/(a[i][1]-a[i-1][1]));break;}
+  return Math.abs(x-575)*FIG.s;}
+const RIBS=[0,1,2,3,4,5,6].map(i=>{const y=I(0,688+i*54)[1],dr=16+i*4.5;return{y,dr,w:{'-1':(latAt('R',y+dr*.6)+9)/.97,'1':(latAt('L',y+dr*.6)+9)/.97}};});
 function ribPts(i,s,b){
-  const r=RIBS[i],o=[CX+s*16,r.y];
-  const pts=[[CX+s*16,r.y],[CX+s*r.w*.55,r.y-16],[CX+s*r.w*1.02,r.y+r.dr*.3],[CX+s*r.w*.98,r.y+r.dr]];
-  const th=-s*(3.4+i*.55)*b*DEG,c=Math.cos(th),sn=Math.sin(th),P0=[o[0],o[1]-6*b];
-  return pts.map(([x,y])=>{const dx=(x-o[0])*(1+.035*b),dy=y-o[1];return[P0[0]+dx*c-dy*sn,P0[1]+dx*sn+dy*c];});
+  const r=RIBS[i],w=r.w[s],o=[CX+s*18,r.y];
+  const pts=[[CX+s*18,r.y],[CX+s*w*.55,r.y-12],[CX+s*w*1.02,r.y+r.dr*.3],[CX+s*w*.98,r.y+r.dr]];
+  const th=-s*(3+i*.5)*b*DEG,c=Math.cos(th),sn=Math.sin(th),P0=[o[0],o[1]-5*b];
+  return pts.map(([x,y])=>{const dx=(x-o[0])*(1+.03*b),dy=y-o[1];return[P0[0]+dx*c-dy*sn,P0[1]+dx*sn+dy*c];});
 }
 
-/* =====================  HAVA YOLLARI  ===================== */
-const NOSE=[[-122,148],[-104,144],[-89,140],[-78,128],[-62,118],[-38,113],[-14,114],[6,117],[20,126],[23,150],[23,180],[18,198],[6,207],[-6,214],[-6,232],[-6,250]].map(([x,y])=>[CX+x,y,0]);
-const MOUTH=[[-122,170],[-104,166],[-88,165],[-70,165],[-46,162],[-20,161],[4,165],[18,174],[23,186],[18,198],[6,207],[-6,214],[-6,232],[-6,250]].map(([x,y])=>[CX+x,y,0]);
-const TRUNK=[[345,272,0],[349,294,0],[350,320,0],[350,346,0],[350,368,0]];
-const ENTRY={nose:[CX-89,140],mouth:[CX-88,165]};
+/* =====================  HAVA YOLLARI (parçacık rotaları)  ===================== */
+const NOSE=IP([[296,318],[320,315],[347,311],[368,300],[400,288],[440,282],[480,284],[505,290],[530,305],[545,335],[548,380],[546,425],[542,465],[545,500],[555,535]]).map(([x,y])=>[x,y,0]);
+const MOUTH=IP([[316,372],[340,371],[366,371],[390,370],[410,356],[440,342],[480,336],[515,345],[535,372],[545,410],[542,465],[545,500],[555,535]]).map(([x,y])=>[x,y,0]);
+const TRUNK=[[562,572,0],[567,620,0],[571,652,0],[573,720,1],[575,790,1],[575,848,1]].map(([x,y,f])=>[...I(x,y),f]);
+const ENTRY={nose:I(347,311),mouth:I(366,371)};
 function makePath(route,tip){
-  const sd=tip.side,br=sd<0?[[336,380,0],[322,390,0]]:[[366,382,0],[382,392,0]];
-  const pts=(route==='nose'?NOSE:MOUTH).concat(TRUNK,br,tip.chain.map(([x,y])=>[x,y,sd]));
+  const br=IP(BRI[tip.side<0?'R':'L'].slice(1)).map(([x,y])=>[x,y,1]);
+  const pts=(route==='nose'?NOSE:MOUTH).concat(TRUNK,br,tip.chain.map(([x,y])=>[x,y,1]));
   const c=cum(pts);return{pts,cum:c,len:c[c.length-1],tip,entryS:c[2]};
 }
 const PATHS={nose:TIPS.map(t=>makePath('nose',t)),mouth:TIPS.map(t=>makePath('mouth',t))};
@@ -384,7 +393,8 @@ const ui=ZD.mount({
   kicker:'SİMÜLASYON · SOLUNUM SİSTEMİ',title:'Soluk Al, Soluk Ver',
   crumb:['7. Sınıf Fen Bilimleri','3. Ünite','Solunum Sistemi'],
   stats:[{id:'s1',label:'Aşama',value:'Dinlenme'},{id:'s2',label:'Hacim',value:'%0',cls:'cyan'},{id:'s3',label:'Soluk/dk',value:'14'},{id:'s4',label:'Keşif',value:'0/10',cls:'green'}],
-  onHelp(){help();},onRestart(){setMode(S.mode,true);ZD.toast('Yeniden başlatıldı','',1400);}
+  onHelp(){help();},onRestart(){setMode(S.mode,true);ZD.toast('Yeniden başlatıldı','',1400);},
+  credit:true
 });
 
 const LUNGICON=`<svg viewBox="0 0 64 64" class="ic" aria-hidden="true"><defs><radialGradient id="hiL" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ffe0e8"/><stop offset=".45" stop-color="#ff9fb8"/><stop offset="1" stop-color="#c9466f"/></radialGradient></defs>
@@ -420,7 +430,7 @@ ui.body.innerHTML=`
   </aside>
 
   <div class="scene pick" id="scene">
-    <svg id="svg" viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Solunum sistemi modeli: burun, yutak, gırtlak, soluk borusu, bronşlar, akciğerler ve diyafram"></svg>
+    <svg id="svg" viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Solunum sistemi modeli (Servier Medical Art): burun, yutak, gırtlak, soluk borusu, bronşlar, akciğerler ve diyafram"></svg>
     <canvas id="cv"></canvas>
     <div class="scene-tag"><span class="ph-pill" id="phPill">DİNLENME</span></div>
   </div>
@@ -443,77 +453,46 @@ ui.body.innerHTML=`
 
 /* =====================  SVG SAHNE  ===================== */
 const svg=$('#svg');
-function headPath(){
-  const st=[-40,262],sg=[[[-38,246],[-36,230],[-34,214]],[[-44,210],[-56,204],[-63,196]],[[-68,190],[-70,182],[-70,176]],[[-72,172],[-76,170],[-76,167]],[[-76,164],[-72,163],[-70,162]],[[-74,160],[-78,158],[-77,154]],[[-76,150],[-74,147],[-74,146]],[[-78,145],[-84,144],[-88,142]],[[-96,140],[-100,136],[-97,131]],[[-93,122],[-86,110],[-82,100]],[[-82,95],[-86,90],[-84,84]],[[-82,74],[-80,64],[-76,54]],[[-66,28],[-36,10],[0,8]],[[40,6],[72,26],[82,62]],[[90,90],[88,128],[74,158]],[[66,176],[54,190],[44,204]],[[42,226],[40,246],[40,262]]];
-  return `M${P(CX+st[0],st[1])}`+sg.map(s=>'C'+s.map(p=>P(CX+p[0],p[1])).join(' ')).join('');
-}
-const HEAD=headPath();
-function torsoD(b){
-  const e=7*b,f=6*b;
-  const sg=[[[80,270],[122,276],[152,290]],[[186,300],[204,322],[203+e*.3,352]],[[200+e,400],[192+e,452],[186+e*.9,504]],[[181+f,556],[170+f,590],[172+f*.6,622]],[[174,648],[172,668],[168,684]]];
-  let d='';sg.forEach(s=>d+='C'+s.map(p=>P(CX+p[0],p[1])).join(' '));
-  d+=`L${P(CX-168,684)}`;
-  for(let k=sg.length-1;k>=0;k--){const s=sg[k],end=k>0?sg[k-1][2]:[40,262];d+='C'+[s[1],s[0],end].map(p=>P(CX-p[0],p[1])).join(' ');}
-  return HEAD+d+'Z';
-}
-function trachea(){
-  const cl=[[344,252],[345,272],[349,292],[350,312],[350,372]];const d=crPath(cl,false);let rings='';
-  const sm=crSample(cl,12),cc=cum(sm);
-  for(let s=10;s<cc[cc.length-1]-6;s+=9.5){let i=1;while(cc[i]<s)i++;const t=(s-cc[i-1])/(cc[i]-cc[i-1]);const x=lerp(sm[i-1][0],sm[i][0],t),y=lerp(sm[i-1][1],sm[i][1],t);
-    rings+=`<path d="M${P(x-11,y+1.5)}C${P(x-6,y+6)} ${P(x+6,y+6)} ${P(x+11,y+1.5)}" stroke="rgba(40,60,90,.45)" stroke-width="3" fill="none"/><path d="M${P(x-11,y)}C${P(x-6,y+4.5)} ${P(x+6,y+4.5)} ${P(x+11,y)}" stroke="#eef6ff" stroke-width="3.4" fill="none" stroke-linecap="round"/>`;}
-  return {d,rings};
-}
-const TR_=trachea();
-const ALV=[[-22,-18,20],[6,-24,21],[32,-10,19],[34,18,18],[10,26,21],[-16,20,19],[-2,0,16]];
-const CAPS=[[[-96,52],[-66,46],[-40,42],[-22,48],[-4,48],[14,46],[32,38],[48,22],[58,2],[62,-18],[76,-38],[98,-52]],
-  [[-96,6],[-72,8],[-50,2],[-44,-18],[-30,-36],[-8,-44],[14,-46],[34,-38],[52,-32],[72,-40],[98,-34]],
-  [[-74,88],[-50,70],[-28,62],[-6,58],[16,56],[36,48],[54,36],[70,20],[98,10]]];
-const CAPL=[[[-22,48],[-38,20],[-44,-18]],[[32,38],[52,6],[52,-32]],[[-6,58],[-4,48]],[[14,46],[20,4],[14,-46]]];
+const IMG='assets/img/';
+const figImg=(f,extra='')=>`<image href="${IMG}${f}" x="${FIG.x}" y="${FIG.y}" width="${FIG.w}" height="${FIG.h}" preserveAspectRatio="xMidYMid meet" ${extra}/>`;
+/* büyüteç: A = alveoli.webp (bronşçuk ucu + alveol keseleri), B = gas_pulmonary.webp (alveol-kılcal gaz alışverişi) */
 const MG={x:712,y:568,r:100};
+const MA={cx:540,cy:900,k:.215,W:955,H:1388}, MB={cx:692,cy:463,k:.225,W:1385,H:927};
+const mA=([x,y])=>[(x-MA.cx)*MA.k,(y-MA.cy)*MA.k], mB=([x,y])=>[(x-MB.cx)*MB.k,(y-MB.cy)*MB.k];
+const AIRP=[[[150,300],[205,400],[250,500],[310,545],[375,548],[430,540]],
+  [[150,300],[205,400],[250,500],[290,600],[300,690],[290,760],[255,830]],
+  [[150,300],[205,400],[250,500],[300,600],[360,700],[420,760],[500,770],[600,770],[690,780]],
+  [[150,300],[205,400],[250,500],[300,600],[360,700],[420,780],[450,880],[440,990],[400,1080],[360,1150]],
+  [[150,300],[205,400],[250,500],[300,600],[360,700],[420,780],[500,880],[545,980],[620,1070],[720,1150]]].map(p=>{const s=crSample(p.map(mA),6);return{s,c:cum(s)};});
+const VES=[[[520,927],[440,800],[370,690],[310,600],[200,545],[80,545],[0,560]],
+  [[520,927],[440,800],[360,660],[350,520],[450,410],[510,300],[480,150],[460,0]],
+  [[960,927],[905,760],[880,600],[900,470],[1050,385],[1200,315],[1385,265]],
+  [[960,927],[905,760],[860,600],[820,470],[700,385],[580,330],[500,200],[465,0]]];
+const ALV=[[590,650,70],[520,560,30],[680,800,40],[860,190,60],[760,160,40],[1040,560,40]].map(([x,y,r])=>{const p=mB([x,y]);return[p[0],p[1],r*MB.k];});
 
 svg.innerHTML=`
 <defs>
-  <linearGradient id="gBody" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1b3d60" stop-opacity=".5"/><stop offset=".7" stop-color="#0e2238" stop-opacity=".42"/><stop offset="1" stop-color="#0b1a2d" stop-opacity="0"/></linearGradient>
-  <linearGradient id="gRim" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="684"><stop offset="0" stop-color="#9ffaff"/><stop offset=".55" stop-color="#35eefc" stop-opacity=".6"/><stop offset=".86" stop-color="#35eefc" stop-opacity=".25"/><stop offset="1" stop-color="#35eefc" stop-opacity="0"/></linearGradient>
-  <radialGradient id="gBodyIn" cx=".45" cy=".42" r=".55"><stop offset="0" stop-color="#3a7ab0" stop-opacity=".22"/><stop offset="1" stop-color="#0b1a2d" stop-opacity="0"/></radialGradient>
-  <pattern id="pGrid" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M16 0H0V16" fill="none" stroke="#7fdcff" stroke-opacity=".07"/></pattern>
-  <radialGradient id="gLungR" cx=".38" cy=".32" r=".8"><stop offset="0" stop-color="#ffd9e3"/><stop offset=".3" stop-color="#ffa7bf"/><stop offset=".72" stop-color="#e06a8f"/><stop offset="1" stop-color="#9c2f58"/></radialGradient>
-  <radialGradient id="gLungL" cx=".62" cy=".32" r=".8"><stop offset="0" stop-color="#ffd9e3"/><stop offset=".3" stop-color="#ffa7bf"/><stop offset=".72" stop-color="#e06a8f"/><stop offset="1" stop-color="#9c2f58"/></radialGradient>
-  <radialGradient id="gAir" cx=".5" cy=".45" r=".6"><stop offset="0" stop-color="#ffffff" stop-opacity=".55"/><stop offset="1" stop-color="#ffd0dc" stop-opacity="0"/></radialGradient>
-  <pattern id="pSponge" width="18" height="18" patternUnits="userSpaceOnUse">
-    <circle cx="4" cy="4" r="3.2" fill="#8f2350" fill-opacity=".2" stroke="#ffe6ee" stroke-opacity=".38" stroke-width=".7"/>
-    <circle cx="13" cy="6" r="2.7" fill="#8f2350" fill-opacity=".18" stroke="#ffe6ee" stroke-opacity=".32" stroke-width=".7"/>
-    <circle cx="8" cy="13" r="3.4" fill="#8f2350" fill-opacity=".2" stroke="#ffe6ee" stroke-opacity=".36" stroke-width=".7"/>
-    <circle cx="16.5" cy="15" r="2.1" fill="#8f2350" fill-opacity=".16" stroke="#ffe6ee" stroke-opacity=".3" stroke-width=".6"/>
-    <circle cx="1" cy="11" r="1.7" fill="#8f2350" fill-opacity=".15" stroke="#ffe6ee" stroke-opacity=".28" stroke-width=".6"/>
-  </pattern>
-  <linearGradient id="gTra" gradientUnits="userSpaceOnUse" x1="338" y1="0" x2="362" y2="0"><stop offset="0" stop-color="#8ea3bd"/><stop offset=".35" stop-color="#f4f9ff"/><stop offset=".65" stop-color="#d3e0ee"/><stop offset="1" stop-color="#7f93ad"/></linearGradient>
-  <linearGradient id="gMus" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffab80"/><stop offset=".45" stop-color="#ff8a5c"/><stop offset="1" stop-color="#b8461f"/></linearGradient>
-  <linearGradient id="gIc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ff9a6c"/><stop offset="1" stop-color="#c4512a"/></linearGradient>
-  <linearGradient id="gBone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset="1" stop-color="#cbd6e4"/></linearGradient>
-  <radialGradient id="gMuc" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ffd0d8"/><stop offset=".5" stop-color="#ff9aa8"/><stop offset="1" stop-color="#d84a64"/></radialGradient>
-  <linearGradient id="gPh" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#ffb3bf"/><stop offset=".5" stop-color="#ff8e9f"/><stop offset="1" stop-color="#c9445f"/></linearGradient>
-  <linearGradient id="gTongue" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9aa6"/><stop offset="1" stop-color="#d9475f"/></linearGradient>
-  <linearGradient id="gCart" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#c6d6ea"/><stop offset=".4" stop-color="#f5faff"/><stop offset="1" stop-color="#9fb3cc"/></linearGradient>
-  <linearGradient id="gEso" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff9aa8"/><stop offset="1" stop-color="#e2566e" stop-opacity="0"/></linearGradient>
-  <radialGradient id="gHeart" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#ff8a9a"/><stop offset=".5" stop-color="#ff4d64"/><stop offset="1" stop-color="#a3122e"/></radialGradient>
-  <linearGradient id="gGut" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffb0a0"/><stop offset="1" stop-color="#e46d68"/></linearGradient>
-  <radialGradient id="gLiver" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#d0675e"/><stop offset=".6" stop-color="#b5473f"/><stop offset="1" stop-color="#7d2420"/></radialGradient>
-  <radialGradient id="gStom" cx=".4" cy=".3" r=".8"><stop offset="0" stop-color="#ffb0bc"/><stop offset=".55" stop-color="#ff8a9a"/><stop offset="1" stop-color="#d94a66"/></radialGradient>
-  <linearGradient id="gAbd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffbb3d" stop-opacity=".2"/><stop offset=".6" stop-color="#ff9a3d" stop-opacity=".08"/><stop offset="1" stop-color="#ffbb3d" stop-opacity="0"/></linearGradient>
-  <linearGradient id="gBlood" gradientUnits="userSpaceOnUse" x1="-80" y1="0" x2="80" y2="0"><stop offset="0" stop-color="#5b6cff"/><stop offset=".5" stop-color="#a64fc4"/><stop offset="1" stop-color="#ff3b55"/></linearGradient>
-  <radialGradient id="gAlv" cx=".36" cy=".3" r=".8"><stop offset="0" stop-color="#fff3f7"/><stop offset=".35" stop-color="#ffc3d3"/><stop offset=".8" stop-color="#e46f94"/><stop offset="1" stop-color="#b03d68"/></radialGradient>
-  <radialGradient id="gMagBg" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#3a1630"/><stop offset="1" stop-color="#12081a"/></radialGradient>
-  <linearGradient id="gRing" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#b8c8dc"/><stop offset=".6" stop-color="#5f7590"/><stop offset="1" stop-color="#dfe8f3"/></linearGradient>
+  <radialGradient id="gPool" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#bfe9ff" stop-opacity=".16"/><stop offset=".6" stop-color="#5fc6ff" stop-opacity=".06"/><stop offset="1" stop-color="#35eefc" stop-opacity="0"/></radialGradient>
+  <linearGradient id="gFadeV" gradientUnits="userSpaceOnUse" x1="0" y1="604" x2="0" y2="672"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#000"/></linearGradient>
+  <linearGradient id="gRibMask" gradientUnits="userSpaceOnUse" x1="${CX-64}" y1="0" x2="${CX+64}" y2="0"><stop offset="0" stop-color="#fff"/><stop offset=".36" stop-color="#fff" stop-opacity=".9"/><stop offset=".5" stop-color="#000"/><stop offset=".64" stop-color="#fff" stop-opacity=".9"/><stop offset="1" stop-color="#fff"/></linearGradient>
+  <mask id="mFade" maskUnits="userSpaceOnUse" x="-100" y="-100" width="1020" height="900"><rect x="-100" y="-100" width="1020" height="900" fill="url(#gFadeV)"/></mask>
+  <mask id="mStatic" maskUnits="userSpaceOnUse" x="-100" y="-100" width="1020" height="900"><rect x="-100" y="-100" width="1020" height="900" fill="url(#gFadeV)"/>
+    <g fill="#000"><path d="${polyD(IP(LUNGD.R))}"/><path d="${polyD(IP(LUNGD.L))}"/><path d="${polyD(AIR.solukL.map((p,i)=>i<2?[p[0],ORG[1]]:p))}"/><path d="${polyD(AIR.brons)}"/></g></mask>
+  <mask id="mRib" maskUnits="userSpaceOnUse" x="-100" y="-100" width="1020" height="900"><rect x="-100" y="-100" width="1020" height="900" fill="url(#gRibMask)"/></mask>
+  <clipPath id="cLR"><path d="${polyD(IP(LUNGD.R))}"/></clipPath>
+  <clipPath id="cLL"><path d="${polyD(IP(LUNGD.L))}"/></clipPath>
+  ${['burun','yutak','girtlak','solukU','solukL','brons'].map(k=>`<clipPath id="c_${k}"><path d="${polyD(AIR[k])}"/></clipPath>`).join('')}
+  <linearGradient id="gMus" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f29a7c"/><stop offset=".5" stop-color="#d9624a"/><stop offset="1" stop-color="#a53b2a"/></linearGradient>
+  <linearGradient id="gIc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e2765a"/><stop offset="1" stop-color="#b44a32"/></linearGradient>
+  <linearGradient id="gBone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#e6d8bf"/></linearGradient>
+  <linearGradient id="gAbd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffbb3d" stop-opacity=".22"/><stop offset=".6" stop-color="#ff9a3d" stop-opacity=".1"/><stop offset="1" stop-color="#ffbb3d" stop-opacity="0"/></linearGradient>
   <radialGradient id="gSmog" cx=".3" cy=".55" r=".8"><stop offset="0" stop-color="#8a7356" stop-opacity=".55"/><stop offset="1" stop-color="#5a4a3a" stop-opacity="0"/></radialGradient>
   <radialGradient id="gSky" cx=".3" cy=".4" r=".8"><stop offset="0" stop-color="#8fe9ff" stop-opacity=".35"/><stop offset="1" stop-color="#35eefc" stop-opacity="0"/></radialGradient>
   <linearGradient id="gHill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fd17a"/><stop offset="1" stop-color="#1c6a3a" stop-opacity="0"/></linearGradient>
   <radialGradient id="gLeaf" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#c9f78f"/><stop offset=".55" stop-color="#59bf45"/><stop offset="1" stop-color="#25752c"/></radialGradient>
-  <symbol id="alvTip" overflow="visible"><circle cx="-2.6" cy="-1.5" r="3.3" fill="url(#gAlv)"/><circle cx="2.8" cy="-1.8" r="3" fill="url(#gAlv)"/><circle cx=".2" cy="2.6" r="3.2" fill="url(#gAlv)"/><circle cx="-1" cy="-2.6" r="1" fill="#fff" opacity=".8"/></symbol>
+  <linearGradient id="gRing" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#b8c8dc"/><stop offset=".6" stop-color="#5f7590"/><stop offset="1" stop-color="#dfe8f3"/></linearGradient>
   <symbol id="arw" overflow="visible"><path d="M0 -16 L11 -2 L4.5 -2 L4.5 14 L-4.5 14 L-4.5 -2 L-11 -2Z" stroke="#04222a" stroke-width="1.5" stroke-linejoin="round"/></symbol>
-  <filter id="fShadow" x="-20%" y="-15%" width="140%" height="145%"><feGaussianBlur in="SourceAlpha" stdDeviation="7"/><feOffset dy="9"/><feComponentTransfer><feFuncA type="linear" slope=".5"/></feComponentTransfer><feMerge><feMergeNode/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   <filter id="fSoft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
-  <filter id="fGlow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   <filter id="fHover"><feColorMatrix type="matrix" values="1.12 0 0 0 .04  0 1.12 0 0 .05  0 0 1.12 0 .07  0 0 0 1 0"/></filter>
   <filter id="fSel" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="2.5" result="d"/><feFlood flood-color="#35eefc"/><feComposite in2="d" operator="in" result="o"/><feGaussianBlur in="o" stdDeviation="3" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
   <filter id="fOk" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/><feFlood flood-color="#2fe39b"/><feComposite in2="d" operator="in" result="o"/><feGaussianBlur in="o" stdDeviation="3.5" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
@@ -535,144 +514,60 @@ svg.innerHTML=`
     <g fill="#22303f" stroke="#3b4c60" stroke-width="1"><rect x="18" y="196" width="86" height="56" rx="3"/><rect x="34" y="138" width="12" height="60"/><rect x="66" y="152" width="10" height="46"/><path d="M104 252 V214 L124 226 V214 L144 226 V252Z"/></g>
     <g fill="#ffcf6b" opacity=".55"><rect x="28" y="210" width="8" height="8"/><rect x="46" y="210" width="8" height="8"/><rect x="64" y="210" width="8" height="8"/><rect x="82" y="226" width="8" height="8"/></g>
     <g class="smoke" fill="#7a7068"><circle cx="40" cy="128" r="10" opacity=".6"/><circle cx="50" cy="110" r="14" opacity=".45"/><circle cx="66" cy="92" r="18" opacity=".32"/><circle cx="72" cy="140" r="8" opacity=".55"/><circle cx="84" cy="122" r="12" opacity=".4"/></g>
-    <g transform="translate(176 240)"><path d="M-30 6 C-28 -4 -20 -10 -8 -10 L10 -10 C18 -10 24 -4 28 2 L32 4 L32 12 L-32 12Z" fill="#2a3646" stroke="#4a5d76"/><circle cx="-18" cy="12" r="6" fill="#111a24" stroke="#4a5d76"/><circle cx="18" cy="12" r="6" fill="#111a24" stroke="#4a5d76"/><circle cx="-40" cy="8" r="7" fill="#6d6560" opacity=".5"/><circle cx="-52" cy="4" r="10" fill="#6d6560" opacity=".35"/></g>
+    <g transform="translate(168 246) scale(.86)"><path d="M-30 6 C-28 -4 -20 -10 -8 -10 L10 -10 C18 -10 24 -4 28 2 L32 4 L32 12 L-32 12Z" fill="#2a3646" stroke="#4a5d76"/><circle cx="-18" cy="12" r="6" fill="#111a24" stroke="#4a5d76"/><circle cx="18" cy="12" r="6" fill="#111a24" stroke="#4a5d76"/><circle cx="-40" cy="8" r="7" fill="#6d6560" opacity=".5"/><circle cx="-52" cy="4" r="10" fill="#6d6560" opacity=".35"/></g>
   </g>
 </g>
 
-<!-- cam gövde -->
-<g id="bodyG" pointer-events="none">
-  <path id="silGlow" fill="none" stroke="#35eefc" stroke-opacity=".1" stroke-width="12" stroke-linejoin="round"/>
-  <path id="sil" fill="url(#gBody)"/>
-  <path id="silGrid" fill="url(#pGrid)"/>
-  <path id="silIn" fill="url(#gBodyIn)"/>
-  <path id="silRim" fill="none" stroke="url(#gRim)" stroke-width="2.2" stroke-linejoin="round"/>
-  <g transform="translate(${CX} 0)" fill="none" stroke="#9ffaff" stroke-linecap="round">
-    <path d="M-75 93 C-69 87 -60 87 -54 92 C-60 96 -69 96 -75 93Z" fill="rgba(160,230,255,.12)" stroke-opacity=".5" stroke-width="1.3"/>
-    <circle cx="-63" cy="92" r="2.6" fill="#9ffaff" fill-opacity=".45" stroke="none"/>
-    <path d="M-80 80 C-72 74 -60 74 -52 79" stroke-opacity=".35" stroke-width="2"/>
-    <path d="M18 104 C28 94 40 102 38 118 C36 132 30 140 22 138" stroke-opacity=".38" stroke-width="2"/>
-    <path d="M24 112 C30 108 33 116 30 124" stroke-opacity=".25" stroke-width="1.5"/>
-  </g>
+<!-- Servier figürü: gövde/baş (en altta) + sabit hava yolu katmanı -->
+<ellipse cx="${CX}" cy="330" rx="320" ry="350" fill="url(#gPool)" pointer-events="none"/>
+<g id="figBase" pointer-events="none">
+  <g mask="url(#mFade)">${figImg('resp_body.webp','class="figimg"')}</g>
+  <g mask="url(#mStatic)">${figImg('resp_airways.webp')}</g>
 </g>
 
 <!-- boşluklar -->
 <path id="chestFill" fill="#35eefc" opacity=".05" pointer-events="none"/>
-<path id="abdFill" fill="url(#gAbd)" pointer-events="none"/>
-<g id="organs" pointer-events="none" opacity=".42">
-  <g id="gutG"><path d="M${P(CX-120,600)}C${P(CX-90,572)} ${P(CX-60,628)} ${P(CX-30,596)}S${P(CX+30,628)} ${P(CX+60,596)}S${P(CX+110,624)} ${P(CX+128,598)}M${P(CX-128,640)}C${P(CX-96,612)} ${P(CX-66,664)} ${P(CX-36,634)}S${P(CX+24,664)} ${P(CX+54,634)}S${P(CX+104,662)} ${P(CX+124,636)}" stroke="#7a2a3a" stroke-width="22" fill="none" stroke-linecap="round" opacity=".7"/>
-    <path d="M${P(CX-120,600)}C${P(CX-90,572)} ${P(CX-60,628)} ${P(CX-30,596)}S${P(CX+30,628)} ${P(CX+60,596)}S${P(CX+110,624)} ${P(CX+128,598)}M${P(CX-128,640)}C${P(CX-96,612)} ${P(CX-66,664)} ${P(CX-36,634)}S${P(CX+24,664)} ${P(CX+54,634)}S${P(CX+104,662)} ${P(CX+124,636)}" stroke="url(#gGut)" stroke-width="17" fill="none" stroke-linecap="round"/>
-    <path d="M${P(CX-120,596)}C${P(CX-90,568)} ${P(CX-60,624)} ${P(CX-30,592)}S${P(CX+30,624)} ${P(CX+60,592)}" stroke="#fff" stroke-opacity=".3" stroke-width="2.5" fill="none"/></g>
-  <path id="liver" fill="url(#gLiver)" stroke="#e08a80" stroke-opacity=".5"/>
-  <g id="stomG"><path d="M${P(CX+62,474)}C${P(CX+116,462)} ${P(CX+160,494)} ${P(CX+150,540)}C${P(CX+140,580)} ${P(CX+92,592)} ${P(CX+52,574)}C${P(CX+28,562)} ${P(CX+36,540)} ${P(CX+66,542)}C${P(CX+98,544)} ${P(CX+108,522)} ${P(CX+94,506)}C${P(CX+80,494)} ${P(CX+58,494)} ${P(CX+62,474)}Z" fill="url(#gStom)" stroke="#ffc0ca" stroke-opacity=".5"/>
-    <ellipse cx="${CX+122}" cy="504" rx="12" ry="7" fill="#fff" opacity=".3" transform="rotate(30 ${CX+122} 504)"/></g>
-</g>
+<path id="abdFill" fill="url(#gAbd)" pointer-events="none" mask="url(#mFade)"/>
 
-<!-- kalp (arkada, soluk) -->
-<g id="heartG" pointer-events="none" opacity=".62"><g transform="translate(${CX+26} 452) rotate(-24) scale(.92)">
-  <path d="M0 -30 C14 -48 48 -42 48 -12 C48 14 22 36 0 54 C-22 36 -48 14 -48 -12 C-48 -42 -14 -48 0 -30Z" fill="url(#gHeart)"/>
-  <ellipse cx="-20" cy="-18" rx="12" ry="8" fill="#fff" opacity=".3"/></g>
-  <text x="${CX+40}" y="486" text-anchor="middle" font-size="12" font-weight="700" fill="#ffd6dc" opacity=".85">Kalp</text></g>
-
-<!-- yemek borusu (arkada) -->
-<path d="M${P(CX+22,226)}C${P(CX+22,252)} ${P(CX+20,276)} ${P(CX+10,304)}" stroke="url(#gEso)" stroke-width="15" fill="none" stroke-linecap="round" opacity=".6" pointer-events="none"/>
-
-<!-- akciğerler -->
-<g id="lungs" filter="url(#fShadow)">
-  <g class="part" data-part="akciger-sag">
-    <path id="lRb" fill="url(#gLungR)"/><path id="lRt" fill="url(#pSponge)"/><path id="lRa" fill="url(#gAir)" opacity="0"/>
-    <path id="lRs" fill="none" stroke="#7c1d45" stroke-opacity=".35" stroke-width="8"/>
-    <path id="lRf" fill="none" stroke="#8a2550" stroke-opacity=".7" stroke-width="2.4" stroke-linecap="round"/>
-    <path id="lRf2" fill="none" stroke="#ffe0ea" stroke-opacity=".45" stroke-width="1" stroke-linecap="round"/>
-    <path id="lRr" fill="none" stroke="#ffe3ec" stroke-opacity=".8" stroke-width="1.5"/>
-    <ellipse id="lRh" rx="20" ry="44" fill="#fff" opacity=".22" filter="url(#fSoft)"/>
-  </g>
-  <g class="part" data-part="akciger-sol">
-    <path id="lLb" fill="url(#gLungL)"/><path id="lLt" fill="url(#pSponge)"/><path id="lLa" fill="url(#gAir)" opacity="0"/>
-    <path id="lLs" fill="none" stroke="#7c1d45" stroke-opacity=".35" stroke-width="8"/>
-    <path id="lLf" fill="none" stroke="#8a2550" stroke-opacity=".7" stroke-width="2.4" stroke-linecap="round"/>
-    <path id="lLf2" fill="none" stroke="#ffe0ea" stroke-opacity=".45" stroke-width="1" stroke-linecap="round"/>
-    <path id="lLr" fill="none" stroke="#ffe3ec" stroke-opacity=".8" stroke-width="1.5"/>
-    <ellipse id="lLh" rx="18" ry="40" fill="#fff" opacity=".2" filter="url(#fSoft)"/>
-  </g>
+<!-- akciğer katmanı (soluk alırken ölçeklenir) -->
+<g id="lungs">
+  <g class="part" data-part="akciger-sag">${figImg('resp_lungs.webp','clip-path="url(#cLR)" pointer-events="none"')}<path d="${polyD(IP(LUNGI.R))}" fill="transparent"/></g>
+  <g class="part" data-part="akciger-sol">${figImg('resp_lungs.webp','clip-path="url(#cLL)" pointer-events="none"')}<path d="${polyD(IP(LUNGI.L))}" fill="transparent"/></g>
+  <g class="part" data-part="soluk">${figImg('resp_airways.webp','clip-path="url(#c_solukL)" pointer-events="none"')}<path d="${polyD(AIR.solukL.map((p,i)=>i<2?[p[0],ORG[1]]:p))}" fill="transparent"/></g>
+  <g class="part" data-part="brons">${figImg('resp_airways.webp','clip-path="url(#c_brons)" pointer-events="none"')}
+    <path d="M${IP(BRI.R).map(p=>P(p[0],p[1])).join('L')}M${IP(BRI.L).map(p=>P(p[0],p[1])).join('L')}" stroke="transparent" stroke-width="15" stroke-linecap="round" fill="none" pointer-events="stroke"/></g>
+  <g class="part" data-part="bronscuk" id="bcG">${figImg('resp_airways.webp','clip-path="url(#cLR)" pointer-events="none"')}${figImg('resp_airways.webp','clip-path="url(#cLL)" pointer-events="none"')}
+    <path d="${TIPS.map(t=>'M'+t.chain.map(p=>P(p[0],p[1])).join('L')).join('')}" stroke="transparent" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none" pointer-events="stroke"/></g>
+  <g class="part" data-part="alveol" id="tipsG"><path d="${TIPS.map(t=>`M${P(t.x,t.y)}l.1 0`).join('')}" stroke="transparent" stroke-width="14" stroke-linecap="round" fill="none" pointer-events="stroke"/></g>
 </g>
-
-<!-- soluk borusu -->
-<g class="part" data-part="soluk">
-  <path d="${TR_.d}" stroke="#5f7590" stroke-width="27" fill="none" stroke-linecap="round"/>
-  <path d="${TR_.d}" stroke="url(#gTra)" stroke-width="23.5" fill="none" stroke-linecap="round"/>
-  ${TR_.rings}
-  <path d="${TR_.d}" stroke="#fff" stroke-opacity=".35" stroke-width="3" fill="none" transform="translate(-5 0)"/>
-  <path d="${TR_.d}" stroke="transparent" stroke-width="34" fill="none" pointer-events="stroke"/>
-</g>
-<!-- bronşlar -->
-<g class="part" data-part="brons">
-  <path id="brO" stroke="#5f7590" stroke-width="17" fill="none" stroke-linecap="round"/>
-  <path id="brC" stroke="#e6eef8" stroke-width="13.5" fill="none" stroke-linecap="round"/>
-  <path id="brD" stroke="#ffffff" stroke-width="12" fill="none" stroke-dasharray="2.6 5.2" stroke-opacity=".9"/>
-  <path id="brS" stroke="#7f93ad" stroke-width="4" fill="none" stroke-opacity=".45" transform="translate(0 3)"/>
-  <path id="brH" stroke="transparent" stroke-width="26" fill="none" pointer-events="stroke"/>
-</g>
-<!-- bronşçuklar -->
-<g class="part" data-part="bronscuk" id="bcG"></g>
-<!-- alveol uçları -->
-<g class="part" data-part="alveol" id="tipsG"></g>
 
 <!-- diyafram -->
 <g class="part" data-part="diyafram">
-  <path id="dia" fill="url(#gMus)" stroke="#ffd2bd" stroke-opacity=".7" stroke-width="1.2"/>
+  <path id="dia" fill="url(#gMus)" fill-opacity=".9" stroke="#ffd9c8" stroke-opacity=".8" stroke-width="1"/>
   <path id="diaHot" fill="#ff6a3d" opacity="0"/>
-  <path id="diaFib" stroke="#ffe0d0" stroke-opacity=".38" stroke-width="1.1" fill="none"/>
-  <path id="diaTen" stroke="#fff1e8" stroke-opacity=".42" stroke-width="7" fill="none" stroke-linecap="round"/>
-  <path id="diaRim" stroke="#fff" stroke-opacity=".55" stroke-width="1.6" fill="none"/>
+  <path id="diaFib" stroke="#ffe6d8" stroke-opacity=".4" stroke-width=".9" fill="none"/>
+  <path id="diaTen" stroke="#fff3ea" stroke-opacity=".5" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path id="diaRim" stroke="#fff" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
+  <path id="diaHit" stroke="transparent" stroke-width="14" fill="none" pointer-events="stroke"/>
 </g>
 
-<!-- göğüs kafesi -->
-<g id="cage" pointer-events="none">
+<!-- göğüs kafesi: ince, yarı saydam kaburgalar + kaburgalar arası kaslar -->
+<g id="cage" pointer-events="none" mask="url(#mRib)">
   <g class="part" data-part="kaburga"><path id="icL" fill="url(#gIc)"/><path id="icR" fill="url(#gIc)"/>
-  <path id="icF" stroke="#ffc9ae" stroke-width="1.1" fill="none" stroke-opacity=".55"/></g>
-  <path id="ribS" stroke="#2c3e57" stroke-opacity=".22" stroke-width="9" fill="none" stroke-linecap="round" transform="translate(0 2.5)"/>
-  <path id="ribO" stroke="#9fb1c8" stroke-opacity=".42" stroke-width="8" fill="none" stroke-linecap="round"/>
-  <path id="ribC" stroke="url(#gBone)" stroke-opacity=".5" stroke-width="5.6" fill="none" stroke-linecap="round"/>
-  <path id="ribH" stroke="#fff" stroke-opacity=".55" stroke-width="1.4" fill="none" stroke-linecap="round" transform="translate(0 -1.8)"/>
-  <path id="stern" fill="url(#gBone)" fill-opacity=".55" stroke="#fff" stroke-opacity=".5"/>
-  <path d="M${P(CX-14,294)}C${P(CX-60,300)} ${P(CX-100,272)} ${P(CX-150,284)}M${P(CX+14,294)}C${P(CX+60,300)} ${P(CX+100,272)} ${P(CX+150,284)}" stroke="#9fb1c8" stroke-opacity=".75" stroke-width="10" fill="none" stroke-linecap="round"/>
-  <path d="M${P(CX-14,294)}C${P(CX-60,300)} ${P(CX-100,272)} ${P(CX-150,284)}M${P(CX+14,294)}C${P(CX+60,300)} ${P(CX+100,272)} ${P(CX+150,284)}" stroke="url(#gBone)" stroke-opacity=".85" stroke-width="7" fill="none" stroke-linecap="round"/>
+  <path id="icF" stroke="#ffd2bf" stroke-width=".9" fill="none" stroke-opacity=".5"/></g>
+  <path id="ribO" stroke="#7d6a55" stroke-opacity=".38" stroke-width="5.4" fill="none" stroke-linecap="round"/>
+  <path id="ribC" stroke="url(#gBone)" stroke-opacity=".72" stroke-width="3.6" fill="none" stroke-linecap="round"/>
+  <path id="ribH" stroke="#fff" stroke-opacity=".55" stroke-width=".9" fill="none" stroke-linecap="round" transform="translate(0 -1)"/>
 </g>
-<path id="chestLine" fill="none" stroke="#35eefc" stroke-opacity=".55" stroke-width="1.6" stroke-dasharray="5 5" pointer-events="none"/>
+<path id="chestLine" fill="none" stroke="#35eefc" stroke-opacity=".6" stroke-width="1.5" stroke-dasharray="5 5" pointer-events="none"/>
 <g class="part" data-part="kaburga"><path id="icHit" stroke="transparent" stroke-width="16" fill="none" pointer-events="stroke"/></g>
 
-<!-- baş içi yapılar -->
-<g transform="translate(${CX} 0)">
-  <path d="M-70 162 C-60 152 -30 148 -4 149 C6 150 12 154 14 160 L14 178 C0 184 -30 186 -56 178 C-64 174 -68 168 -70 162Z" fill="#3a0f1f" opacity=".85" pointer-events="none"/>
-  <path d="M-62 169 C-52 157 -24 153 -2 156 C10 159 14 167 12 177 C-6 181 -36 181 -62 169Z" fill="url(#gTongue)" pointer-events="none"/>
-  <path d="M-58 166 C-44 159 -20 157 0 160" stroke="#fff" stroke-opacity=".3" stroke-width="1.5" fill="none" pointer-events="none"/>
-  <ellipse id="mouthOpen" cx="-74" cy="165" rx="4.5" ry="3.4" fill="#1a0610" stroke="#ff7a8a" stroke-width="1" opacity="0" pointer-events="none"/>
-  <path d="M-74 144 C-50 142 -20 139 14 136 L14 142 C-20 145 -50 148 -74 149Z" fill="#e9eef6" opacity=".55" pointer-events="none"/>
-  <g class="part" data-part="yutak">
-    <path d="M8 110 C14 102 30 102 34 113 L35 200 C35 212 33 222 31 234 L15 234 C15 222 12 210 10 200 Z" fill="url(#gPh)" stroke="#ffd0d8" stroke-width="1.2"/>
-    <path d="M22 114 L22 230" stroke="#b83552" stroke-width="5" opacity=".4" stroke-linecap="round"/>
-    <path d="M28 116 L28 226" stroke="#fff" stroke-opacity=".35" stroke-width="1.5"/>
-    <path d="M7 206 C5 197 8 190 15 187" stroke="#ffc2cf" stroke-width="3.4" fill="none" stroke-linecap="round"/>
-  </g>
-  <g class="part" data-part="burun">
-    <path d="M-97 131 C-93 122 -86 110 -82 100 L-68 104 L-70 142 L-88 143 C-96 140 -100 136 -97 131Z" fill="transparent" pointer-events="all"/>
-    <path d="M-88 141 C-86 130 -76 116 -60 108 C-44 101 -22 99 -2 101 C10 103 18 108 20 116 L20 134 C6 134 -12 137 -32 139 C-52 141 -70 143 -88 141Z" fill="url(#gMuc)" stroke="#ffd0d8" stroke-width="1.2"/>
-    <path d="M-48 111 C-32 105 -12 105 6 110 C-8 115 -30 117 -48 111Z" fill="#d84a64" opacity=".8"/>
-    <path d="M-56 121 C-38 115 -14 116 8 120 C-10 126 -36 128 -56 121Z" fill="#d84a64" opacity=".75"/>
-    <path d="M-62 132 C-44 127 -20 127 6 129 C-14 135 -42 136 -62 132Z" fill="#d84a64" opacity=".7"/>
-    <path d="M-48 110 C-32 106 -14 106 2 109 M-56 120 C-38 116 -16 116 4 119" stroke="#fff" stroke-opacity=".45" stroke-width="1.1" fill="none"/>
-    <path d="M-70 112 C-54 104 -30 102 -8 104" stroke="#fff" stroke-opacity=".5" stroke-width="1.5" fill="none"/>
-    <g stroke="#5a2a1e" stroke-width="1.3" stroke-linecap="round" opacity=".85"><path d="M-86 139 l4 -6 M-83 140 l5 -5 M-80 141 l3 -7 M-84 133 l5 -3 M-78 130 l4 -5 M-81 127 l5 -2"/></g>
-    <circle cx="-66" cy="138" r="1.6" fill="#fff" opacity=".6"/><circle cx="-40" cy="136" r="1.3" fill="#fff" opacity=".5"/>
-  </g>
-  <g class="part" data-part="girtlak">
-    <path d="M-20 206 C-12 201 2 201 9 205 C10 220 10 236 7 251 C0 254 -14 254 -21 251 C-25 236 -25 220 -20 206Z" fill="url(#gCart)" stroke="#fff" stroke-opacity=".7" stroke-width="1.2"/>
-    <path d="M-21 210 C-28 217 -28 228 -22 234" stroke="#fff" stroke-opacity=".7" stroke-width="2.4" fill="none"/>
-    <ellipse cx="-6" cy="228" rx="8.5" ry="14" fill="#7a1d36" opacity=".85"/>
-    <path id="vocal" d="M-12 219 L-6 236 L0 219" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-    <path d="M-19 245 Q-6 249 6 245" stroke="#9fb3cc" stroke-width="2" fill="none"/>
-  </g>
-</g>
+<!-- üst hava yolları (görselin kendisi; seçim/parlama için ayrık kırpılmış katman) -->
+<g class="part" data-part="soluk">${figImg('resp_airways.webp','clip-path="url(#c_solukU)" pointer-events="none"')}<path d="${polyD(AIR.solukU)}" fill="transparent"/></g>
+<g class="part" data-part="girtlak">${figImg('resp_airways.webp','clip-path="url(#c_girtlak)" pointer-events="none"')}<path d="${polyD(AIR.girtlak)}" fill="transparent"/></g>
+<g class="part" data-part="yutak">${figImg('resp_airways.webp','clip-path="url(#c_yutak)" pointer-events="none"')}<path d="${polyD(AIR.yutak)}" fill="transparent"/></g>
+<g class="part" data-part="burun">${figImg('resp_airways.webp','clip-path="url(#c_burun)" pointer-events="none"')}<path d="${polyD(AIR.burunHit)}" fill="transparent"/></g>
+<ellipse id="mouthOpen" cx="${f1(I(366,371)[0])}" cy="${f1(I(366,371)[1])}" rx="4.5" ry="3.2" fill="#1a0610" stroke="#ff7a8a" stroke-width="1" opacity="0" pointer-events="none"/>
 
 <!-- hareket okları -->
 <g id="arrows" pointer-events="none" opacity="0">
@@ -680,36 +575,31 @@ svg.innerHTML=`
 </g>
 <!-- karın boşluğu -->
 <g id="abdLbl" pointer-events="none">
-  <path id="abdArr" stroke="#ffbb3d" stroke-width="2" fill="none" stroke-opacity=".85"/>
-  <path id="abdHd" fill="#ffbb3d" opacity=".9"/>
-  <rect id="abdR" rx="11" height="26" fill="rgba(40,26,4,.82)" stroke="#ffbb3d" stroke-opacity=".7"/>
+  <path id="abdArr" stroke="#ffbb3d" stroke-width="2" fill="none" stroke-opacity=".9"/>
+  <path id="abdHd" fill="#ffbb3d" opacity=".95"/>
+  <rect id="abdR" rx="11" height="26" fill="rgba(40,26,4,.85)" stroke="#ffbb3d" stroke-opacity=".7"/>
   <text id="abdT" text-anchor="middle" font-size="14" font-weight="800" fill="#ffd98a" letter-spacing=".5">Karın boşluğu</text>
 </g>
 <g id="labels"></g>
 <!-- büyüteç bağlantısı -->
 <g id="lens" pointer-events="none">
-  <path id="lensLn" stroke="#35eefc" stroke-width="1.6" stroke-dasharray="4 4" fill="none" stroke-opacity=".8"/>
-  <circle id="lensMk" r="10" fill="rgba(53,238,252,.12)" stroke="#35eefc" stroke-width="2"/>
+  <path id="lensLn" stroke="#35eefc" stroke-width="1.6" stroke-dasharray="4 4" fill="none" stroke-opacity=".85"/>
+  <circle id="lensMk" r="10" fill="rgba(53,238,252,.14)" stroke="#35eefc" stroke-width="2"/>
 </g>
 <g class="part" data-part="alveol" id="mag" transform="translate(${MG.x} ${MG.y})">
   <circle r="${MG.r+12}" fill="#35eefc" opacity=".12" filter="url(#fSoft)"/>
   <g clip-path="url(#magClip)">
-    <circle r="${MG.r}" fill="url(#gMagBg)"/>
-    <g opacity=".25" fill="none" stroke="#ff9fb8">${[[-60,-60,26],[70,70,30],[-70,50,20],[60,-70,22]].map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}"/>`).join('')}</g>
-    <path d="M-110 -78 C-80 -60 -60 -44 -36 -26" stroke="#9c2f58" stroke-width="22" fill="none" stroke-linecap="round"/>
-    <path d="M-110 -78 C-80 -60 -60 -44 -36 -26" stroke="#ffc9d7" stroke-width="17" fill="none" stroke-linecap="round"/>
-    <path d="M-110 -78 C-80 -60 -60 -44 -36 -26" stroke="#fff" stroke-width="15" fill="none" stroke-dasharray="2 7" opacity=".6"/>
-    <g id="alvG">${ALV.map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="url(#gAlv)" stroke="#ffe6ee" stroke-width="1.2"/><circle cx="${x}" cy="${y}" r="${r*.55}" fill="#c94a77" opacity=".22"/><ellipse cx="${x-r*.35}" cy="${y-r*.4}" rx="${r*.3}" ry="${r*.18}" fill="#fff" opacity=".7" transform="rotate(-30 ${x-r*.35} ${y-r*.4})"/>`).join('')}</g>
-    ${CAPS.concat(CAPL).map(c=>`<path d="${crPath(c,false)}" stroke="#2a0d24" stroke-width="7.5" fill="none" stroke-linecap="round" opacity=".7"/>`).join('')}
-    ${CAPS.map(c=>`<path d="${crPath(c,false)}" stroke="url(#gBlood)" stroke-width="5.2" fill="none" stroke-linecap="round"/>`).join('')}
-    ${CAPL.map(c=>`<path d="${crPath(c,false)}" stroke="url(#gBlood)" stroke-width="3.6" fill="none" stroke-linecap="round"/>`).join('')}
-    ${CAPS.map(c=>`<path d="${crPath(c,false)}" stroke="#fff" stroke-opacity=".3" stroke-width="1.2" fill="none" transform="translate(-.8 -1.4)"/>`).join('')}
+    <circle r="${MG.r}" fill="#2a1424"/>
+    <g id="magA"><g id="magImgA"><image href="${IMG}alveoli.webp" x="${f1(-MA.cx*MA.k)}" y="${f1(-MA.cy*MA.k)}" width="${f1(MA.W*MA.k)}" height="${f1(MA.H*MA.k)}"/></g></g>
+    <g id="magB" opacity="0"><image href="${IMG}gas_pulmonary.webp" x="${f1(-MB.cx*MB.k)}" y="${f1(-MB.cy*MB.k)}" width="${f1(MB.W*MB.k)}" height="${f1(MB.H*MB.k)}"/></g>
     <g font-size="11" font-weight="800" paint-order="stroke" stroke="#12081a" stroke-width="3" stroke-linejoin="round">
-      <text x="34" y="-64" fill="#ffd6e2" id="magAlvT" font-size="12.5" text-anchor="middle">Alveol</text>
-      <text x="4" y="80" fill="#c3c9ff" text-anchor="middle">Kılcal damar</text>
-      <text x="-92" y="28" fill="#9aa5ff" font-size="10">O₂ az</text>
-      <text x="78" y="50" fill="#ff8c9c" font-size="10" text-anchor="end">O₂ çok</text>
-    </g>
+  <g id="magTA"><text class="malv" x="${f1(mA([700,700])[0])}" y="${f1(mA([700,700])[1])}" fill="#ffe2ea" font-size="12.5" text-anchor="middle">Alveol</text>
+    <text x="${f1(mA([330,640])[0])}" y="${f1(mA([330,640])[1])}" fill="#ffe9d8" text-anchor="middle">Bronşçuk</text></g>
+  <g id="magTB" opacity="0"><text class="malv" x="${f1(mB([900,160])[0])}" y="${f1(mB([900,160])[1])}" fill="#ffe2ea" font-size="12.5" text-anchor="middle">Alveol</text>
+    <text x="${f1(mB([700,330])[0])}" y="${f1(mB([700,330])[1])}" fill="#e3e6ff" text-anchor="middle">Kılcal damar</text>
+    <text x="${f1(mB([600,800])[0])}" y="${f1(mB([600,800])[1])}" fill="#b9c4ff" font-size="10.5" text-anchor="middle">O₂ az</text>
+    <text x="${f1(mB([500,170])[0])}" y="${f1(mB([500,170])[1])}" fill="#ffb3bf" font-size="10.5" text-anchor="middle">O₂ çok</text></g>
+</g>
   </g>
   <circle r="${MG.r}" fill="none" stroke="#071423" stroke-width="13"/>
   <circle r="${MG.r}" fill="none" stroke="url(#gRing)" stroke-width="8"/>
@@ -719,46 +609,34 @@ svg.innerHTML=`
   <g transform="translate(0 ${-MG.r-14})"><rect id="magChipR" x="-74" y="-13" width="148" height="26" rx="13" fill="rgba(7,20,37,.9)" stroke="#35eefc" stroke-opacity=".7"/><text id="magChip" text-anchor="middle" y="5" font-size="12.5" font-weight="800" letter-spacing="1.2" fill="#35eefc">ALVEOL · BÜYÜTEÇ</text></g>
 </g>
 `;
-
 /* --- dinamik eleman referansları --- */
 const E={};
-['sil','silGlow','silGrid','silIn','silRim','chestFill','abdFill','liver','stomG','gutG','heartG','lRb','lRt','lRa','lRs','lRf','lRf2','lRr','lRh','lLb','lLt','lLa','lLs','lLf','lLf2','lLr','lLh',
- 'brO','brC','brD','brS','brH','bcG','icHit','tipsG','dia','diaHot','diaFib','diaTen','diaRim','icL','icR','icF','ribS','ribO','ribC','ribH','stern','chestLine',
- 'arrows','aD1','aD2','aRL','aRR','abdArr','abdHd','abdR','abdT','lensLn','lensMk','alvG','mouthOpen','env','envClean','envDirty','vocal','magChip','magChipR','magAlvT'].forEach(id=>E[id]=svg.querySelector('#'+id));
+['chestFill','abdFill','lungs','bcG','icHit','tipsG','dia','diaHot','diaFib','diaTen','diaRim','diaHit','icL','icR','icF','ribO','ribC','ribH','chestLine',
+ 'arrows','aD1','aD2','aRL','aRR','abdArr','abdHd','abdR','abdT','lensLn','lensMk','mouthOpen','env','envClean','envDirty','magChip','magChipR','magA','magB','magImgA'].forEach(id=>E[id]=svg.querySelector('#'+id));
+E.magTA=svg.querySelector('#magTA');E.magTB=svg.querySelector('#magTB');
 const NS='http://www.w3.org/2000/svg';
 const mk=(tag,attrs,parent)=>{const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);parent&&parent.appendChild(e);return e;};
-
-/* bronşçuk yolları (taraf × seviye × katman) */
-const BW={1:7.8,2:5.2,3:3.5};
-const BC={};
-['o','c','h'].forEach(layer=>['R','L'].forEach(k=>[1,2,3].forEach(l=>{
-  const w=BW[l];
-  BC[k+l+layer]=mk('path',layer==='o'?{stroke:'#9b3560','stroke-width':w+2.6,fill:'none','stroke-linecap':'round'}:layer==='c'?{stroke:'#ffe0ea','stroke-width':w,fill:'none','stroke-linecap':'round'}:{stroke:'#fff','stroke-opacity':.55,'stroke-width':Math.max(1,w*.3),fill:'none','stroke-linecap':'round',transform:'translate(-1 -1)'},E.bcG);
-})));
-BC.hR=mk('path',{stroke:'transparent','stroke-width':11,fill:'none','pointer-events':'stroke'},E.bcG);
-BC.hL=mk('path',{stroke:'transparent','stroke-width':11,fill:'none','pointer-events':'stroke'},E.bcG);
-const TIPU=TIPS.map(t=>{const u=mk('use',{href:'#alvTip'},E.tipsG);return u;});
-const TIPH=mk('path',{stroke:'transparent','stroke-width':16,fill:'none','stroke-linecap':'round','pointer-events':'stroke'},E.tipsG);
-/* büyüteç işaretçisi için ucu seç */
-const lensTip=TIPS.filter(t=>t.side>0).reduce((a,t)=>Math.hypot(t.x-(CX+120),t.y-470)<Math.hypot(a.x-(CX+120),a.y-470)?t:a);
-/* bronşçuk etiketi için hedef */
-const bcSeg=TREE.L.segs.filter(s=>s.lvl===2).reduce((a,s)=>Math.hypot(s.cx-(CX+100),s.cy-430)<Math.hypot(a.cx-(CX+100),a.cy-430)?s:a);
+/* büyüteç işaretçisi: sol akciğerin alt-dış bölgesindeki bronşçuk ucu */
+const LT0=I(832,989);
+const lensTip=TIPS.filter(t=>t.side>0).reduce((a,t)=>Math.hypot(t.x-LT0[0],t.y-LT0[1])<Math.hypot(a.x-LT0[0],a.y-LT0[1])?t:a);
+/* bronşçuk etiketi için hedef: sol akciğerde yatay bir dal */
+const bcPt=I(763,891);
 
 /* =====================  ETİKETLER  ===================== */
 const LABELS=[
-  {p:'burun',t:['Burun'],x:132,y:120,a:'end',tg:()=>[CX-90,126]},
+  {p:'burun',t:['Burun'],x:132,y:104,a:'end',tg:()=>I(432,282)},
   {p:'kaburga',t:['Kaburgalar arası','kaslar'],x:132,y:262,a:'end',tg:()=>icTarget,sub:'kab'},
-  {p:'akciger-sag',t:['Sağ akciğer'],x:132,y:372,a:'end',tg:()=>[CX-112,404]},
+  {p:'akciger-sag',t:['Sağ akciğer'],x:132,y:372,a:'end',tg:()=>mapPt(...I(372,800),-1,S.b)},
   {p:null,t:['Göğüs boşluğu'],x:132,y:448,a:'end',tg:()=>chestPt},
-  {p:'diyafram',t:['Diyafram'],x:132,y:534,a:'end',tg:()=>[CX-128,yAt(DT,CX-128)+7],sub:'dia'},
-  {p:'yutak',t:['Yutak'],x:468,y:104,a:'start',tg:()=>[CX+28,150]},
-  {p:'girtlak',t:['Gırtlak','(ses telleri)'],x:468,y:200,a:'start',tg:()=>[CX+4,226]},
-  {p:'soluk',t:['Soluk borusu'],x:578,y:268,a:'start',tg:()=>[CX+6,322]},
-  {p:'brons',t:['Bronş'],x:578,y:318,a:'start',tg:()=>[CX+24,384]},
-  {p:'bronscuk',t:['Bronşçuk'],x:578,y:368,a:'start',tg:()=>mapPt(bcSeg.cx,bcSeg.cy,1,S.b)},
-  {p:'akciger-sol',t:['Sol akciğer'],x:578,y:418,a:'start',tg:()=>[CX+138,408]}
+  {p:'diyafram',t:['Diyafram'],x:132,y:534,a:'end',tg:()=>{const x=I(392,0)[0];return[x,yAt(DT,x)+thick(x)*.5];},sub:'dia'},
+  {p:'yutak',t:['Yutak'],x:468,y:116,a:'start',tg:()=>I(556,372)},
+  {p:'girtlak',t:['Gırtlak','(ses telleri)'],x:468,y:200,a:'start',tg:()=>I(545,492)},
+  {p:'soluk',t:['Soluk borusu'],x:578,y:268,a:'start',tg:()=>I(572,610)},
+  {p:'brons',t:['Bronş'],x:578,y:318,a:'start',tg:()=>mapPt(...I(628,876),1,S.b)},
+  {p:'bronscuk',t:['Bronşçuk'],x:578,y:368,a:'start',tg:()=>mapPt(bcPt[0],bcPt[1],1,S.b)},
+  {p:'akciger-sol',t:['Sol akciğer'],x:578,y:418,a:'start',tg:()=>mapPt(...I(808,900),1,S.b)}
 ];
-let icTarget=[CX-150,352],chestPt=[CX-172,452];
+let icTarget=[CX-110,352],chestPt=[CX-150,452];
 const LG=$('#labels',svg);
 LABELS.forEach(L=>{
   const g=mk('g',{class:'lbl'+(L.p?' part':' info')},LG);if(L.p)g.dataset.part=L.p;
@@ -782,90 +660,58 @@ function updLabels(){
 function setLabelSub(key,txt,col){LABELS.forEach(L=>{if(L.sub===key&&(L.subTxt!==txt||L.subCol!==col)){L.subTxt=txt;L.subCol=col;renderLabelText(L);}});}
 
 /* =====================  ANATOMİ GÜNCELLEME  ===================== */
-let lastDrawB=-1;
+let lastDrawB=-1,ribLat=[CX-160,CX+160];
+const ABDW={L:IP([[318,1345],[326,1290],[320,1240]]),R:IP([[852,1240],[846,1290],[852,1345]])};
 function drawAnatomy(b){
   const dp=setDia(b);
   /* diyafram */
   const top=dp,bot=dp.map(p=>[p[0],p[1]+thick(p[0])]);
   E.dia.setAttribute('d',crPath(top,false)+crPath(bot.slice().reverse(),false).replace('M','L')+'Z');
-  E.diaHot.setAttribute('d',E.dia.getAttribute('d'));E.diaHot.setAttribute('opacity',f1(b*.38*10)/10);
-  E.diaRim.setAttribute('d',crPath(top.map(p=>[p[0],p[1]+1.2]),false));
-  let fb='';for(let i=4;i<DT.length-4;i+=5){const [x,y]=DT[i],t=thick(x),sl=(x-CX)*.05;fb+=`M${P(x,y+1.5)}L${P(x+sl,y+t-1.5)}`;}
+  E.diaHot.setAttribute('d',E.dia.getAttribute('d'));E.diaHot.setAttribute('opacity',f1(b*.32*10)/10);
+  E.diaRim.setAttribute('d',crPath(top.map(p=>[p[0],p[1]+1]),false));
+  E.diaHit.setAttribute('d',crPath(top.map(p=>[p[0],p[1]+thick(p[0])*.5]),false));
+  let fb='';for(let i=4;i<DT.length-4;i+=5){const [x,y]=DT[i],t=thick(x),sl=(x-CX)*.05;fb+=`M${P(x,y+1.2)}L${P(x+sl,y+t-1.2)}`;}
   E.diaFib.setAttribute('d',fb);
-  E.diaTen.setAttribute('d',crPath(DT.filter(p=>Math.abs(p[0]-CX)<48).filter((p,i)=>i%3===0).map(p=>[p[0],p[1]+thick(p[0])*.5]),false));
-  /* akciğerler */
-  [['R',LUNG.R],['L',LUNG.L]].forEach(([k,L])=>{
-    const pts=lungPts(L,b),d=crPath(pts,true);
-    ['b','t','a','s','r'].forEach(x=>E['l'+k+x].setAttribute('d',d));
-    E['l'+k+'a'].setAttribute('opacity',f1(b*.9*10)/10);
-    const s=L.side,ex=s*9*b*.75;let f;
-    if(k==='R'){
-      const h=[[CX-153+ex,398+disp(CX-153)*wgt(398)],[CX-100,392+disp(CX-100)*wgt(392)],[CX-42,396+disp(CX-42)*wgt(396)]];
-      const o=[[CX-158+ex,434+disp(CX-158)*wgt(434)],[CX-126,452+disp(CX-126)*wgt(452)],[CX-98,yAt(DT,CX-98)-24],[CX-84,yAt(DT,CX-84)-4]];
-      f=crPath(h,false)+crPath(o,false);
-    }else{
-      const o=[[CX+44,352],[CX+86,392+disp(CX+86)*wgt(392)],[CX+122,440+disp(CX+122)*wgt(440)],[CX+140+ex,yAt(DT,CX+140)-14]];
-      f=crPath(o,false);
-    }
-    E['l'+k+'f'].setAttribute('d',f);E['l'+k+'f2'].setAttribute('d',f);E['l'+k+'f2'].setAttribute('transform','translate(1.2 1.6)');
-    const hx=k==='R'?CX-118-6*b:CX+104+6*b;E['l'+k+'h'].setAttribute('cx',f1(hx));E['l'+k+'h'].setAttribute('cy',f1(372+6*b));
-    E['l'+k+'h'].setAttribute('transform',`rotate(${k==='R'?14:-14} ${f1(hx)} ${f1(372+6*b)})`);
-    E['l'+k+'t'].setAttribute('opacity',f1((.62+.25*b)*100)/100);
-  });
-  /* bronşlar */
-  const hr=mapPt(HR[0],HR[1],-1,b),hl=mapPt(HL[0],HL[1],1,b);
-  const bd=`M${P(350,364)}Q${P(336,374)} ${P(hr[0],hr[1])}M${P(350,364)}Q${P(370,374)} ${P(hl[0],hl[1])}`;
-  ['brO','brC','brD','brS','brH'].forEach(id=>E[id].setAttribute('d',bd));
-  /* bronşçuklar */
-  ['R','L'].forEach(k=>{const sd=k==='R'?-1:1;const acc={1:'',2:'',3:''};
-    TREE[k].segs.forEach(s=>{const a=mapPt(s.x1,s.y1,sd,b),c=mapPt(s.cx,s.cy,sd,b),e=mapPt(s.x2,s.y2,sd,b);acc[s.lvl]+=`M${P(a[0],a[1])}Q${P(c[0],c[1])} ${P(e[0],e[1])}`;});
-    [1,2,3].forEach(l=>['o','c','h'].forEach(y=>BC[k+l+y].setAttribute('d',acc[l]||'M0 0')));
-    BC['h'+k].setAttribute('d',acc[1]+acc[2]+acc[3]);
-  });
-  let th='';TIPS.forEach((t,i)=>{const [x,y]=mapPt(t.x,t.y,t.side,b);TIPU[i].setAttribute('x',f1(x));TIPU[i].setAttribute('y',f1(y));th+=`M${P(x,y)}l.1 0`;});
-  TIPH.setAttribute('d',th);
+  E.diaTen.setAttribute('d',crPath(DT.filter(p=>Math.abs(p[0]-CX)<40).filter((p,i)=>i%3===0).map(p=>[p[0],p[1]+thick(p[0])*.5]),false));
+  /* akciğerler: Servier akciğer katmanı (+ içindeki bronş ağacı) üst-orta noktadan ölçeklenir */
+  const sx=1+KX*b,sy=1+KY*b;
+  E.lungs.setAttribute('transform',`matrix(${sx.toFixed(4)} 0 0 ${sy.toFixed(4)} ${(ORG[0]*(1-sx)).toFixed(2)} ${(ORG[1]*(1-sy)).toFixed(2)})`);
   /* kaburgalar + kaslar */
   const RB={};let rs='';
   [-1,1].forEach(s=>{RB[s]=[];for(let i=0;i<7;i++){const p=ribPts(i,s,b);RB[s].push(p);rs+=`M${P(p[0][0],p[0][1])}C${P(p[1][0],p[1][1])} ${P(p[2][0],p[2][1])} ${P(p[3][0],p[3][1])}`;}});
-  ['ribS','ribO','ribC','ribH'].forEach(id=>E[id].setAttribute('d',rs));
+  ['ribO','ribC','ribH'].forEach(id=>E[id].setAttribute('d',rs));
   let fib='';
   [-1,1].forEach(s=>{let d='';for(let i=0;i<6;i++){const A=RB[s][i],B=RB[s][i+1],ta=[],tb=[];
-    for(let k=0;k<=6;k++){const t=.34+k*.11;const a=bez(A,t),c=bez(B,t);ta.push([a[0],a[1]+4.5]);tb.push([c[0],c[1]-4.5]);}
+    for(let k=0;k<=6;k++){const t=.34+k*.11;const a=bez(A,t),c=bez(B,t);ta.push([a[0],a[1]+3]);tb.push([c[0],c[1]-3]);}
     d+='M'+ta.map(p=>P(p[0],p[1])).join('L')+'L'+tb.reverse().map(p=>P(p[0],p[1])).join('L')+'Z';tb.reverse();
     for(let k=0;k<6;k++)fib+=`M${P(ta[k][0],ta[k][1])}L${P(tb[k+1][0],tb[k+1][1])}`;}
     E[s<0?'icL':'icR'].setAttribute('d',d);});
   E.icF.setAttribute('d',fib);
-  const ico=f1((.13+.3*b)*100)/100;E.icF.setAttribute('stroke-opacity',f1((.3+.45*b)*100)/100);E.icL.setAttribute('opacity',ico);E.icR.setAttribute('opacity',ico);
-  icTarget=bez(RB[-1][1],.8).map((v,j)=>v+(j?18:0));
-  const sl=-6*b;E.stern.setAttribute('d',`M${P(CX-11,292+sl)}L${P(CX+11,292+sl)}L${P(CX+9,470+sl)}L${P(CX,484+sl)}L${P(CX-9,470+sl)}Z`);
+  const ico=f1((.1+.32*b)*100)/100;E.icF.setAttribute('stroke-opacity',f1((.22+.45*b)*100)/100);E.icL.setAttribute('opacity',ico);E.icR.setAttribute('opacity',ico);
+  icTarget=bez(RB[-1][1],.8).map((v,j)=>v+(j?13:0));
+  ribLat=[Math.min(...RB[-1].map(p=>Math.min(p[2][0],p[3][0]))),Math.max(...RB[1].map(p=>Math.max(p[2][0],p[3][0])))];
   /* göğüs boşluğu sınırı */
-  const cp=[[CX-176,yAt(DT,CX-176)]];for(let i=6;i>=0;i--){const p=RB[-1][i][3];cp.push([p[0]-5,p[1]]);}
-  cp.push([CX-70,284],[CX+70,284]);for(let i=0;i<7;i++){const p=RB[1][i][3];cp.push([p[0]+5,p[1]]);}cp.push([CX+176,yAt(DT,CX+176)]);
-  E.chestLine.setAttribute('d',crPath(cp,false));E.icHit.setAttribute('d',crPath(cp.slice(0,5).map(q=>[q[0]-8,q[1]]),false)+crPath(cp.slice(12).map(q=>[q[0]+8,q[1]]),false));
-  E.chestFill.setAttribute('d',crPath(cp,false)+'L'+DT.slice().reverse().map(p=>P(p[0],p[1])).join('L')+'Z');
-  E.chestFill.setAttribute('opacity',f1((.04+.07*b)*100)/100);
+  const xl=RB[-1][6][3][0]-3,xr=RB[1][6][3][0]+3;
+  const cp=[[xl,yAt(DT,xl)]];for(let i=6;i>=0;i--){const p=RB[-1][i][3];cp.push([p[0]-4,p[1]]);}
+  cp.push([CX-56,ORG[1]-8],[CX+56,ORG[1]-8]);for(let i=0;i<7;i++){const p=RB[1][i][3];cp.push([p[0]+4,p[1]]);}cp.push([xr,yAt(DT,xr)]);
+  E.chestLine.setAttribute('d',crPath(cp,false));E.icHit.setAttribute('d',crPath(cp.slice(0,5).map(q=>[q[0]-6,q[1]]),false)+crPath(cp.slice(12).map(q=>[q[0]+6,q[1]]),false));
+  const dtIn=DT.filter(p=>p[0]>=xl&&p[0]<=xr);
+  E.chestFill.setAttribute('d',crPath(cp,false)+'L'+dtIn.slice().reverse().map(p=>P(p[0],p[1])).join('L')+'Z');
+  E.chestFill.setAttribute('opacity',f1((.03+.07*b)*100)/100);
   chestPt=[cp[4][0],cp[4][1]];
-  /* karın boşluğu */
-  E.abdFill.setAttribute('d','M'+DB.map(p=>P(p[0],p[1])).join('L')+`L${P(CX+168,668)}L${P(CX-168,668)}Z`);
-  const ay=yAt(DB,CX)+6,ab=664,am=(ay+ab)/2+6;
+  /* karın boşluğu: diyaframın altı (diyafram inince daralır) */
+  E.abdFill.setAttribute('d','M'+DB.map(p=>P(p[0],p[1])).join('L')+'L'+ABDW.R.map(p=>P(p[0],p[1])).join('L')+'L'+ABDW.L.map(p=>P(p[0],p[1])).join('L')+'Z');
+  const ay=yAt(DB,CX)+5,ab=648,am=(ay+ab)/2+4;
   E.abdArr.setAttribute('d',`M${P(CX,ay+8)}L${P(CX,am-18)}M${P(CX,am+12)}L${P(CX,ab-8)}`);
   E.abdHd.setAttribute('d',`M${P(CX,ay)}l-6 9h12zM${P(CX,ab)}l-6 -9h12z`);
   E.abdT.setAttribute('x',CX);E.abdT.setAttribute('y',f1(am+1));
   E.abdR.setAttribute('x',CX-62);E.abdR.setAttribute('width',124);E.abdR.setAttribute('y',f1(am-17));
-  /* karın organları: diyafram inince aşağı itilir ve sıkışır */
-  const lt0=[];for(let x=CX-172;x<=CX+40;x+=12)lt0.push([x,yAt(DB,x)+1]);
-  const lb=[[CX+40,494],[CX-14,522],[CX-80,552],[CX-140,584],[CX-172,580]].map(([x,y])=>[x,y+disp(x)*.6]);
-  E.liver.setAttribute('d',crPath(lt0,false)+crPath(lb,false).replace('M','L')+'Z');
-  const ds=disp(CX+95);E.stomG.setAttribute('transform',`translate(0 ${f1(ds*.85)}) translate(0 ${f1(530)}) scale(1 ${(1-.1*b).toFixed(3)}) translate(0 -530)`);
-  const kg=1-.2*b;E.gutG.setAttribute('transform',`matrix(1 0 0 ${kg.toFixed(3)} 0 ${f1(676*(1-kg))})`);
-  /* gövde */
-  const td=torsoD(b);['sil','silGlow','silGrid','silIn','silRim'].forEach(id=>E[id].setAttribute('d',td));
-  E.heartG.setAttribute('transform',`translate(0 ${f1(disp(CX+26)*.35)})`);
   /* büyüteç işaretçisi */
   const lt=mapPt(lensTip.x,lensTip.y,1,b);E.lensMk.setAttribute('cx',f1(lt[0]));E.lensMk.setAttribute('cy',f1(lt[1]));
   const dx=lt[0]-MG.x,dy=lt[1]-MG.y,dl=Math.hypot(dx,dy);
   E.lensLn.setAttribute('d',`M${P(lt[0]-dx/dl*10,lt[1]-dy/dl*10)}L${P(MG.x+dx/dl*(MG.r+6),MG.y+dy/dl*(MG.r+6))}`);
-  E.alvG.setAttribute('transform',`translate(${f1(4-4*(1+.1*b))} 0) scale(${(1+.1*b).toFixed(3)})`);
+  /* alveol keseleri soluk alırken hafifçe şişer */
+  E.magImgA.setAttribute('transform',`scale(${(1+.06*b).toFixed(3)})`);
   updLabels();
 }
 function drawArrows(){
@@ -873,8 +719,9 @@ function drawArrows(){
   if(a<=0)return;const inh=fl>0,col=inh?'#7ff6ff':'#c9b0ff';
   const set=(el,x,y,rot)=>{el.setAttribute('transform',`translate(${f1(x)} ${f1(y)}) rotate(${rot})`);el.setAttribute('fill',col);};
   const bob=Math.sin(performance.now()/180)*3;
-  set(E.aD1,CX-96,yAt(DB,CX-96)+30+bob*(inh?1:-1),inh?180:0);set(E.aD2,CX+96,yAt(DB,CX+96)+30+bob*(inh?1:-1),inh?180:0);
-  set(E.aRL,CX-182,404,inh?-38:142);set(E.aRR,CX+182,404,inh?38:-142);
+  const x1=CX-62,x2=CX+66;
+  set(E.aD1,x1,yAt(DB,x1)+26+bob*(inh?1:-1),inh?180:0);set(E.aD2,x2,yAt(DB,x2)+26+bob*(inh?1:-1),inh?180:0);
+  set(E.aRL,ribLat[0]-24,I(0,880)[1],inh?-38:142);set(E.aRR,ribLat[1]+24,I(0,880)[1],inh?38:-142);
 }
 
 /* =====================  KANVAS: PARÇACIKLAR  ===================== */
@@ -883,7 +730,7 @@ let VS=1,VOX=0,VOY=0,DPR=1,CW=0,CH=0,VB=[0,0,VW,VH],MOB=false;
 function resize(){
   const r=scene.getBoundingClientRect();DPR=Math.min(2,devicePixelRatio||1);CW=r.width;CH=r.height;
   cv.width=Math.round(r.width*DPR);cv.height=Math.round(r.height*DPR);
-  const mob=innerWidth<=600;if(mob!==MOB){MOB=mob;VB=mob?[140,0,680,680]:[0,0,VW,VH];svg.setAttribute('viewBox',VB.join(' '));scene.classList.toggle('mob',mob);}
+  const mob=innerWidth<=600;if(mob!==MOB){MOB=mob;VB=mob?[148,0,672,680]:[0,0,VW,VH];svg.setAttribute('viewBox',VB.join(' '));scene.classList.toggle('mob',mob);}
   VS=Math.min(r.width/VB[2],r.height/VB[3]);VOX=(r.width-VB[2]*VS)/2-VB[0]*VS;VOY=(r.height-VB[3]*VS)/2-VB[1]*VS;
   const sp=$('#spiro'),sr=sp.getBoundingClientRect();sp.width=Math.round(sr.width*DPR);sp.height=Math.round(sr.height*DPR);
 }
@@ -898,23 +745,28 @@ const parts=[];let accIn=0,accOut=0,magBoost=0;
 function pRoute(){return S.mode==='ortam'?S.route:'nose';}
 function spawnAir(kind,fromEnd){const list=PATHS[pRoute()];const pa=list[(Math.random()*list.length)|0];
   parts.push({pa,s:fromEnd?pa.len*(.84+Math.random()*.16):Math.random()*10,kind,r:Math.random(),life:1,free:false,lab:Math.random()<.09});}
-/* toz */
+/* toz (yüzün önündeki havada) */
 const dust=[],stuck=[],dep=[];
-function spawnDust(){dust.push({x:150+Math.random()*92,y:86+Math.random()*120,vx:(Math.random()-.5)*10,vy:(Math.random()-.5)*10,st:'air',r:2.4+Math.random()*1.8,soot:Math.random()<.45});}
-/* büyüteç */
-const CAPSM=CAPS.map(c=>{const s=crSample(c,8);return{s,c:cum(s)};});
-const CAPPTS=[];CAPSM.forEach(c=>c.s.forEach(p=>CAPPTS.push(p)));
-const cells=Array.from({length:18},(_,i)=>({c:i%3,s:Math.random()}));
-const gas=[];let gasAcc=0,co2Acc=0;
+const DZ={x0:118,x1:222,y0:70,y1:215};
+function spawnDust(){dust.push({x:DZ.x0+8+Math.random()*(DZ.x1-DZ.x0-16),y:DZ.y0+16+Math.random()*120,vx:(Math.random()-.5)*10,vy:(Math.random()-.5)*10,st:'air',r:2.4+Math.random()*1.8,soot:Math.random()<.45});}
+/* büyüteç: kılcal damar yolları, alveol hava yolları */
+const CAPSM=VES.map(v=>{const s=crSample(v.map(mB),6);return{s,c:cum(s)};});
+const CAPPTS=[];CAPSM.forEach(c=>c.s.forEach(p=>{if(Math.hypot(p[0],p[1])<MG.r-8)CAPPTS.push(p);}));
+const cells=Array.from({length:24},(_,i)=>({c:i%4,s:Math.random()}));
+const gas=[],airM=[];let gasAcc=0,co2Acc=0,airAcc=0;
+const MV={v:0,t:0,f:0};
+function setMagView(v){MV.v=v;MV.t=0;if(S.mode!=='gorev'){E.magChip.textContent=v?'GAZ ALIŞVERİŞİ':'ALVEOL · BÜYÜTEÇ';}}
 function nearCap(x,y){let best=null,bd=1e9;for(const p of CAPPTS){const d=Math.hypot(p[0]-x,p[1]-y);if(d<bd&&d>4){bd=d;best=p;}}return best;}
 function spawnGas(kind){
-  const a=ALV[(Math.random()*6)|0],ang=Math.random()*6.28,rr=Math.random()*a[2]*.5;const ip=[a[0]+Math.cos(ang)*rr,a[1]+Math.sin(ang)*rr];
-  const cp=nearCap(ip[0]+(Math.random()-.5)*20,ip[1]+(Math.random()-.5)*20);
+  const a=ALV[(Math.random()*ALV.length)|0],ang=Math.random()*6.28,rr=Math.random()*a[2]*.55;const ip=[a[0]+Math.cos(ang)*rr,a[1]+Math.sin(ang)*rr];
+  const cp=nearCap(ip[0]+(Math.random()-.5)*14,ip[1]+(Math.random()-.5)*14);if(!cp)return;
   if(kind==='o2')gas.push({kind,x0:ip[0],y0:ip[1],x1:cp[0],y1:cp[1],t:0,dur:1.5+Math.random()*.6});
   else gas.push({kind,x0:cp[0],y0:cp[1],x1:ip[0],y1:ip[1],t:0,dur:1.5+Math.random()*.6});
 }
 function lerpCol(a,b,t){return `rgb(${a.map((v,i)=>Math.round(lerp(v,b[i],t))).join(',')})`;}
-const DEOX=[91,108,255],OXY=[255,59,85];
+const DEOX=[70,96,255],OXY=[235,40,60];
+function onPath(ps,s){const L=ps.c[ps.c.length-1];s=clamp(s,0,L);let k=1;while(k<ps.c.length-1&&ps.c[k]<s)k++;
+  const t=(s-ps.c[k-1])/((ps.c[k]-ps.c[k-1])||1);return[lerp(ps.s[k-1][0],ps.s[k][0],t),lerp(ps.s[k-1][1],ps.s[k][1],t),Math.atan2(ps.s[k][1]-ps.s[k-1][1],ps.s[k][0]-ps.s[k-1][0])];}
 
 function stepParticles(dt){
   const fl=S.flow,v=clamp(fl,-2.6,2.6)*600;
@@ -936,24 +788,35 @@ function stepParticles(dt){
     if(d.st==='air'){
       const dx=E0[0]-d.x,dy=E0[1]-d.y,dd=Math.hypot(dx,dy),pull=S.mode==='ortam'&&fl>.06&&dd<40+110*Math.min(1,fl);
       if(!pull){d.vx+=(Math.random()-.5)*30*dt;d.vy+=(Math.random()-.5)*30*dt;d.vx*=.98;d.vy*=.98;d.x+=d.vx*dt;d.y+=d.vy*dt;
-        if(d.x<140||d.x>248)d.vx*=-1;if(d.y<70||d.y>215)d.vy*=-1;d.x=clamp(d.x,140,248);d.y=clamp(d.y,70,215);}
+        if(d.x<DZ.x0||d.x>DZ.x1)d.vx*=-1;if(d.y<DZ.y0||d.y>DZ.y1)d.vy*=-1;d.x=clamp(d.x,DZ.x0,DZ.x1);d.y=clamp(d.y,DZ.y0,DZ.y1);}
       if(pull){const k=Math.min(1,dt*(1.2+fl*3)*(90/(dd+20)));d.x+=dx*k;d.y+=dy*k;
         if(dd<7){const list=PATHS[S.route];d.pa=list[(Math.random()*list.length)|0];d.s=d.pa.entryS;d.st='in';d.route=S.route;
-          d.trap=S.route==='nose'?Math.random()<.84:Math.random()<.14;d.trapAt=d.s+(S.route==='nose'?6+Math.random()*90:10+Math.random()*120);}}
+          d.trap=S.route==='nose'?Math.random()<.84:Math.random()<.14;d.trapAt=d.s+(S.route==='nose'?6+Math.random()*70:10+Math.random()*100);}}
       if(S.air!=='dirty'||S.mode!=='ortam'){d.life=(d.life??1)-dt*1.5;if(d.life<=0)dust.splice(i,1);}
     }else{
       d.s+=(v<0?v*.1:v)*dt*.92;const q=posAt(d.pa,d.s);d.x=q[0];d.y=q[1];
       if(d.trap&&d.s>=d.trapAt){stuck.push({x:d.x+(Math.random()-.5)*5,y:d.y+(Math.random()-.5)*5,r:d.r,soot:d.soot});if(stuck.length>110)stuck.shift();S.trapped++;dust.splice(i,1);ortamStats();}
-      else if(d.s>=d.pa.len-1){const t=d.pa.tip;dep.push({x:t.x+(Math.random()-.5)*12,y:t.y+(Math.random()-.5)*12,side:t.side,r:d.r*.9,soot:d.soot});if(dep.length>160)dep.shift();S.reached++;dust.splice(i,1);ortamStats();}
+      else if(d.s>=d.pa.len-1){const t=d.pa.tip;dep.push({x:t.x+(Math.random()-.5)*10,y:t.y+(Math.random()-.5)*10,side:t.side,r:d.r*.9,soot:d.soot});if(dep.length>160)dep.shift();S.reached++;dust.splice(i,1);ortamStats();}
       else if(d.s<d.pa.entryS-2){d.st='air';}
     }}
-  /* büyüteç gaz alışverişi */
+  /* büyüteç: görünüm değişimi (alveol keseleri ↔ gaz alışverişi) */
+  MV.t+=dt;if(MV.t>8.5)setMagView(1-MV.v);
+  const f0=MV.f;MV.f+=(MV.v-MV.f)*Math.min(1,dt*3.2);if(Math.abs(MV.f-MV.v)<.002)MV.f=MV.v;
+  if(MV.f!==f0||!E.magB.dataset.k){E.magB.dataset.k=1;const fb=MV.f.toFixed(3),fa=(1-MV.f).toFixed(3);E.magB.setAttribute('opacity',fb);E.magTB.setAttribute('opacity',fb);E.magA.setAttribute('opacity',fa);E.magTA.setAttribute('opacity',fa);}
+  /* gaz alışverişi */
   magBoost=Math.max(0,magBoost-dt*.5);
   gasAcc+=dt*(.9+1.8*S.b+magBoost);co2Acc+=dt*(.9+1.2*S.b+magBoost*.5);
   while(gasAcc>=1){gasAcc--;if(gas.length<26)spawnGas('o2');}
   while(co2Acc>=1){co2Acc--;if(gas.length<26)spawnGas('co2');}
   for(let i=gas.length-1;i>=0;i--){const g=gas[i];g.t+=dt/g.dur;if(g.t>=1.25)gas.splice(i,1);}
-  cells.forEach(c=>{c.s+=dt*.14;if(c.s>1)c.s-=1;});
+  cells.forEach(c=>{c.s+=dt*.12;if(c.s>1)c.s-=1;});
+  /* bronşçuktan alveol keselerine hava */
+  if(Math.abs(fl)>.05){airAcc+=Math.abs(fl)*26*dt;while(airAcc>=1&&airM.length<60){airAcc--;const k=(Math.random()*AIRP.length)|0,L=AIRP[k].c[AIRP[k].c.length-1];airM.push({k,s:fl>0?Math.random()*6:L-Math.random()*6,r:Math.random(),life:1});}}
+  else airAcc=0;
+  for(let i=airM.length-1;i>=0;i--){const a=airM[i],L=AIRP[a.k].c[AIRP[a.k].c.length-1];a.s+=clamp(fl,-2.6,2.6)*70*dt*(.8+.4*a.r);
+    if(a.s>=L){a.s=L;a.life-=dt*2.2;}else if(a.s<=0){a.s=0;a.life-=dt*4;}
+    if(Math.abs(fl)<.04)a.life-=dt*.6;
+    if(a.life<=0)airM.splice(i,1);}
 }
 function drawParticles(){
   cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,cv.width,cv.height);
@@ -966,20 +829,24 @@ function drawParticles(){
   /* hava parçacıkları */
   cx.font='800 11px Lexend,system-ui,sans-serif';cx.textAlign='center';
   for(const p of parts){let x,y;if(p.free){x=p.x;y=p.y;}else{[x,y]=posAt(p.pa,p.s);}
-    const a=clamp(p.life,0,1);cx.globalAlpha=a;const sz=p.kind==='air'?13:15;
+    const a=clamp(p.life,0,1);cx.globalAlpha=a;const sz=p.kind==='air'?12:14;
     cx.drawImage(SPR[p.kind],x-sz/2,y-sz/2,sz,sz);
     if(p.lab&&p.kind!=='air'){cx.globalAlpha=a*.95;cx.fillStyle=p.kind==='co2'?'#e3d4ff':'#d7f1ff';cx.strokeStyle='rgba(3,12,24,.85)';cx.lineWidth=3;cx.strokeText(p.kind==='co2'?'CO₂':'O₂',x+9,y-7);cx.fillText(p.kind==='co2'?'CO₂':'O₂',x+9,y-7);}}
   /* büyüteç */
   cx.save();cx.globalAlpha=1;cx.beginPath();cx.arc(MG.x,MG.y,MG.r-4,0,7);cx.clip();cx.translate(MG.x,MG.y);
-  for(const c of cells){const cs=CAPSM[c.c];const L=cs.c[cs.c.length-1],s=c.s*L;let k=1;while(k<cs.c.length-1&&cs.c[k]<s)k++;
-    const t=(s-cs.c[k-1])/((cs.c[k]-cs.c[k-1])||1),x=lerp(cs.s[k-1][0],cs.s[k][0],t),y=lerp(cs.s[k-1][1],cs.s[k][1],t);
-    const u=clamp((x+80)/160,0,1);cx.fillStyle=lerpCol(DEOX,OXY,u);cx.beginPath();cx.ellipse(x,y,3.6,2.6,Math.atan2(cs.s[k][1]-cs.s[k-1][1],cs.s[k][0]-cs.s[k-1][0]),0,7);cx.fill();
-    cx.fillStyle='rgba(0,0,0,.25)';cx.beginPath();cx.arc(x,y,1.1,0,7);cx.fill();}
-  cx.font='800 10px Lexend,system-ui,sans-serif';
-  for(const g of gas){const t=clamp(g.t,0,1),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;const x=lerp(g.x0,g.x1,e),y=lerp(g.y0,g.y1,e);
-    const al=g.t<.15?g.t/.15:g.t>1?clamp(1-(g.t-1)/.25,0,1):1;cx.globalAlpha=al;
-    const o=g.kind==='o2';cx.drawImage(o?SPR.o2:SPR.co2,x-8,y-8,16,16);
-    cx.fillStyle=o?'#ffffff':'#ead9ff';cx.strokeStyle='rgba(10,5,20,.85)';cx.lineWidth=2.6;cx.strokeText(o?'O₂':'CO₂',x,y-7);cx.fillText(o?'O₂':'CO₂',x,y-7);}
+  const fA=1-MV.f,fB=MV.f;
+  if(fA>.02){const sc=1+.06*S.b;
+    for(const a of airM){const ps=AIRP[a.k],L=ps.c[ps.c.length-1];const [x,y]=onPath(ps,a.s);const e=Math.min(1,a.s/12,(L-a.s)/10+.35);
+      cx.globalAlpha=fA*clamp(a.life,0,1)*clamp(e,0,1);cx.drawImage(SPR.air,x*sc-5,y*sc-5,10,10);}}
+  if(fB>.02){
+    for(const c of cells){const [x,y,ang]=onPath(CAPSM[c.c],c.s*CAPSM[c.c].c[CAPSM[c.c].c.length-1]);
+      cx.globalAlpha=fB;cx.fillStyle=lerpCol(DEOX,OXY,clamp(.5-y/150,0,1));cx.beginPath();cx.ellipse(x,y,4.2,3,ang,0,7);cx.fill();
+      cx.strokeStyle='rgba(20,0,10,.45)';cx.lineWidth=.8;cx.stroke();cx.fillStyle='rgba(0,0,0,.22)';cx.beginPath();cx.arc(x,y,1.2,0,7);cx.fill();}
+    cx.font='800 10px Lexend,system-ui,sans-serif';
+    for(const g of gas){const t=clamp(g.t,0,1),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;const x=lerp(g.x0,g.x1,e),y=lerp(g.y0,g.y1,e);
+      const al=g.t<.15?g.t/.15:g.t>1?clamp(1-(g.t-1)/.25,0,1):1;cx.globalAlpha=al*fB;
+      const o=g.kind==='o2';cx.drawImage(o?SPR.o2:SPR.co2,x-8,y-8,16,16);
+      cx.fillStyle=o?'#ffffff':'#ead9ff';cx.strokeStyle='rgba(10,5,20,.85)';cx.lineWidth=2.6;cx.strokeText(o?'O₂':'CO₂',x,y-7);cx.fillText(o?'O₂':'CO₂',x,y-7);}}
   cx.restore();cx.globalAlpha=1;
 }
 
@@ -1040,7 +907,7 @@ function updRate(){$('#rateV').textContent='≈'+RATE[S.act];$('#rateA').textCon
   $('#rdot').style.animation=`hb ${(60/RATE[S.act]).toFixed(2)}s infinite`;}
 
 /* sahne tıklama */
-svg.addEventListener('click',e=>{const g=e.target.closest('[data-part]');if(!g)return;onPart(g.dataset.part);});
+svg.addEventListener('click',e=>{const g=e.target.closest('[data-part]');if(!g)return;if(g.id==='mag')setMagView(1-MV.v);onPart(g.dataset.part);});
 function hl(part,cls='sel',ms){$$('.part',svg).forEach(el=>el.classList.remove(cls));if(!part)return;
   $$(`[data-part="${part}"]`,svg).forEach(el=>el.classList.add(cls));if(ms)setTimeout(()=>$$(`[data-part="${part}"]`,svg).forEach(el=>el.classList.remove(cls)),ms);}
 
@@ -1054,7 +921,7 @@ function setMode(m,restart){
   $$('#modeSeg button').forEach(b=>{b.classList.toggle('on',b.dataset.m===m);b.setAttribute('aria-selected',b.dataset.m===m);});
   scene.classList.toggle('nolabels',m==='gorev');
   scene.classList.toggle('pick',m!=='antrenor');
-  E.magChip.textContent=m==='gorev'?'BÜYÜTEÇ':'ALVEOL · BÜYÜTEÇ';E.magAlvT.style.display=m==='gorev'?'none':'';
+  E.magChip.textContent=m==='gorev'?'BÜYÜTEÇ':MV.v?'GAZ ALIŞVERİŞİ':'ALVEOL · BÜYÜTEÇ';$$('.malv',svg).forEach(t=>t.style.display=m==='gorev'?'none':'');
   $('#actSeg').classList.toggle('dis',m==='antrenor');autoTgl.classList.toggle('dis',m==='antrenor');
   E.env.setAttribute('opacity',m==='ortam'?1:0);
   setAuto(m==='ortam');
@@ -1312,7 +1179,6 @@ function phaseChanged(){
   else{ct.textContent='—';ct.className='';at.textContent='—';at.className='';}
   setLabelSub('dia',ph==='in'?'kasılır · düzleşir':ph==='hold'?'kasılı · düz':ph==='out'?'gevşer · kubbeleşir':'gevşek · kubbeli',ph==='in'||ph==='hold'?'#7ff6ff':ph==='out'?'#c9b0ff':'#8fa8c4');
   setLabelSub('kab',ph==='in'||ph==='hold'?'kasılır':ph==='out'?'gevşer':'gevşek',ph==='in'||ph==='hold'?'#7ff6ff':ph==='out'?'#c9b0ff':'#8fa8c4');
-  E.vocal.setAttribute('d',ph==='rest'?'M-12 219 L-6 236 L0 219':'M-13 219 L-6 237 L1 219');
   const hb=$('#holdB'),hs=$('#holdS');
   if(S.holding){hb.textContent=ph==='hold'?'NEFES TUTULUYOR':'SOLUK ALINIYOR…';hs.textContent='Bırakınca soluk verilir';}
   else if(ph==='out'){hb.textContent='SOLUK VERİLİYOR…';hs.innerHTML='Tekrar basılı tut: soluk al';}
