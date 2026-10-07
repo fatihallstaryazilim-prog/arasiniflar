@@ -19,6 +19,9 @@
   .side-tag rect{fill:rgba(8,20,36,.8);stroke:rgba(255,255,255,.45)}
   .side-tag text{font-family:var(--font);font-size:11.5px;font-weight:800;fill:#fff;text-anchor:middle;letter-spacing:.5px}
   .dl-fig .hit{cursor:pointer;pointer-events:stroke}
+  .dl-fig.narrow{aspect-ratio:416/600}
+  .labs-narrow,.dl-fig.narrow .labs-wide{display:none}
+  .dl-fig.narrow .labs-narrow{display:inline}
   .dl-fig .hitf{cursor:pointer;pointer-events:all}
   .vessel{transition:opacity .5s var(--ease)}
   .vessel.dim{opacity:.18}
@@ -285,7 +288,8 @@ const SVG = `
     ${[[262,164],[380,164],[300,493]].map(([x,y])=>`<rect x="${x-36}" y="${y-11}" width="72" height="18" rx="9"/><text x="${x}" y="${y+2.5}"><tspan fill="#bff6ff">O₂ ↓</tspan><tspan dx="4" fill="#d6c6ff">CO₂ ↑</tspan></text>`).join('')}
   </g>
 
-  <!-- etiketler (çizgi ucu = işaret ettiği yer) -->
+  <!-- etiketler (çizgi ucu = işaret ettiği yer); geniş ekran -->
+  <g class="labs-wide">
   ${label(80,222,'Atardamar','akciğere giden','middle','#b9c2ff',208,180)}
   ${label(560,222,'Toplardamar','akciğerden gelen','middle','#ffb3bf',462,200)}
   ${label(80,430,'Toplardamar','vücuttan gelen','middle','#b9c2ff',196,486)}
@@ -293,6 +297,17 @@ const SVG = `
   ${label(560,96,'Akciğerler','kılcal damarlar','middle','#eaf6ff',454,128)}
   ${label(560,566,'Vücut hücreleri','kılcal damarlar','middle','#eaf6ff',478,560)}
   ${label(80,330,'Kalp','','middle','#eaf6ff',218,330)}
+  </g>
+  <!-- dar ekran (telefon): sahne organlara yakınlaşır, etiketler boş köşelere kısa adlarla yerleşir -->
+  <g class="labs-narrow">
+  ${label(166,20,'Akciğerler','','middle','#eaf6ff',224,78)}
+  ${label(478,20,'Atardamar','','middle','#b9c2ff',428,172)}
+  ${label(474,300,'Toplardamar','','middle','#ffb3bf',460,236)}
+  ${label(150,360,'Kalp','','middle','#eaf6ff',218,357)}
+  ${label(168,440,'Toplardamar','','middle','#b9c2ff',185,491)}
+  ${label(470,440,'Atardamar','','middle','#ffb3bf',476,505)}
+  ${label(440,588,'Vücut hücreleri','','middle','#eaf6ff')}
+  </g>
 </svg>`;
 
 /* ------------------------------------------------------------------
@@ -578,7 +593,15 @@ function selfTimer(){
    ------------------------------------------------------------------ */
 const cv = ZD.$('#cv'), g = cv.getContext('2d');
 let W=0,H=0,DPR=1;
+// telefonda görünüm kutusu organlara daralır (kalp ve akciğerler büyür)
+const VB={x:0,w:640}, mqNarrow=matchMedia('(max-width:600px)');
+function applyVB(){
+  const n=mqNarrow.matches; VB.x=n?112:0; VB.w=n?416:640;
+  ZD.$$('#dlsvg,#dltop').forEach(e=>e.setAttribute('viewBox',`${VB.x} 0 ${VB.w} 600`));
+  fig.classList.toggle('narrow',n);
+}
 function sizeCanvas(){
+  applyVB();
   const r = fig.getBoundingClientRect(); DPR=Math.min(2,devicePixelRatio||1);
   W=r.width; H=r.height; cv.width=Math.round(W*DPR); cv.height=Math.round(H*DPR);
 }
@@ -654,7 +677,7 @@ function frame(now){
 
   // parçacıklar (kalbin içinden geçen kısım görünmez; kalp görseli zaten üstte)
   const v = (LOOPLEN/16)*(S.bpm/72);
-  g.setTransform(DPR*W/640,0,0,DPR*H/600,0,0); g.clearRect(0,0,640,600);
+  const kx=DPR*W/VB.w; g.setTransform(kx,0,0,DPR*H/600,-VB.x*kx,0); g.clearRect(0,0,640,600);
   for(const p of parts){
     let r=RT[p.k];
     const isArt = r.seg==='P1'||r.seg==='P3'||r.hidden;
