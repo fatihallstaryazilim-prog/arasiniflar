@@ -18,9 +18,8 @@
 .a-head{display:flex;align-items:center;gap:8px;flex:none}
 .a-svg{flex:1;min-height:0;position:relative}
 .a-svg>svg{position:absolute;inset:0;width:100%;height:100%}
-.skin-badge{position:absolute;left:0;bottom:0;width:76px;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
+.skin-badge{position:absolute;right:0;top:0;width:76px;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
 .skin-badge svg{width:66px;height:66px;filter:drop-shadow(0 8px 14px rgba(0,0,0,.5))}
-.a-svg>svg image{filter:drop-shadow(0 6px 10px rgba(0,0,0,.35))}
 .skin-badge span{margin-top:-10px;font-size:10px;font-weight:800;letter-spacing:1.4px;color:#ffd9bf;background:rgba(6,18,32,.85);border:1px solid rgba(243,199,166,.5);padding:3px 8px;border-radius:99px}
 .a-legend{display:flex;gap:6px 12px;flex-wrap:wrap;font-size:12px;color:#cfe0f2;justify-content:center;flex:none;font-weight:500}
 .a-legend i{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:-1px;box-shadow:0 0 8px currentColor}
@@ -35,14 +34,13 @@
 #btnWC svg{width:16px;height:16px}
 #btnWC.pulse{animation:wcp 1.1s infinite}
 @keyframes wcp{50%{box-shadow:0 5px 0 rgba(0,0,0,.28),0 0 0 8px rgba(255,187,61,.0),0 0 28px rgba(255,187,61,.75)}}
-.need-pill{position:absolute;left:50%;bottom:31%;transform:translate(-50%,10px) scale(.9);transform-origin:center;opacity:0;transition:.35s var(--spring);pointer-events:none;
+.need-pill{position:absolute;left:6px;top:4px;transform:translate(0,10px) scale(.9);transform-origin:left center;opacity:0;transition:.35s var(--spring);pointer-events:none;
   display:flex;align-items:center;gap:8px;padding:8px 14px;border-radius:99px;font-weight:800;font-size:14px;white-space:nowrap;
   background:linear-gradient(180deg,#4a2a06,#2c1904);border:1.5px solid #ffbb3d;color:#ffd77a;box-shadow:0 0 22px rgba(255,187,61,.55)}
-.need-pill.on{opacity:1;transform:translate(-50%,0)}
+.need-pill.on{opacity:1;transform:none}
 .need-pill i{width:10px;height:10px;border-radius:50%;background:#ffbb3d;animation:zd-pd 1s infinite;box-shadow:0 0 0 0 rgba(255,187,61,.7)}
 .blad-g.tremble{animation:tremble .16s infinite}
-/* titreme, idrar kesesi görselinin piksel ölçeğinde (1 sahne birimi ≈ 3.4 px) */
-@keyframes tremble{0%{transform:translate(0,0)}25%{transform:translate(5px,-2px)}50%{transform:translate(-4px,2px)}75%{transform:translate(3px,3px)}100%{transform:translate(0,0)}}
+@keyframes tremble{0%{transform:translate(0,0)}25%{transform:translate(1.4px,-.6px)}50%{transform:translate(-1.2px,.5px)}75%{transform:translate(.8px,.8px)}100%{transform:translate(0,0)}}
 .kid-ring{animation:kring 2.4s infinite}
 @keyframes kring{0%{opacity:.9;stroke-width:2}100%{opacity:0;stroke-width:.5}}
 
@@ -50,10 +48,6 @@
 .filter-card{flex:1;min-height:0;display:flex;flex-direction:column;padding:12px 14px;gap:8px;position:relative}
 .f-head{display:flex;align-items:flex-end;gap:10px;flex:none}
 .f-count{margin-left:auto;display:flex;gap:8px}
-/* bağlam: süzgeç böbreğin içindeki küçük yapılardan biri */
-.f-ctx{position:relative;width:46px;height:46px;flex:none;align-self:center;border-radius:50%;background:radial-gradient(circle at 50% 45%,#1d3d62,#0a1a2c 75%);border:1.5px solid rgba(53,238,252,.55);box-shadow:0 0 14px rgba(53,238,252,.25);cursor:help}
-.f-ctx svg{position:absolute;inset:0;width:100%;height:100%}
-.f-ctx .fc-ring{animation:kring 2.4s infinite}
 .f-count div{display:flex;flex-direction:column;align-items:flex-end;padding:4px 10px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid var(--line)}
 .f-count small{font-size:10px;font-weight:700;letter-spacing:1.2px;color:var(--muted);text-transform:uppercase}
 .f-count b{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.1}
@@ -247,8 +241,7 @@
 .body-o[data-sel="deri"] .torso-rim{stroke:#ffb27a}
 .body-o[data-sel="deri"] .torso-warm{opacity:1}
 .torso-warm{opacity:0;transition:opacity .6s}
-.body-o .org-ex{opacity:.5}
-.body-o .org image{filter:drop-shadow(0 4px 6px rgba(0,0,0,.45))}
+.body-s .org-lung,.body-s .org-liver,.body-s .org-int{opacity:.13}
 .zd-howto li span b{all:unset;font-weight:800;color:#fff}
 .zd-stat .v.warnc{color:#ffbb3d;text-shadow:0 0 18px rgba(255,187,61,.5)}
 
@@ -334,6 +327,12 @@ const GDEFS=`<svg width="0" height="0" style="position:absolute" aria-hidden="tr
 <linearGradient id="ga-scr" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#7ff7ff"/><stop offset="1" stop-color="#1679b8"/></linearGradient>
 <linearGradient id="ga-glass" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#bfe9ff" stop-opacity=".55"/><stop offset=".5" stop-color="#ffffff" stop-opacity=".15"/><stop offset="1" stop-color="#bfe9ff" stop-opacity=".45"/></linearGradient>
 <linearGradient id="ga-leaf" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9cf57a"/><stop offset="1" stop-color="#2f9a3a"/></linearGradient>
+<radialGradient id="ga-kid" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#ea7a84"/><stop offset=".45" stop-color="#c8505a"/><stop offset="1" stop-color="#6a1824"/></radialGradient>
+<radialGradient id="ga-blad" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#ffe7a8"/><stop offset=".5" stop-color="#ffcf6b"/><stop offset="1" stop-color="#c47c12"/></radialGradient>
+<radialGradient id="ga-skin" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#fde3cf"/><stop offset=".5" stop-color="#f3c7a6"/><stop offset="1" stop-color="#c98a64"/></radialGradient>
+<radialGradient id="ga-lung" cx=".38" cy=".3" r=".85"><stop offset="0" stop-color="#ffd0dc"/><stop offset=".45" stop-color="#ff9fb8"/><stop offset="1" stop-color="#b8436a"/></radialGradient>
+<radialGradient id="ga-liv" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#d96d63"/><stop offset=".5" stop-color="#b5473f"/><stop offset="1" stop-color="#5e1814"/></radialGradient>
+<linearGradient id="ga-int" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f9b2a4"/><stop offset=".5" stop-color="#f08d7e"/><stop offset="1" stop-color="#a8423f"/></linearGradient>
 <linearGradient id="ga-ves" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7b8d"/><stop offset=".35" stop-color="#e0233f"/><stop offset="1" stop-color="#7c0a1e"/></linearGradient>
 <linearGradient id="ga-urine" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff0a0"/><stop offset="1" stop-color="#f2b400"/></linearGradient>
 <filter id="ga-sh" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="4" stdDeviation="3" flood-color="#000" flood-opacity=".45"/></filter>
@@ -390,137 +389,147 @@ const ART={
    CAM GÖVDE SVG
    ===================================================================== */
 const TORSO='M170 0L230 0C230 22 232 36 240 46C262 58 318 62 340 86C356 104 346 150 336 200C328 250 318 300 306 338C300 362 310 410 320 450C330 490 326 540 316 580L306 640L214 640C210 620 206 612 200 612C194 612 190 620 186 640L94 640L84 580C74 540 70 490 80 450C90 410 100 362 94 338C82 300 72 250 64 200C54 150 44 104 60 86C82 62 138 58 160 46C168 36 170 22 170 0Z';
-/* Servier Medical Art görselleri (CC BY 4.0) — assets/img/ */
-const IMG='assets/img/';
-/* Görsel piksel koordinatlarındaki bir yolu (yalnız mutlak M/L/C) sahne koordinatına taşır */
-const mapD=(d,tx,ty,s)=>{let i=0;return d.replace(/-?\d+(\.\d+)?/g,n=>((i++%2?ty:tx)+(+n)*s).toFixed(1));};
-/* urinary.webp (795×1356) — piksel koordinatları */
-const U={W:795,H:1356,S:.29,TX:200-795*.29/2,TY:240};
-const UP=(x,y)=>[+(U.TX+x*U.S).toFixed(1),+(U.TY+y*U.S).toFixed(1)];
-const U_BLAD='M218 1004C228 958 316 922 397 922C478 922 566 958 578 1004C584 1064 568 1114 542 1152C514 1192 474 1228 428 1246L428 1362L360 1362L360 1246C318 1228 278 1192 250 1152C224 1114 212 1064 218 1004Z';
-const U_IN='M246 1006C300 994 500 994 552 1004C556 1070 540 1120 506 1158C470 1196 430 1218 398 1232C366 1218 326 1196 290 1158C256 1120 240 1070 246 1006Z';
-const U_URE_L='M236 188C250 225 272 255 275 300C278 350 277 400 274 440C270 490 270 530 280 575C290 620 302 670 304 725C306 780 304 840 296 875C288 905 272 945 262 990';
-const U_URE_R='M630 150C600 165 565 195 556 240C549 280 550 340 550 420C550 500 551 560 546 620C540 680 525 750 519 810C515 860 520 900 528 930C533 950 535 965 536 990';
-const U_URETHRA='M394 1236L394 1372';
-/* aort (kırmızı) ve alt ana toplardamar (mavi) — kidneys_vessels.webp düzeni: toplardamar görüntünün solunda, aort sağında */
-const AO_X=425,VC_X=378;
-const U_ART_L='M425 200C360 196 300 152 226 150', U_ART_R='M425 196C482 188 540 150 604 146';
-const U_VEIN_L='M378 238C330 234 292 176 226 172', U_VEIN_R='M378 246C440 250 522 192 604 176';
-const U_VEIN_L_REV='M226 172C292 176 330 234 378 238', U_VEIN_R_REV='M604 176C522 192 440 250 378 246';
+const KID='M0 -42C-24 -42 -31 -18 -31 0C-31 22 -22 42 0 42C14 42 22 34 20 22C18 12 8 8 8 0C8 -8 18 -12 20 -22C22 -34 14 -42 0 -42Z';
+const BLAD='M146 524C146 502 170 496 200 496C230 496 254 502 254 524C254 560 232 588 200 590C168 588 146 560 146 524Z';
+const LIV='M96 296C100 268 150 258 222 266C252 270 262 284 250 296C224 316 176 334 128 344C104 348 92 330 96 296Z';
+const LUNG_L='M184 118C160 104 122 130 110 178C100 220 102 258 114 272C134 280 162 270 188 262C194 220 194 154 184 118Z';
+const LUNG_R='M216 124C240 110 278 134 290 180C298 220 296 252 286 264C268 270 240 264 214 258C206 216 206 158 216 124Z';
+const INT='M126 506C116 480 116 440 122 412C126 398 140 392 160 394C185 396 215 396 240 394C260 392 274 398 278 412C284 440 284 480 274 506C266 528 238 534 222 546C210 556 204 572 202 600L201 626';
+const URE_L='M165 392C172 420 170 458 162 488C158 504 160 516 166 530';
+const URE_R='M234 380C228 418 230 456 238 486C242 502 240 516 234 530';
+const URETHRA='M200 588C200 602 199 616 200 640';
+const ART_L='M194 370C182 372 174 378 166 380', VEIN_L='M166 389C180 391 196 386 208 381';
+const ART_R='M194 360C206 360 222 364 234 368', VEIN_R='M234 377C224 376 216 374 208 372';
 
 function pill(x,y,t,k=''){const w=t.length*8.2+22;return `<g class="pill ${k?'olbl':''}" ${k?`data-k="${k}"`:''} transform="translate(${x} ${y})"><rect x="${-w/2}" y="-13" width="${w}" height="26" rx="13" fill="rgba(6,20,36,.88)" stroke="rgba(53,238,252,.6)" stroke-width="1.3"/><text y="5" text-anchor="middle" font-size="14.5" font-weight="700" fill="#eef6ff" font-family="Lexend,system-ui,sans-serif">${t}</text></g>`;}
 function lead(x1,y1,x2,y2,k=''){return `<g ${k?`class="olbl" data-k="${k}"`:''}><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#35eefc" stroke-opacity=".75" stroke-width="1.3"/><circle cx="${x2}" cy="${y2}" r="3" fill="#35eefc"/></g>`;}
 
-function torsoDefs(p){return `
-    <linearGradient id="${p}-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a4a78" stop-opacity=".5"/><stop offset=".5" stop-color="#0d2846" stop-opacity=".5"/><stop offset="1" stop-color="#071a30" stop-opacity=".75"/></linearGradient>
-    <linearGradient id="${p}-rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8ff9ff"/><stop offset=".55" stop-color="#35eefc" stop-opacity=".8"/><stop offset="1" stop-color="#35eefc" stop-opacity=".3"/></linearGradient>
-    <pattern id="${p}-grid" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M16 0H0V16" fill="none" stroke="#7fd6ff" stroke-opacity=".09" stroke-width=".8"/></pattern>
-    <clipPath id="${p}-tclip"><path d="${TORSO}"/></clipPath>
-    <radialGradient id="${p}-pool" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#cfeeff" stop-opacity=".16"/><stop offset=".6" stop-color="#8fd8ff" stop-opacity=".06"/><stop offset="1" stop-color="#8fd8ff" stop-opacity="0"/></radialGradient>
-    <filter id="${p}-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-    <filter id="${p}-sh" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#000" flood-opacity=".5"/></filter>`;}
-
-/* ---- Simülasyon: cam gövde içinde Servier boşaltım sistemi ---- */
-function simSVG(){
-  const p='s',[rx,ry]=UP(742,118),[bx,by]=UP(560,1060),[ux,uy]=UP(394,1300),[lx,ly]=UP(304,725);
-  const vessel=(d,w,c1,c2)=>`<path d="${d}" stroke="#2a1018" stroke-width="${w+7}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="${c1}" stroke-width="${w}" fill="none" stroke-linecap="round"/><path d="${d}" stroke="${c2}" stroke-opacity=".55" stroke-width="${w*.22}" fill="none" stroke-linecap="round" transform="translate(-${w*.18} -${w*.12})"/>`;
-  const dash=`stroke-width="7" stroke-dasharray="7 41" fill="none" stroke-linecap="round"`;
-  return `<svg class="body-svg body-s" id="s-svg" viewBox="40 222 320 418" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Böbrekler, üreterler, mesane ve üretrayı gösteren cam gövde">
-  <defs>${torsoDefs(p)}
-    <radialGradient id="${p}-aura" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb15c" stop-opacity=".9"/><stop offset=".55" stop-color="#ff9a4a" stop-opacity=".75"/><stop offset="1" stop-color="#ff7a3c" stop-opacity="0"/></radialGradient>
-    <linearGradient id="${p}-vc" gradientUnits="userSpaceOnUse" x1="${VC_X-19}" y1="0" x2="${VC_X+19}" y2="0"><stop offset="0" stop-color="#1d4fb8"/><stop offset=".45" stop-color="#4f8cff"/><stop offset="1" stop-color="#2346a8"/></linearGradient>
-    <linearGradient id="${p}-ao" gradientUnits="userSpaceOnUse" x1="${AO_X-17}" y1="0" x2="${AO_X+17}" y2="0"><stop offset="0" stop-color="#a3122e"/><stop offset=".45" stop-color="#ff3b55"/><stop offset="1" stop-color="#9c0f27"/></linearGradient>
-    <linearGradient id="${p}-fade" gradientUnits="userSpaceOnUse" x1="0" y1="640" x2="0" y2="900"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></linearGradient>
-    <mask id="${p}-vmask" maskUnits="userSpaceOnUse" x="-100" y="-400" width="1000" height="1400"><rect x="-100" y="-400" width="1000" height="1400" fill="url(#${p}-fade)"/></mask>
-    <clipPath id="${p}-ubase"><path clip-rule="evenodd" d="M-20 -20H815V1380H-20Z${U_BLAD}"/></clipPath>
-    <clipPath id="${p}-ublad"><path d="${U_BLAD}"/></clipPath>
-    <clipPath id="${p}-uin"><path d="${U_IN}"/></clipPath>
-  </defs>
-  <g class="torso" transform="translate(200 0) scale(1.1 1) translate(-200 0)">
-    <path class="torso-path" d="${TORSO}" fill="url(#${p}-glass)"/>
-    <rect width="400" height="640" fill="url(#${p}-grid)" clip-path="url(#${p}-tclip)"/>
-    <path class="torso-rim" d="${TORSO}" fill="none" stroke="url(#${p}-rim)" stroke-width="2.6" filter="url(#${p}-glow)"/>
-  </g>
-  <ellipse cx="200" cy="420" rx="140" ry="210" fill="url(#${p}-pool)"/>
-  <g class="org org-ex" data-k="bosaltim" transform="translate(${U.TX.toFixed(2)} ${U.TY}) scale(${U.S})">
-    <ellipse class="kid-aura" cx="128" cy="208" rx="215" ry="270" fill="url(#${p}-aura)" opacity="0"/>
-    <ellipse class="kid-aura" cx="668" cy="195" rx="215" ry="270" fill="url(#${p}-aura)" opacity="0"/>
-    <g class="vessels">
-      ${vessel(U_ART_L,20,'#e0233f','#ffc0c8')}${vessel(U_ART_R,20,'#e0233f','#ffc0c8')}
-      <g mask="url(#${p}-vmask)">${vessel(`M${AO_X} -260L${AO_X} 900`,34,`url(#${p}-ao)`,'#ffc0c8')}</g>
-      <g class="vflow-a" stroke="#ffe0e6" opacity=".9"><path d="M${AO_X} -260L${AO_X} 196" ${dash}/><path d="${U_ART_L}" ${dash}/><path d="${U_ART_R}" ${dash}/></g>
-      <g mask="url(#${p}-vmask)">${vessel(`M${VC_X} -260L${VC_X} 900`,38,`url(#${p}-vc)`,'#cfe0ff')}</g>
-      ${vessel(U_VEIN_L,24,'#3f6fe0','#cfe0ff')}${vessel(U_VEIN_R,24,'#3f6fe0','#cfe0ff')}
-      <g class="vflow-v" stroke="#dfe8ff" opacity=".9"><path d="${U_VEIN_L_REV}" ${dash}/><path d="${U_VEIN_R_REV}" ${dash}/><path d="M${VC_X} 246L${VC_X} -260" ${dash}/></g>
-    </g>
-    <image href="${IMG}urinary.webp" width="${U.W}" height="${U.H}" clip-path="url(#${p}-ubase)" preserveAspectRatio="xMidYMid meet"/>
-    <g class="uflow" stroke="#fff3b0" stroke-width="9" stroke-dasharray="11 30" fill="none" stroke-linecap="round"><path d="${U_URE_L}"/><path d="${U_URE_R}"/></g>
-    <g class="blad-s"><g class="blad-g">
-      <image href="${IMG}urinary.webp" width="${U.W}" height="${U.H}" clip-path="url(#${p}-ublad)" preserveAspectRatio="xMidYMid meet"/>
-      <g clip-path="url(#${p}-uin)">
-        <path class="urine" d="" fill="#ffe06a"/>
-        <path class="urine-top" d="" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="5"/>
-        <g class="bubbles" fill="#fff" fill-opacity=".6"><circle r="5.5"/><circle r="4"/><circle r="6"/><circle r="4.5"/></g>
-      </g>
-    </g></g>
-    <path class="uretflow" d="${U_URETHRA}" stroke="#ffe06a" stroke-width="13" fill="none" stroke-dasharray="20 16" opacity="0" stroke-linecap="round"/>
-  </g>
-  <g class="fx"></g>
-  ${pill(200,238,'Böbrek')}${lead(166,244,128,272)}${lead(234,244,262,262)}
-  ${pill(76,ly,'Üreter')}${lead(111,ly,lx-1,ly)}
-  ${pill(300,by,'Mesane')}${lead(265,by,bx-8,by)}
-  ${pill(268,uy,'Üretra')}${lead(233,uy,ux+2,uy)}
-  <circle class="kid-ring" cx="${rx}" cy="${ry}" r="12" fill="none" stroke="#35eefc" stroke-width="2"/>
-  <circle cx="${rx}" cy="${ry}" r="12" fill="none" stroke="#35eefc" stroke-width="1.6" stroke-dasharray="3 3"/>
-  ${pill(300,372,'Süzgeç')}${lead(300,359,rx,ry+12)}
-</svg>`;
+function kidney(p,tx,ty,sx){
+  return `<g transform="translate(${tx} ${ty}) scale(${sx*1.22} 1.22)">
+    <ellipse cx="2" cy="44" rx="26" ry="6" fill="#000" opacity=".4" filter="url(#${p}-blur2)"/>
+    <path d="${KID}" fill="url(#${p}-kid)" stroke="#ffb0ba" stroke-opacity=".55" stroke-width="1.3"/>
+    <path d="${KID}" transform="translate(-2 0) scale(.76)" fill="url(#${p}-kidIn)" opacity=".85"/>
+    <g fill="url(#${p}-pyr)" opacity=".9"><path d="M-22 -21Q-17 -31 -7 -27L3 -10Z"/><path d="M-27 -5Q-27 -15 -17 -15L2 -4Z"/><path d="M-27 6Q-27 16 -17 16L2 5Z"/><path d="M-22 22Q-17 32 -7 28L3 11Z"/></g>
+    <path d="M2 -15C-5 -8 -5 8 2 15L13 7C9 4 9 -4 13 -7Z" fill="url(#${p}-pelv)" stroke="#fff0c4" stroke-opacity=".5" stroke-width=".8"/>
+    <path d="M-22 -30C-28 -20 -30 -6 -29 6" stroke="#ffd0d6" stroke-opacity=".45" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    <ellipse cx="-14" cy="-24" rx="6" ry="11" fill="#fff" opacity=".26" transform="rotate(28 -14 -24)"/>
+  </g>`;
 }
 
-/* ---- Yardımcı organlar: tam gövde, Servier organ görselleri ---- */
-/* yerleşim (gövde koordinatı): görsel, x, y, genişlik; yükseklik oranla */
-const OI={
-  uri:{src:'urinary.webp',w0:795,h0:1356,x:120.5,y:330,w:159},
-  col:{src:'colon.webp',w0:940,h0:1387,x:115.4,y:362,w:169.2},
-  liv:{src:'liver.webp',w0:1384,h0:1147,x:88,y:250,w:150},
-  lung:{src:'lungs.webp',w0:1386,h0:1315,x:84,y:40,w:232}
-};
-for(const k in OI){const o=OI[k];o.s=o.w/o.w0;o.h=o.h0*o.s;}
-const oImg=o=>`<image href="${IMG}${o.src}" x="${o.x}" y="${o.y}" width="${o.w.toFixed(1)}" height="${o.h.toFixed(1)}" preserveAspectRatio="xMidYMid meet" pointer-events="none"/>`;
-/* kalın bağırsak orta hattı (colon.webp pikselleri): kör bağırsak → yükselen → enine → inen → S-kolon → anüs */
-const COL_D='M200 960C140 950 97 900 97 820L97 300C97 220 112 168 160 190C220 215 300 320 400 335C520 345 620 300 700 190C740 130 760 60 800 60C845 60 818 200 808 400C806 600 860 760 860 860C860 960 760 1030 650 1040C560 1045 480 960 440 990C415 1030 455 1150 470 1250C478 1320 490 1360 495 1385';
-const INT=mapD(COL_D,OI.col.x,OI.col.y,OI.col.s);
-
-function orgSVG(){
-  const p='o';
-  return `<svg class="body-svg body-o" id="o-svg" viewBox="0 0 400 640" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Boşaltıma yardımcı organları gösteren cam insan gövdesi">
-  <defs>${torsoDefs(p)}
+function bodySVG(p,full){
+  const vb=full?'0 0 400 640':'40 222 320 418';
+  let spine='';for(let y=232;y<480;y+=19)spine+=`<rect x="191" y="${y}" width="20" height="14" rx="4" fill="#e9eef6" opacity=".13"/>`;
+  let rings='';for(let y=48;y<110;y+=8)rings+=`<path d="M193 ${y}Q200 ${y+3} 207 ${y}" stroke="#e8f2ff" stroke-width="2.2" fill="none" opacity=".85"/>`;
+  return `<svg class="body-svg body-${p}" id="${p}-svg" viewBox="${vb}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="${full?'Boşaltıma yardımcı organları gösteren cam insan gövdesi':'Böbrekler, üreterler, mesane ve üretrayı gösteren cam gövde'}">
+  <defs>
+    <linearGradient id="${p}-glass" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1a4a78" stop-opacity=".5"/><stop offset=".5" stop-color="#0d2846" stop-opacity=".5"/><stop offset="1" stop-color="#071a30" stop-opacity=".75"/></linearGradient>
+    <linearGradient id="${p}-rim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8ff9ff"/><stop offset=".55" stop-color="#35eefc" stop-opacity=".8"/><stop offset="1" stop-color="#35eefc" stop-opacity=".3"/></linearGradient>
     <radialGradient id="${p}-warm" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#ff9a5c" stop-opacity=".0"/><stop offset=".8" stop-color="#ff9a5c" stop-opacity=".12"/><stop offset="1" stop-color="#ffb27a" stop-opacity=".35"/></radialGradient>
+    <pattern id="${p}-grid" width="16" height="16" patternUnits="userSpaceOnUse"><path d="M16 0H0V16" fill="none" stroke="#7fd6ff" stroke-opacity=".09" stroke-width=".8"/></pattern>
+    <clipPath id="${p}-tclip"><path d="${TORSO}"/></clipPath>
+    <radialGradient id="${p}-kid" cx=".35" cy=".28" r=".85"><stop offset="0" stop-color="#ee808a"/><stop offset=".42" stop-color="#c8505a"/><stop offset="1" stop-color="#5e1420"/></radialGradient>
+    <radialGradient id="${p}-kidIn" cx=".45" cy=".45" r=".7"><stop offset="0" stop-color="#9a2c3a"/><stop offset="1" stop-color="#5a121d"/></radialGradient>
+    <linearGradient id="${p}-pyr" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b03a4a"/><stop offset="1" stop-color="#6a1624"/></linearGradient>
+    <radialGradient id="${p}-pelv" cx=".3" cy=".4" r=".8"><stop offset="0" stop-color="#fff0c0"/><stop offset="1" stop-color="#e0a03a"/></radialGradient>
+    <linearGradient id="${p}-ure" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#b98320"/><stop offset=".45" stop-color="#ffd27a"/><stop offset="1" stop-color="#c88e2a"/></linearGradient>
+    <linearGradient id="${p}-art" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#9c0f27"/><stop offset=".45" stop-color="#ff3b55"/><stop offset="1" stop-color="#a3122e"/></linearGradient>
+    <linearGradient id="${p}-vein" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2d36b0"/><stop offset=".45" stop-color="#7c86ff"/><stop offset="1" stop-color="#3540c0"/></linearGradient>
+    <radialGradient id="${p}-blad" cx=".35" cy=".25" r=".9"><stop offset="0" stop-color="#ffe9b0"/><stop offset=".45" stop-color="#ffcf6b"/><stop offset="1" stop-color="#b0690c"/></radialGradient>
+    <radialGradient id="${p}-lung" cx=".4" cy=".3" r=".85"><stop offset="0" stop-color="#ffd0dc"/><stop offset=".45" stop-color="#ff9fb8"/><stop offset="1" stop-color="#b8436a"/></radialGradient>
+    <pattern id="${p}-sponge" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="4" cy="4" r="2.1" fill="#7a1f3d" fill-opacity=".22"/></pattern>
+    <radialGradient id="${p}-liv" cx=".35" cy=".3" r=".85"><stop offset="0" stop-color="#d96d63"/><stop offset=".5" stop-color="#b5473f"/><stop offset="1" stop-color="#5e1814"/></radialGradient>
+    <linearGradient id="${p}-int" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#f9b2a4"/><stop offset=".5" stop-color="#f08d7e"/><stop offset="1" stop-color="#b84d4a"/></linearGradient>
+    <radialGradient id="${p}-aura" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ffb15c" stop-opacity=".75"/><stop offset="1" stop-color="#ff7a3c" stop-opacity="0"/></radialGradient>
+    <radialGradient id="${p}-bin" cx=".42" cy=".35" r=".75"><stop offset="0" stop-color="#5a4214"/><stop offset=".7" stop-color="#2e2008"/><stop offset="1" stop-color="#160f03"/></radialGradient>
+    <clipPath id="${p}-bclip"><path d="${BLAD}"/></clipPath>
+    <filter id="${p}-glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
     <filter id="${p}-hl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur in="SourceAlpha" stdDeviation="6" result="b"/><feFlood flood-color="#35eefc" flood-opacity=".9"/><feComposite in2="b" operator="in" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="${p}-sh" x="-30%" y="-30%" width="160%" height="170%"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#000" flood-opacity=".55"/></filter>
+    <filter id="${p}-blur2"><feGaussianBlur stdDeviation="2.5"/></filter>
   </defs>
   <g class="torso">
     <path class="torso-path" d="${TORSO}" fill="url(#${p}-glass)"/>
-    <rect width="400" height="640" fill="url(#${p}-grid)" clip-path="url(#${p}-tclip)" pointer-events="none"/>
-    <path class="torso-warm" d="${TORSO}" fill="url(#${p}-warm)" pointer-events="none"/>
-    <ellipse cx="200" cy="320" rx="150" ry="290" fill="url(#${p}-pool)" pointer-events="none"/>
+    <rect width="400" height="640" fill="url(#${p}-grid)" clip-path="url(#${p}-tclip)"/>
+    <path class="torso-warm" d="${TORSO}" fill="url(#${p}-warm)"/>
+    <path d="M96 130C80 200 84 300 104 350" stroke="#fff" stroke-opacity=".07" stroke-width="14" fill="none" stroke-linecap="round" clip-path="url(#${p}-tclip)"/>
+    <g opacity=".9" fill="#e9eef6" fill-opacity=".09" stroke="#e9eef6" stroke-opacity=".18" stroke-width="1.2">
+      <path d="M118 452C108 424 128 404 160 414C178 424 182 454 178 482C160 476 136 470 118 452Z"/>
+      <path d="M282 452C292 424 272 404 240 414C222 424 218 454 222 482C240 476 264 470 282 452Z"/>
+      <path d="M184 470L216 470L209 522L191 522Z"/>
+      <path d="M150 560C170 594 230 594 250 560" fill="none" stroke-width="5"/>
+    </g>
+    ${spine}
     <path class="torso-rim" d="${TORSO}" fill="none" stroke="url(#${p}-rim)" stroke-width="2.6" filter="url(#${p}-glow)"/>
   </g>
-  <g class="org org-ex" data-k="bosaltim" pointer-events="none">${oImg(OI.uri)}</g>
-  <g class="org org-int" data-k="kalin">${oImg(OI.col)}
-    <path class="int-path hit" d="${INT}" stroke="transparent" stroke-width="30" fill="none" stroke-linecap="round"/>
-  </g>
-  <g class="org org-liver" data-k="karaciger">${oImg(OI.liv)}
-    <path class="hit" d="M92 300C92 262 120 252 170 254C210 256 236 262 238 272C226 300 170 338 120 368C100 376 92 350 92 300Z" fill="transparent"/>
-  </g>
-  <g class="org org-lung" data-k="akciger"><g class="lung-b">${oImg(OI.lung)}
-    <path class="hit" d="M92 240C86 180 110 80 160 54C182 52 190 70 190 110L190 240Z M310 240C316 180 290 80 240 54C218 52 210 70 210 110L210 240Z M192 40H208V130H192Z" fill="transparent"/>
+  <g class="org org-lung" data-k="akciger"><g class="lung-b">
+    <path d="M200 40L200 112M200 112C196 122 190 128 184 136M200 112C204 122 210 128 216 138" stroke="#cfe2ff" stroke-width="9" fill="none" stroke-linecap="round" opacity=".9"/>
+    ${rings}
+    <g filter="url(#${p}-sh)"><path d="${LUNG_L}" fill="url(#${p}-lung)"/><path d="${LUNG_L}" fill="url(#${p}-sponge)"/><path d="${LUNG_R}" fill="url(#${p}-lung)"/><path d="${LUNG_R}" fill="url(#${p}-sponge)"/></g>
+    <path d="${LUNG_L}" fill="none" stroke="#ffd6e2" stroke-opacity=".6" stroke-width="1.4"/><path d="${LUNG_R}" fill="none" stroke="#ffd6e2" stroke-opacity=".6" stroke-width="1.4"/>
+    <ellipse cx="140" cy="170" rx="12" ry="26" fill="#fff" opacity=".2" transform="rotate(18 140 170)"/><ellipse cx="258" cy="172" rx="10" ry="24" fill="#fff" opacity=".18" transform="rotate(-14 258 172)"/>
   </g></g>
-  <g class="fx" pointer-events="none"></g>
-  <g pointer-events="none">
-    ${pill(200,24,'Nefesle: CO₂ + su buharı','akciger')}
-    ${pill(200,234,'Zararlı → daha az zararlı','karaciger')}${lead(160,247,150,292,'karaciger')}
-    ${pill(200,480,'Sindirilmeyen besinler + fazla su','kalin')}
-    ${pill(200,96,'Ter: su + tuz','deri')}${pill(200,600,'Vücut sıcaklığı dengelenir','deri')}
+  <g class="org org-int" data-k="kalin">
+    <path class="int-path" d="${INT}" stroke="#5a1f1c" stroke-width="26" fill="none" stroke-linecap="round" opacity=".55"/>
+    <path d="${INT}" stroke="url(#${p}-int)" stroke-width="22" fill="none" stroke-linecap="round"/>
+    <path d="${INT}" stroke="#7a2a28" stroke-opacity=".35" stroke-width="22" fill="none" stroke-dasharray="2.2 10"/>
+    <path d="${INT}" stroke="#fff" stroke-opacity=".22" stroke-width="5" fill="none" stroke-linecap="round" transform="translate(-3 -4)"/>
   </g>
+  <g class="org org-liver" data-k="karaciger">
+    <path d="${LIV}" fill="url(#${p}-liv)" filter="url(#${p}-sh)"/>
+    <path d="${LIV}" fill="none" stroke="#ffb0a6" stroke-opacity=".45" stroke-width="1.3"/>
+    <path d="M160 268C170 290 180 310 186 330" stroke="#5e1814" stroke-opacity=".4" stroke-width="2" fill="none"/>
+    <ellipse cx="130" cy="290" rx="22" ry="8" fill="#fff" opacity=".2" transform="rotate(-10 130 290)"/>
+  </g>
+  <g class="org org-ex" data-k="bosaltim">
+    <ellipse class="kid-aura" cx="150" cy="384" rx="52" ry="66" fill="url(#${p}-aura)" opacity="0"/>
+    <ellipse class="kid-aura" cx="250" cy="372" rx="52" ry="66" fill="url(#${p}-aura)" opacity="0"/>
+    <path d="M208 200L208 462C208 484 224 498 242 520L252 540" stroke="url(#${p}-vein)" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <path d="M194 200L194 462C194 484 178 498 160 520L150 540" stroke="url(#${p}-art)" stroke-width="10" fill="none" stroke-linecap="round"/>
+    <g fill="none" stroke-linecap="round">
+      <path d="${VEIN_L}" stroke="#5b6cff" stroke-width="7"/><path d="${VEIN_R}" stroke="#5b6cff" stroke-width="7"/>
+      <path d="${ART_L}" stroke="#ff3b55" stroke-width="7"/><path d="${ART_R}" stroke="#ff3b55" stroke-width="7"/>
+      <g class="vflow-a" stroke="#ffd0d8" stroke-width="2.2" stroke-dasharray="2 12" opacity=".9"><path d="M194 200L194 372"/><path d="${ART_L}"/><path d="${ART_R}"/></g>
+      <g class="vflow-v" stroke="#d6dbff" stroke-width="2.2" stroke-dasharray="2 12" opacity=".9"><path d="${VEIN_L}"/><path d="${VEIN_R}"/><path d="M208 381L208 200"/></g>
+    </g>
+    ${kidney(p,150,384,1)}${kidney(p,250,372,-1)}
+    <g fill="none" stroke-linecap="round">
+      <path d="${URE_L}" stroke="#7a5410" stroke-width="7.5"/><path d="${URE_R}" stroke="#7a5410" stroke-width="7.5"/>
+      <path d="${URE_L}" stroke="url(#${p}-ure)" stroke-width="5.5"/><path d="${URE_R}" stroke="url(#${p}-ure)" stroke-width="5.5"/>
+      <g class="uflow" stroke="#fff3b0" stroke-width="2.6" stroke-dasharray="3 9"><path d="${URE_L}"/><path d="${URE_R}"/></g>
+    </g>
+    <path d="${URETHRA}" stroke="#7a5410" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <path d="${URETHRA}" stroke="url(#${p}-ure)" stroke-width="6" fill="none" stroke-linecap="round"/>
+    <path class="uretflow" d="${URETHRA}" stroke="#ffe06a" stroke-width="3.4" fill="none" stroke-dasharray="6 5" opacity="0" stroke-linecap="round"/>
+    <g class="blad-s"><g class="blad-g" style="transform-box:fill-box;transform-origin:center">
+      <ellipse cx="200" cy="594" rx="50" ry="7" fill="#000" opacity=".45" filter="url(#${p}-blur2)"/>
+      <path d="${BLAD}" fill="url(#${p}-bin)"/>
+      <g clip-path="url(#${p}-bclip)">
+        <path class="urine" d="" fill="#ffe06a"/>
+        <path class="urine-top" d="" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="1.6"/>
+        <g class="bubbles" fill="#fff" fill-opacity=".55"><circle r="1.6"/><circle r="1.2"/><circle r="1.8"/><circle r="1.3"/></g>
+        <path d="M150 530C150 506 176 500 200 500" stroke="#fff" stroke-opacity=".12" stroke-width="10" fill="none"/>
+      </g>
+      <path d="${BLAD}" fill="none" stroke="url(#${p}-blad)" stroke-width="9"/>
+      <path d="${BLAD}" fill="none" stroke="#8a4a06" stroke-opacity=".55" stroke-width="9" stroke-dasharray="1.6 4.2"/>
+      <path d="${BLAD}" fill="none" stroke="#ffe7b0" stroke-opacity=".55" stroke-width="1.2" transform="translate(0 -1)"/>
+      <path d="M160 516C166 504 182 499 196 499" stroke="#fff" stroke-opacity=".55" stroke-width="3" fill="none" stroke-linecap="round"/>
+    </g></g>
+  </g>
+  <g class="fx"></g>
+  ${full?`
+    ${pill(200,26,'Nefesle: CO₂ + su buharı','akciger')}
+    ${pill(200,238,'Zararlı → daha az zararlı','karaciger')}${lead(170,250,170,290,'karaciger')}
+    ${pill(200,470,'Sindirilmeyen besinler + fazla su','kalin')}
+    ${pill(200,96,'Ter: su + tuz','deri')}${pill(200,600,'Vücut sıcaklığı dengelenir','deri')}
+  `:`
+    ${pill(84,300,'Böbrek')}${lead(104,312,128,346)}
+    ${pill(86,470,'Üreter')}${lead(112,470,161,474)}
+    ${pill(312,572,'Mesane')}${lead(286,566,252,552)}
+    ${pill(270,622,'Üretra')}${lead(244,622,203,624)}
+    <circle class="kid-ring" cx="276" cy="372" r="14" fill="none" stroke="#35eefc" stroke-width="2"/>
+    <circle cx="276" cy="372" r="14" fill="none" stroke="#35eefc" stroke-width="1.6" stroke-dasharray="3 3"/>
+    ${pill(316,420,'Süzgeç')}${lead(316,407,282,382)}
+  `}
 </svg>`;
 }
 
@@ -529,10 +538,10 @@ const ICON={
   bora:`<svg viewBox="0 0 48 48"><circle cx="22" cy="26" r="17" fill="url(#ga-ball)" stroke="#fff" stroke-opacity=".8"/><polygon points="22,19 28.5,23.5 26,31 18,31 15.5,23.5" fill="#1b2b40"/><path d="M22 19V10M28.5 23.5L36 21M26 31L30 38M18 31L14 38M15.5 23.5L8 21" stroke="#1b2b40" stroke-width="1.8"/><ellipse cx="16" cy="17" rx="5" ry="2.6" fill="#fff" opacity=".7" transform="rotate(-30 16 17)"/>${A.drop(41,10,4.2)}${A.drop(44,24,3.2)}</svg>`,
   ekran:`<svg viewBox="0 0 48 48"><rect x="5" y="8" width="38" height="26" rx="4" fill="#0e2238" stroke="#9fd8ff" stroke-width="2"/><rect x="8.5" y="11.5" width="31" height="19" rx="2" fill="url(#ga-scr)" opacity=".8"/><path d="M12 25l6-6 5 4 8-8" stroke="#fff" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/><path d="M19 34h10l2 6H17z" fill="#9fb3c9"/><rect x="14" y="40" width="20" height="3" rx="1.5" fill="#cfdbea"/><circle cx="39" cy="38" r="7" fill="#c47a06" stroke="#ffe06a" stroke-width="1.6"/><path d="M39 34.5v4.2M39 41v.2" stroke="#fff" stroke-width="2" stroke-linecap="round"/></svg>`,
   denge:`<svg viewBox="0 0 48 48"><path d="M10 10h22l-3 32H13z" fill="url(#ga-glass)" stroke="#d8f5ff" stroke-opacity=".8" stroke-width="1.6"/><path d="M11.6 20h18.8l-2.2 21H14z" fill="#45b6ff" opacity=".65"/><ellipse cx="17" cy="16" rx="2" ry="6" fill="#fff" opacity=".45"/><path d="M30 30C34 18 44 16 46 14C46 26 40 36 30 34Z" fill="url(#ga-leaf)" stroke="#d4ffc0" stroke-opacity=".6"/><path d="M31 33C35 27 40 22 45 15" stroke="#e9ffd9" stroke-width="1.2" fill="none" opacity=".8"/></svg>`,
-  deri:`<svg viewBox="0 0 48 48"><image href="${IMG}skin.webp" x="1" y="5" width="44" height="42.8" preserveAspectRatio="xMidYMid meet"/>${A.drop(41,8,3.6)}${A.drop(33,5,2.8)}</svg>`,
-  akciger:`<svg viewBox="0 0 48 48"><image href="${IMG}lungs.webp" x="1" y="2" width="46" height="44" preserveAspectRatio="xMidYMid meet"/></svg>`,
-  kalin:`<svg viewBox="0 0 48 48"><image href="${IMG}colon.webp" x="4" y="1" width="40" height="46" preserveAspectRatio="xMidYMid meet"/></svg>`,
-  karaciger:`<svg viewBox="0 0 48 48"><image href="${IMG}liver.webp" x="1" y="4" width="46" height="40" preserveAspectRatio="xMidYMid meet"/></svg>`,
+  deri:`<svg viewBox="0 0 48 48"><rect x="4" y="22" width="40" height="22" rx="5" fill="#b9675a"/><path d="M4 27c0-3 2-5 5-5h30c3 0 5 2 5 5v3H4z" fill="url(#ga-skin)"/><path d="M15 30v8M33 30v8" stroke="#ffd2c2" stroke-width="1.8"/><circle cx="15" cy="39" r="3" fill="#ff9fb8"/><circle cx="33" cy="39" r="3" fill="#ff9fb8"/>${A.drop(15,14,4.6)}${A.drop(33,12,5.2)}${A.cube(24,19,3)}</svg>`,
+  akciger:`<svg viewBox="0 0 48 48"><path d="M24 4V16M24 16C22 19 20 21 18 23M24 16C26 19 28 21 30 23" stroke="#cfe2ff" stroke-width="3" fill="none" stroke-linecap="round"/><path d="M20 18C14 14 6 22 5 32C4 40 8 44 12 44C16 44 20 41 21 38C22 30 22 22 20 18Z" fill="url(#ga-lung)"/><path d="M28 18C34 14 42 22 43 32C44 40 40 44 36 44C32 44 28 41 27 38C26 30 26 22 28 18Z" fill="url(#ga-lung)"/><ellipse cx="11" cy="28" rx="2.5" ry="6" fill="#fff" opacity=".35"/></svg>`,
+  kalin:`<svg viewBox="0 0 48 48"><path d="M12 40C8 34 8 20 10 14C12 10 16 9 24 9C32 9 36 10 38 14C40 20 40 34 36 40C33 43 28 42 26 46" stroke="#5a1f1c" stroke-width="9" fill="none" stroke-linecap="round" opacity=".5"/><path d="M12 40C8 34 8 20 10 14C12 10 16 9 24 9C32 9 36 10 38 14C40 20 40 34 36 40C33 43 28 42 26 46" stroke="url(#ga-int)" stroke-width="7" fill="none" stroke-linecap="round"/><path d="M12 40C8 34 8 20 10 14C12 10 16 9 24 9C32 9 36 10 38 14C40 20 40 34 36 40" stroke="#7a2a28" stroke-opacity=".45" stroke-width="7" fill="none" stroke-dasharray="1.2 4"/></svg>`,
+  karaciger:`<svg viewBox="0 0 48 48"><path d="M4 22C6 12 18 9 34 11C42 12 46 16 42 21C36 27 24 33 12 36C6 37 3 30 4 22Z" fill="url(#ga-liv)" stroke="#ffb0a6" stroke-opacity=".5"/><ellipse cx="14" cy="18" rx="6" ry="2.4" fill="#fff" opacity=".3" transform="rotate(-10 14 18)"/><path d="M22 11C24 18 26 24 27 30" stroke="#5e1814" stroke-opacity=".5" stroke-width="1.4" fill="none"/></svg>`,
   water:`<svg viewBox="0 0 24 24">${A.drop(12,13,6.2)}</svg>`,
   salt:`<svg viewBox="0 0 24 24">${A.cube(12,11,7)}</svg>`,
   sun:`<svg viewBox="0 0 24 24">${A.sun(12,12,4.8)}</svg>`
@@ -551,7 +560,7 @@ const LEG=[
    ===================================================================== */
 const ui=ZD.mount({
   kicker:'SİMÜLASYON · BOŞALTIM SİSTEMİ',title:'Böbrek Laboratuvarı',
-  crumb:['7. Sınıf Fen Bilimleri','3. Ünite','Boşaltım Sistemi'],credit:true,
+  crumb:['7. Sınıf Fen Bilimleri','3. Ünite','Boşaltım Sistemi'],
   stats:[{id:'s1',label:'Saat',value:'08:00',cls:'cyan'},{id:'s2',label:'Mesane',value:'12%'},{id:'s3',label:'Tuvalet',value:0},{id:'s4',label:'Seri',value:'×0'}],
   onHelp(){help();},onRestart(){restart();}
 });
@@ -594,19 +603,25 @@ ui.body.innerHTML=GDEFS+`
 <div class="bb-view on" id="v-sim">
   <section class="zd-card bb-a" aria-label="Cam gövde">
     <div class="a-head"><span class="zd-chip">Cam gövde · bel–pelvis</span></div>
-    <div class="a-svg">${simSVG()}
-      <div class="skin-badge" aria-label="Deri: terleme (ter bezi)">
+    <div class="a-svg">${bodySVG('s',false)}
+      <div class="skin-badge" aria-label="Deri: terleme">
         <svg viewBox="0 0 100 100" id="skinSvg"><defs>
           <clipPath id="skc"><circle cx="50" cy="50" r="46"/></clipPath>
-          <radialGradient id="skBg" cx=".5" cy=".4" r=".6"><stop offset="0" stop-color="#1d3d62"/><stop offset="1" stop-color="#0a1a2c"/></radialGradient>
+          <linearGradient id="skAir" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#0b2140"/><stop offset="1" stop-color="#16365c"/></linearGradient>
+          <linearGradient id="skEp" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fbdcc4"/><stop offset="1" stop-color="#e2a985"/></linearGradient>
+          <linearGradient id="skDe" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e59a86"/><stop offset="1" stop-color="#9c4a42"/></linearGradient>
         </defs>
-        <circle cx="50" cy="50" r="46" fill="url(#skBg)"/>
+        <circle cx="50" cy="50" r="46" fill="#0a1a2c"/>
         <g clip-path="url(#skc)">
-          <image href="${IMG}skin.webp" x="-67" y="-12.4" width="153.8" height="149.8" preserveAspectRatio="xMidYMid meet"/>
+          <rect width="100" height="46" fill="url(#skAir)"/>
+          <path d="M0 46Q25 42 50 46T100 46V100H0Z" fill="url(#skDe)"/>
+          <path d="M0 46Q25 42 50 46T100 46V57Q75 60 50 57T0 57Z" fill="url(#skEp)"/>
+          <path d="M28 47V76M72 47V78" stroke="#ffd8c8" stroke-width="2.2"/>
+          <g fill="#ff9fb8" stroke="#ffd0dc" stroke-width=".8"><circle cx="25" cy="80" r="4"/><circle cx="31" cy="82" r="4"/><circle cx="27" cy="86" r="3.6"/><circle cx="69" cy="82" r="4"/><circle cx="75" cy="84" r="4"/><circle cx="71" cy="88" r="3.6"/></g>
           <g id="skDrops"></g>
         </g>
         <circle cx="50" cy="50" r="46" fill="none" stroke="#f3c7a6" stroke-width="2.6"/>
-        <ellipse cx="34" cy="20" rx="18" ry="7" fill="#fff" opacity=".12" transform="rotate(-20 34 20)"/>
+        <ellipse cx="34" cy="20" rx="18" ry="7" fill="#fff" opacity=".1" transform="rotate(-20 34 20)"/>
         </svg>
         <span>DERİ</span>
       </div>
@@ -622,7 +637,7 @@ ui.body.innerHTML=GDEFS+`
 
   <section class="bb-b">
     <div class="zd-card filter-card">
-      <div class="f-head"><div class="f-ctx" role="img" title="Böbrekte bunun gibi milyonlarca küçük süzgeç vardır; burada biri büyütülerek gösteriliyor." aria-label="Böbrek kesiti: böbrekte bunun gibi milyonlarca küçük süzgeç vardır; burada biri büyütülerek gösteriliyor."><svg viewBox="0 0 60 60" aria-hidden="true"><defs><clipPath id="fcClip"><circle cx="30" cy="30" r="28.5"/></clipPath></defs><g clip-path="url(#fcClip)"><image href="${IMG}kidney_section.webp" x="13.9" y="4" width="32.2" height="52" preserveAspectRatio="xMidYMid meet"/><g fill="#7ff7ff" opacity=".85"><circle cx="29.6" cy="7.6" r="1.1"/><circle cx="36.4" cy="7.2" r="1.1"/><circle cx="41.3" cy="11.1" r="1.1"/><circle cx="43.5" cy="18.2" r="1.1"/><circle cx="43.9" cy="26.5" r="1.1"/><circle cx="23.3" cy="10.8" r="1.1"/><circle cx="18.8" cy="16.4" r="1.1"/><circle cx="17.6" cy="34.0" r="1.1"/><circle cx="20.3" cy="43.8" r="1.1"/><circle cx="25.1" cy="51.6" r="1.1"/><circle cx="33.4" cy="53.1" r="1.1"/><circle cx="40.1" cy="49.8" r="1.1"/></g></g><circle class="fc-ring" cx="17.8" cy="25.0" r="4.6" fill="none" stroke="#35eefc" stroke-width="1.6"/><circle cx="17.8" cy="25.0" r="4.6" fill="rgba(53,238,252,.25)" stroke="#e9fdff" stroke-width="1.1"/></svg></div><div><div class="ttl-s">Yakın plan</div><div class="h3">Böbreğin Süzgeci</div></div>
+      <div class="f-head"><div><div class="ttl-s">Yakın plan</div><div class="h3">Böbreğin Süzgeci</div></div>
         <div class="f-count"><div><small>Kana geri dönen</small><b id="cRet" style="color:#5ff0b0">0</b></div><div><small>İdrara giden</small><b id="cUri" style="color:#ffd45a">0</b></div></div></div>
       <div class="f-canvas" id="fWrap"><canvas id="fcv" aria-label="Süzgeç parçacık animasyonu: kan hücreleri ve proteinler kanda kalır; su, tuz, üre ve glikoz süzülür"></canvas>
         <div class="story" id="story" role="status"><svg class="si" viewBox="0 0 48 48"></svg><div><h4></h4><p class="tx"></p><p class="res"></p></div><button class="x" aria-label="Hikâyeyi kapat">${ZD.I.x}</button></div>
@@ -681,10 +696,13 @@ ui.body.innerHTML=GDEFS+`
     </div>
   </section>
   <section class="gz yellow" id="gzR" aria-label="İdrara bölgesi">
-    <svg class="gz-art" viewBox="0 0 220 110" role="img" aria-label="İdrar kesesi (mesane)"><defs><clipPath id="bclipG"><path transform="translate(76.7 1) scale(.07792)" d="M38 628C120 600 740 600 815 628C812 760 740 880 620 960C540 1010 460 1050 418 1080C376 1050 300 1010 220 960C110 880 42 760 38 628Z"/></clipPath><radialGradient id="gzPool" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff3c8" stop-opacity=".18"/><stop offset="1" stop-color="#fff3c8" stop-opacity="0"/></radialGradient></defs>
-      <ellipse cx="110" cy="58" rx="70" ry="54" fill="url(#gzPool)"/>
-      <image href="${IMG}bladder.webp" x="76.7" y="1" width="66.6" height="108" preserveAspectRatio="xMidYMid meet" style="filter:drop-shadow(0 6px 10px rgba(0,0,0,.45))"/>
-      <g clip-path="url(#bclipG)"><path class="gwave" d="M30 64Q50 58 70 64T110 64T150 64T190 64V110H30Z" fill="url(#ga-urine)" opacity=".82"/></g></svg>
+    <svg class="gz-art" viewBox="0 0 220 110"><defs><clipPath id="bclipG"><path d="M70 40C70 24 90 18 110 18C130 18 150 24 150 40C150 70 132 92 110 94C88 92 70 70 70 40Z"/></clipPath></defs>
+      <path d="M40 4C46 20 56 30 74 38M180 4C174 20 164 30 146 38" stroke="#ffd27a" stroke-width="6" fill="none" stroke-linecap="round"/>
+      <path d="M70 40C70 24 90 18 110 18C130 18 150 24 150 40C150 70 132 92 110 94C88 92 70 70 70 40Z" fill="#1c1406"/>
+      <g clip-path="url(#bclipG)"><path class="gwave" d="M60 52Q80 46 100 52T140 52T180 52V110H60Z" fill="url(#ga-urine)"/></g>
+      <path d="M70 40C70 24 90 18 110 18C130 18 150 24 150 40C150 70 132 92 110 94C88 92 70 70 70 40Z" fill="none" stroke="#ffcf6b" stroke-width="6"/>
+      <path d="M80 34C84 26 96 22 106 22" stroke="#fff" stroke-opacity=".5" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M110 94V108" stroke="#ffd27a" stroke-width="6" stroke-linecap="round"/></svg>
     <h3>İDRARA</h3><p>Süzülür ve idrarla<br>vücuttan atılır</p>
     <div class="gz-tray" id="trayR"></div>
   </section>
@@ -692,7 +710,7 @@ ui.body.innerHTML=GDEFS+`
 
 <!-- ============ YARDIMCI ORGANLAR ============ -->
 <div class="bb-view" id="v-org">
-  <section class="zd-card o-body" aria-label="Cam gövde: yardımcı organlar">${orgSVG()}</section>
+  <section class="zd-card o-body" aria-label="Cam gövde: yardımcı organlar">${bodySVG('o',true)}</section>
   <section class="o-right">
     <div class="o-cards" id="oCards"></div>
     <div class="zd-card o-info" id="oInfo"></div>
@@ -792,16 +810,14 @@ const SB=$('#s-svg');
 const B={urine:$('.urine',SB),top:$('.urine-top',SB),bub:$$('.bubbles circle',SB),bladG:$('.blad-g',SB),bladS:$('.blad-s',SB),uflow:$('.uflow',SB),uret:$('.uretflow',SB),
   va:$('.vflow-a',SB),vv:$('.vflow-v',SB),aura:$$('.kid-aura',SB)};
 let offU=0,offA=0,offR=0;
-const KS=1/U.S; /* sahne birimi → urinary.webp pikseli */
-const BL_EMPTY=1228,BL_FULL=1004; /* idrar kesesi iç boşluğu: boş/dolu seviye (piksel) */
 function bladderDraw(t){
-  const fill=sim.bl,ly=BL_EMPTY-(BL_EMPTY-BL_FULL)*fill,amp=(1.4+(fill>=.8&&!sim.draining?2.4:0)+(sim.draining?2.2:0))*KS*.8;
+  const fill=sim.bl,ly=588-90*fill,amp=1.4+(fill>=.8&&!sim.draining?2.4:0)+(sim.draining?2.2:0);
   let d='',dt='';
-  for(let x=230;x<=570;x+=10){const y=ly+Math.sin(x*.03+t*3.2)*amp+Math.sin(x*.075-t*2.1)*amp*.45;const s=(x===230?'M':'L')+x+' '+y.toFixed(1);d+=s;dt+=s;}
-  B.urine.setAttribute('d',d+'L570 1250L230 1250Z');B.top.setAttribute('d',dt);
-  const col=urineRGB(cur.c);B.urine.setAttribute('fill',rgba(col,.8));
-  B.bub.forEach((c,i)=>{const h=Math.max(12,BL_EMPTY-ly);const y=BL_EMPTY-((t*48+i*100)%h);c.setAttribute('cx',(335+i*42+Math.sin(t*2+i)*10).toFixed(1));c.setAttribute('cy',y.toFixed(1));c.setAttribute('opacity',fill>.08?.8:0);});
-  const sc=.97+.07*fill;B.bladS.setAttribute('transform',`translate(397 1100) scale(${sc.toFixed(3)}) translate(-397 -1100)`);
+  for(let x=140;x<=260;x+=5){const y=ly+Math.sin(x*.09+t*3.2)*amp+Math.sin(x*.23-t*2.1)*amp*.45;const s=(x===140?'M':'L')+x+' '+y.toFixed(2);d+=s;dt+=s;}
+  B.urine.setAttribute('d',d+'L260 600L140 600Z');B.top.setAttribute('d',dt);
+  const col=urineRGB(cur.c);B.urine.setAttribute('fill',rgba(col,.95));
+  B.bub.forEach((c,i)=>{const h=Math.max(4,588-ly);const y=588-((t*14+i*29)%h);c.setAttribute('cx',(170+i*18+Math.sin(t*2+i)*3).toFixed(1));c.setAttribute('cy',y.toFixed(1));c.setAttribute('opacity',fill>.08?.8:0);});
+  const sc=.84+.2*fill;B.bladS.setAttribute('transform',`translate(200 590) scale(${sc.toFixed(3)}) translate(-200 -590)`);
   B.bladG.classList.toggle('tremble',fill>=.8&&!sim.draining);
 }
 
@@ -809,10 +825,10 @@ function bladderDraw(t){
 const skG=$('#skDrops');const skin={drops:[],acc:0};
 function skinStep(dt){
   skin.acc+=dt*(cur.sweat*3.4+.05);
-  while(skin.acc>=1&&skin.drops.length<12){skin.acc-=1;const g=document.createElementNS(NS,'g');g.innerHTML=A.drop(0,0,4)+`<circle cx="5" cy="2" r=".9" fill="#fff"/>`;skG.appendChild(g);skin.drops.push({g,x:pick([42,50,58])+rnd(-3,3),t:0,life:rnd(1.6,2.4)});}
+  while(skin.acc>=1&&skin.drops.length<12){skin.acc-=1;const g=document.createElementNS(NS,'g');g.innerHTML=A.drop(0,0,4)+`<circle cx="5" cy="2" r=".9" fill="#fff"/>`;skG.appendChild(g);skin.drops.push({g,x:pick([28,50,72])+rnd(-4,4),t:0,life:rnd(1.6,2.4)});}
   if(skin.acc>1)skin.acc=1;
   skin.drops=skin.drops.filter(d=>{d.t+=dt;const k=d.t/d.life;if(k>=1){d.g.remove();return false;}
-    const grow=Math.min(1,k*3),y=22-grow*3-(k>.45?(k-.45)*30:0),s=.4+.7*grow,op=k>.6?1-(k-.6)/.4:1;
+    const grow=Math.min(1,k*3),y=44-grow*3-(k>.45?(k-.45)*40:0),s=.4+.7*grow,op=k>.6?1-(k-.6)/.4:1;
     d.g.setAttribute('transform',`translate(${d.x} ${y.toFixed(1)}) scale(${s.toFixed(2)})`);d.g.setAttribute('opacity',op.toFixed(2));return true;});
 }
 
@@ -869,10 +885,10 @@ function simStep(dt,t){
   }
   if(sim.draining){sim.bl-=dt*.5;if(sim.bl<=0){sim.bl=0;sim.draining=false;sim.toilet++;sim.lastDecile=0;toast('İdrar, üretra (idrar kanalı) yoluyla vücuttan atıldı.','good',2400);sfx('good');}}
   // akış çizgileri
-  offU-=dt*(10+40*cur.U)*KS;offA-=dt*(26*cur.flow)*KS;
+  offU-=dt*(10+40*cur.U);offA-=dt*(26*cur.flow);
   B.uflow.setAttribute('stroke-dashoffset',offU.toFixed(1));B.uflow.setAttribute('stroke',rgba(urineRGB(Math.max(.25,cur.c))));
   B.va.setAttribute('stroke-dashoffset',offA.toFixed(1));B.vv.setAttribute('stroke-dashoffset',offA.toFixed(1));
-  offR-=dt*60*KS;B.uret.setAttribute('stroke-dashoffset',offR.toFixed(1));B.uret.setAttribute('opacity',sim.draining?1:0);B.uret.setAttribute('stroke',rgba(urineRGB(Math.max(.3,cur.c))));
+  offR-=dt*60;B.uret.setAttribute('stroke-dashoffset',offR.toFixed(1));B.uret.setAttribute('opacity',sim.draining?1:0);B.uret.setAttribute('stroke',rgba(urineRGB(Math.max(.3,cur.c))));
   const au=clamp((cur.L-30)/60,0,1)*(.65+.35*Math.sin(t*4));B.aura.forEach(a=>a.setAttribute('opacity',au.toFixed(2)));
   bladderDraw(t);skinStep(dt);
   gaugeAcc+=dt;if(gaugeAcc>.1){gaugeAcc=0;updateGauges();}
@@ -1015,7 +1031,7 @@ function fDraw(){
 }
 
 /* ---- giriş ---- */
-const KIDART=`<img src="${IMG}urinary.webp" alt="Böbrekler, üreterler, idrar kesesi (mesane) ve üretra" style="display:block;height:128px;width:auto;margin:0 auto 6px;filter:drop-shadow(0 10px 18px rgba(0,0,0,.5))">`;
+const KIDART=`<svg viewBox="0 0 160 90" style="width:150px;height:84px;margin:0 auto 4px;filter:drop-shadow(0 10px 18px rgba(0,0,0,.5))"><g transform="translate(46 40) scale(.8)"><path d="${KID}" fill="url(#ga-kid)" stroke="#ffb0ba" stroke-opacity=".6" stroke-width="1.5"/><ellipse cx="-14" cy="-22" rx="6" ry="11" fill="#fff" opacity=".28" transform="rotate(28 -14 -22)"/></g><g transform="translate(114 40) scale(-.8 .8)"><path d="${KID}" fill="url(#ga-kid)" stroke="#ffb0ba" stroke-opacity=".6" stroke-width="1.5"/><ellipse cx="-14" cy="-22" rx="6" ry="11" fill="#fff" opacity=".28" transform="rotate(28 -14 -22)"/></g><path d="M56 48C62 60 70 66 74 72M104 48C98 60 90 66 86 72" stroke="#ffd27a" stroke-width="3.5" fill="none" stroke-linecap="round"/><path d="M66 74C66 68 72 66 80 66C88 66 94 68 94 74C94 82 88 88 80 88C72 88 66 82 66 74Z" fill="url(#ga-blad)" stroke="#ffe7b0" stroke-opacity=".6"/></svg>`;
 function simIntro(isHelp){
   ZD.intro({kicker:'SİMÜLASYON · BOŞALTIM SİSTEMİ',title:'Böbrek Laboratuvarı',art:KIDART,
     text:'Böbrekler kanı süzer; yararlı maddelerin tekrar kana geçmesini sağlar, fazla su, tuz ve üre gibi atıkları idrarla uzaklaştırır.',
@@ -1185,14 +1201,14 @@ const harm=`<polygon transform="scale(1.4)" points="0,-9 2.6,-3 9,-3 4,1.4 6,8 0
 const safe=`<circle r="9" fill="#5be3a0" stroke="#d5ffe9" stroke-width="1.4"/><circle cx="-2" cy="-2" r="1.8" fill="#fff" opacity=".7"/>`;
 function orgStep(dt,t){
   const k=O.sel;if(!k)return;
-  const lb=$('.lung-b',OS);lb.setAttribute('transform',k==='akciger'?`translate(200 150) scale(${1+.035*Math.sin(t*2.2)}) translate(-200 -150)`:'');
+  const lb=$('.lung-b',OS);lb.setAttribute('transform',k==='akciger'?`translate(200 190) scale(${1+.035*Math.sin(t*2.2)}) translate(-200 -190)`:'');
   const rate={deri:6,akciger:2.6,kalin:1.6,karaciger:1.3}[k];O.acc+=dt*rate;
   while(O.acc>=1&&O.parts.length<40){O.acc-=1;
     if(k==='deri'){const p=pick(TORSO_PTS),salt=Math.random()<.35;O.parts.push({k,g:mkP(salt?A.cube(0,0,6):A.drop(0,0,7)),x:p[0],y:p[1],vx:(p[0]<200?-1:1)*rnd(8,22),vy:rnd(-4,6),t:0,life:rnd(1.6,2.4)});}
-    else if(k==='akciger'){const L=Math.random()<.5,co2=Math.random()<.6;const st=L?[rnd(112,172),rnd(110,225)]:[rnd(228,288),rnd(110,225)];
-      O.parts.push({k,co2,g:mkP(co2?`<circle r="12" fill="#9fb3c8" fill-opacity=".92" stroke="#e6f0ff" stroke-width="1.4"/><text y="3.5" text-anchor="middle" font-size="9.5" font-weight="800" fill="#0b1a2d" font-family="Lexend,system-ui,sans-serif">CO₂</text>`:`<circle r="8" fill="#fff" fill-opacity=".4"/><circle r="4" fill="#fff" fill-opacity=".6"/>`),pts:[st,[L?193:207,142],[200,122],[200,40],[200+rnd(-30,30),-20]],t:0,life:2.6});}
+    else if(k==='akciger'){const L=Math.random()<.5,co2=Math.random()<.6;const st=L?[rnd(125,175),rnd(170,250)]:[rnd(225,275),rnd(170,245)];
+      O.parts.push({k,co2,g:mkP(co2?`<circle r="12" fill="#9fb3c8" fill-opacity=".92" stroke="#e6f0ff" stroke-width="1.4"/><text y="3.5" text-anchor="middle" font-size="9.5" font-weight="800" fill="#0b1a2d" font-family="Lexend,system-ui,sans-serif">CO₂</text>`:`<circle r="8" fill="#fff" fill-opacity=".4"/><circle r="4" fill="#fff" fill-opacity=".6"/>`),pts:[st,[L?186:214,138],[200,110],[200,40],[200+rnd(-30,30),-20]],t:0,life:2.6});}
     else if(k==='kalin'){const w=Math.random()<.35;O.parts.push({k,g:mkP(w?A.drop(0,0,7):`<ellipse rx="9" ry="6.5" fill="#7a4a2c" stroke="#c48a5c" stroke-width="1.4"/><ellipse cx="-2" cy="-2" rx="2.5" ry="1.4" fill="#fff" opacity=".3"/>`),s:0,t:0,sp:rnd(70,95)});}
-    else if(k==='karaciger'){O.parts.push({k,g:mkP(harm),pts:[[rnd(150,250),440],[rnd(118,180),rnd(286,320)]],out:[[206,262],[206,212]],t:0,ph:0});}
+    else if(k==='karaciger'){O.parts.push({k,g:mkP(harm),pts:[[rnd(150,250),420],[rnd(150,190),rnd(296,316)]],out:[[208,250],[208,200]],t:0,ph:0});}
   }
   O.parts=O.parts.filter(p=>{p.t+=dt;let x,y,op=1,s=1;
     if(p.k==='deri'){p.vy+=dt*22;p.x+=p.vx*dt;p.y+=p.vy*dt;x=p.x;y=p.y;const q=p.t/p.life;op=q<.15?q/.15:1-Math.max(0,(q-.6)/.4);s=.6+Math.min(1,q*4)*.6;if(q>=1){p.g.remove();return false;}}
