@@ -21,7 +21,7 @@ Kaynak: Servier Medical Art, servier.com, CC BY 4.0.
 | `cell_neutrophil.webp` | 659×682 | 28 KB | Akyuvar (nötrofil) |
 | `cell_platelet.webp` | 646×682 | 17 KB | Kan pulcuğu |
 | `cell_rbc.webp` | 690×668 | 24 KB | Alyuvar |
-| `coagulation.webp` | 1393×845 | 133 KB | Yaralanma ve pıhtılaşma, 3 aşama (deri+damar kesiti) |
+| `coagulation.webp` | 1393×623 | 132 KB | Yaralanma ve pıhtılaşma, 3 aşama (deri+damar kesiti) |
 | `colon.webp` | 940×1387 | 90 KB | Kalın bağırsak (kör bağırsak/apandis dahil) ve anüs |
 | `dg_colon.webp` | 447×658 | 35 KB | Ayrık organ: kalın bağırsak |
 | `dg_duodenum.webp` | 664×651 | 16 KB | Ayrık organ: onikiparmak bağırsağı |

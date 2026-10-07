@@ -284,6 +284,6 @@ img,svg{display:block}
 }
 
 /* görsel kaynak notu */
-.zd-credit{margin:6px auto 0;max-width:1400px;padding:0 24px;font-size:11px;letter-spacing:.2px;color:var(--dim);text-align:center}
+.zd-credit{position:relative;margin:-23px auto 0;max-width:1400px;padding:0 24px 9px;font-size:11px;line-height:14px;letter-spacing:.2px;color:var(--dim);text-align:center}
 .zd-credit a{color:var(--muted);text-decoration:none;border-bottom:1px dotted currentColor}
 .zd-credit a:hover{color:var(--cyan)}
