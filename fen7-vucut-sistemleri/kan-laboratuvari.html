@@ -1,0 +1,1658 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kan Laboratuvarı: Mikroskop Altında Kan</title>
+<link rel="stylesheet" href="assets/zd.css">
+<style>
+:root{--S:520px}
+.zd-body{padding:2px 22px 20px}
+/* ---- üst sıra: modlar + tarih çipi ---- */
+.kl-top{display:flex;align-items:center;gap:12px;margin-bottom:12px;min-width:0}
+.kl-top .zd-seg{overflow-x:auto;max-width:100%;scrollbar-width:none;flex:0 1 auto}
+.kl-top .zd-seg::-webkit-scrollbar{display:none}
+.kl-top .zd-seg button{display:inline-flex;align-items:center;gap:8px;min-height:40px;padding:7px 15px 7px 8px;font-size:13.5px}
+.kl-top .zd-seg button i{font-style:normal;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:800;background:rgba(255,255,255,.08);color:var(--muted)}
+.kl-top .zd-seg button.on i{background:#06303a;color:#bff4ff}
+.hist{margin-left:auto;display:inline-flex;align-items:center;gap:10px;padding:5px 16px 5px 5px;border-radius:999px;min-height:44px;text-align:left;
+  background:linear-gradient(180deg,rgba(255,187,61,.16),rgba(255,187,61,.05));border:1px solid rgba(255,187,61,.45);box-shadow:0 0 16px rgba(255,187,61,.14);transition:.2s var(--ease)}
+.hist:hover{transform:translateY(-1px);box-shadow:0 0 24px rgba(255,187,61,.3)}
+.hist .hi{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#fff1c4,#ffbb3d 60%,#b8741a);color:#3a2300;box-shadow:inset 0 -2px 4px rgba(0,0,0,.2)}
+.hist .hi svg{width:19px;height:19px}
+.hist small{display:block;font-size:10px;font-weight:700;letter-spacing:1.6px;color:var(--amber)}
+.hist b{font-size:14px;font-weight:700}
+
+/* ---- laboratuvar ızgarası ---- */
+.lab{display:grid;grid-template-columns:var(--S) 150px minmax(0,1fr);gap:16px;height:var(--S)}
+.lab[hidden],.don[hidden]{display:none}
+.scope-wrap{position:relative;width:var(--S);height:var(--S)}
+.bezel{position:absolute;inset:0;border-radius:50%;
+  background:repeating-conic-gradient(from 0deg,#2b3c55 0deg 2.25deg,#121d2d 2.25deg 4.5deg);
+  box-shadow:0 0 0 1.5px rgba(73,243,255,.6),0 0 28px rgba(73,243,255,.33),0 26px 50px rgba(0,0,0,.6),inset 0 0 0 1px rgba(255,255,255,.08)}
+.bezel::after{content:"";position:absolute;inset:8px;border-radius:50%;background:linear-gradient(145deg,#3d4f69,#0a1321 60%,#1b2a3f);box-shadow:inset 0 2px 3px rgba(255,255,255,.18),inset 0 -3px 6px rgba(0,0,0,.5)}
+.scope{position:absolute;inset:16px;border-radius:50%;overflow:hidden;background:#0d0905;box-shadow:inset 0 0 0 2px rgba(0,0,0,.7);transform:translateZ(0)}
+.scope canvas,.scope .ov{position:absolute;left:0;top:0;width:100%;height:100%;display:block}
+.scope .ov{pointer-events:none}
+#uc{cursor:crosshair;touch-action:manipulation}
+.scope-wrap.zd-shake .scope{filter:drop-shadow(0 0 14px rgba(255,84,104,.7))}
+.magtag{position:absolute;left:50%;bottom:-4px;transform:translateX(-50%);z-index:3;padding:5px 14px;border-radius:999px;white-space:nowrap;
+  background:#0b1a2d;border:1px solid rgba(73,243,255,.6);font-size:11px;font-weight:700;letter-spacing:1.6px;color:var(--muted);box-shadow:0 0 14px rgba(73,243,255,.3)}
+.magtag b{color:var(--cyan);font-size:15px;letter-spacing:.5px;margin-left:4px}
+.blurpill{position:absolute;left:50%;top:15%;transform:translate(-50%,-6px);z-index:3;padding:8px 16px;border-radius:999px;font-size:13px;font-weight:700;white-space:nowrap;
+  background:rgba(40,24,4,.82);border:1px solid rgba(255,187,61,.7);color:#ffd88a;box-shadow:0 0 20px rgba(255,187,61,.35);opacity:0;pointer-events:none;transition:.35s var(--ease)}
+.blurpill.show{opacity:1;transform:translate(-50%,0)}
+.blurpill i{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--amber);margin-right:8px;box-shadow:0 0 0 0 rgba(255,187,61,.7);animation:zd-pd 1.6s infinite}
+
+/* ---- kontrol sütunu ---- */
+.ctrl{display:flex;flex-direction:column;gap:10px;min-width:0}
+.mscope{width:100%;height:auto;overflow:visible;display:block}
+.knob{cursor:grab;touch-action:none;outline:none}
+.knob:active{cursor:grabbing}
+.knob:focus-visible .kring{stroke:#35eefc;stroke-width:2.5}
+#msTurret{transition:transform .6s var(--spring);transform-box:view-box;transform-origin:72px 92px}
+#msStage{transition:transform .12s linear}
+.ctrl-r{display:flex;flex-direction:column;gap:10px}
+.fwrap{background:rgba(0,0,0,.28);border:1px solid var(--line);border-radius:16px;padding:9px 11px 4px}
+.fwrap .fl{display:flex;justify-content:space-between;align-items:center;font-size:11px;font-weight:700;letter-spacing:1.6px;color:var(--muted)}
+.fstat{font-size:10.5px;padding:2px 8px;border-radius:99px;background:rgba(255,187,61,.15);color:var(--amber);letter-spacing:.8px}
+.fstat.ok{background:rgba(47,227,155,.16);color:var(--green)}
+input.kr{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent;touch-action:none;cursor:pointer}
+input.kr::-webkit-slider-runnable-track{height:8px;border-radius:99px;background:linear-gradient(90deg,#14c3dc,#35eefc) 0 0/var(--p,10%) 100% no-repeat,rgba(0,0,0,.5);box-shadow:inset 0 1px 2px rgba(0,0,0,.6)}
+input.kr::-webkit-slider-thumb{-webkit-appearance:none;width:26px;height:26px;margin-top:-9px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#d3e2ef 60%,#8ea3bb);box-shadow:0 0 0 3px rgba(53,238,252,.45),0 4px 10px rgba(0,0,0,.5)}
+input.kr::-moz-range-track{height:8px;border-radius:99px;background:rgba(0,0,0,.5)}
+input.kr::-moz-range-progress{height:8px;border-radius:99px;background:#35eefc}
+input.kr::-moz-range-thumb{width:24px;height:24px;border:0;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff,#d3e2ef 60%,#8ea3bb);box-shadow:0 0 0 3px rgba(53,238,252,.45)}
+.mag{display:flex;flex-direction:column;gap:6px}
+.mag .mh{font-size:10.5px;font-weight:700;letter-spacing:1.6px;color:var(--dim);text-align:center}
+.mag button{min-height:44px;border-radius:14px;font-weight:800;font-size:16px;letter-spacing:.5px;background:linear-gradient(180deg,#22344c,#162537);border:1px solid var(--line);color:#a9bdd4;box-shadow:0 4px 0 rgba(0,0,0,.3);transition:.2s var(--ease)}
+.mag button:hover{color:#fff}
+.mag button.on{background:linear-gradient(180deg,#e9fbff,#bff4ff);color:#06303a;border-color:#bff4ff;box-shadow:0 0 18px rgba(53,238,252,.45),0 4px 0 rgba(0,0,0,.3)}
+.mag button:disabled{opacity:.4;cursor:not-allowed}
+.mag button.on:disabled{opacity:.75}
+
+/* ---- sağ panel ---- */
+.panel{display:flex;flex-direction:column;gap:12px;min-height:0;min-width:0}
+.pane{flex:1 1 auto;min-height:0;overflow:auto;padding:15px 18px;display:flex;flex-direction:column;gap:11px;scrollbar-width:thin}
+.p-head{display:flex;align-items:center;gap:10px}
+.p-step{font-size:12px;font-weight:600;color:var(--muted);letter-spacing:.4px;margin-left:auto;text-align:right}
+.p-ttl{font-size:18px;font-weight:800;line-height:1.15}
+.p-title{font-size:20px;font-weight:800;line-height:1.2}
+.p-text{font-size:14.5px;line-height:1.55;color:#cfe0f2}
+.p-text b{color:#fff}
+.p-small{font-size:13px;line-height:1.5;color:var(--muted)}
+.p-quote{font-size:15px;line-height:1.5;font-weight:600;color:#ffe3e7;padding:10px 14px;border-radius:14px;border-left:3px solid var(--oxy);background:rgba(255,59,85,.09)}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.task{border-radius:18px;padding:14px 16px;background:linear-gradient(135deg,rgba(53,238,252,.16),rgba(53,238,252,.04));border:1.5px solid rgba(53,238,252,.55);box-shadow:0 0 22px rgba(53,238,252,.15),inset 0 1px 0 rgba(255,255,255,.08)}
+.task.warn{background:linear-gradient(135deg,rgba(255,187,61,.16),rgba(255,187,61,.04));border-color:rgba(255,187,61,.6);box-shadow:0 0 22px rgba(255,187,61,.14)}
+.task .tk{font-size:11px;font-weight:700;letter-spacing:1.8px;color:var(--cyan);text-transform:uppercase}
+.task.warn .tk{color:var(--amber)}
+.task .tt{font-size:23px;font-weight:800;margin:3px 0 4px;display:flex;align-items:center;gap:10px}
+.task .td{font-size:14px;line-height:1.5;color:#cfe0f2}
+.task .dots{display:flex;gap:6px;margin-left:auto}
+.task .dots i{width:14px;height:14px;border-radius:50%;border:2px solid rgba(53,238,252,.6)}
+.task .dots i.on{background:var(--green);border-color:var(--green);box-shadow:0 0 10px rgba(47,227,155,.6)}
+.netlik{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:12px;font-weight:700;letter-spacing:1.2px;color:var(--muted)}
+.netlik .zd-meter{flex:1}
+.tlist{list-style:none;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tlist li{display:flex;align-items:center;gap:8px;padding:6px 9px;border-radius:12px;font-size:13.5px;line-height:1.25;background:rgba(0,0,0,.2);border:1px solid var(--line);color:#a9bdd4}
+.tlist li .b{width:24px;height:24px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;background:rgba(255,255,255,.07)}
+.tlist li .b svg{width:15px;height:15px}
+.tlist li .n{margin-left:auto;font-weight:700;font-variant-numeric:tabular-nums}
+.tlist li.cur{border-color:rgba(53,238,252,.55);color:#fff;background:rgba(53,238,252,.08)}
+.tlist li.cur .b{background:var(--cyan);color:#05262c}
+.tlist li.ok{color:#bfeedd}
+.tlist li.ok .b{background:var(--green);color:#032a1b}
+.zd-meter.red>i{background:linear-gradient(90deg,#e0334a,#ff7385);box-shadow:0 0 12px rgba(255,84,104,.6)}
+.zd-meter.amber>i{background:linear-gradient(90deg,#ffa41b,#ffd36b);box-shadow:0 0 12px rgba(255,187,61,.55)}
+.zd-meter.green>i{background:linear-gradient(90deg,#16b979,#3ff0a8);box-shadow:0 0 12px rgba(47,227,155,.55)}
+.mrow{display:flex;justify-content:space-between;align-items:baseline;font-size:13px;font-weight:600;color:#c9d8ea;margin-bottom:5px}
+.mrow b{font-size:15px;font-variant-numeric:tabular-nums}
+.steps{list-style:none;display:grid;gap:6px}
+.steps li{display:flex;gap:9px;align-items:center;padding:4px 9px;border-radius:12px;font-size:13.5px;line-height:1.3;color:#7f97b3;border:1px solid transparent;transition:.35s var(--ease)}
+.steps li b{flex:none;width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:12px;background:rgba(255,255,255,.07)}
+.steps li.act{color:#fff;background:rgba(255,84,104,.1);border-color:rgba(255,84,104,.45)}
+.steps li.act b{background:var(--red);color:#fff}
+.steps li.done{color:#cfe0f2}
+.steps li.done b{background:var(--green);color:#032a1b}
+.steps li.fin{color:#fff;background:rgba(47,227,155,.1);border-color:rgba(47,227,155,.5)}
+.note{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border-radius:14px;background:rgba(168,121,255,.1);border:1px solid rgba(168,121,255,.4);font-size:14px;line-height:1.45;color:#e4d8ff}
+.note.pulse{animation:zd-gg 1s}
+.note svg{width:20px;height:20px;flex:none;color:#c6a8ff;margin-top:1px}
+.real-m .box{max-width:min(640px,94vw)}
+.real-m img{display:block;width:100%;height:auto;margin:12px 0 4px;border-radius:14px;background:radial-gradient(ellipse at 50% 50%,rgba(255,255,255,.14),rgba(255,255,255,.02) 72%)}
+.real-m .cap{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;font-size:12.5px;font-weight:700;color:#cfe0f2;text-align:center;margin-bottom:6px}
+.mk-stats{display:flex;gap:8px;flex:1}
+.mk-stats div{flex:1;text-align:center;padding:6px 4px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--line)}
+.mk-stats b{display:block;font-size:21px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1.15}
+.mk-stats span{font-size:10.5px;font-weight:700;letter-spacing:1.1px;color:var(--muted);text-transform:uppercase}
+.chart{position:relative;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--line);padding:6px 8px}
+.chart canvas{width:100%;height:62px;display:block}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.legend{display:flex;gap:14px;font-size:12px;font-weight:600;color:#c9d8ea;padding:2px 2px 0}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.lg2{display:grid;gap:7px}
+.lg2 div{display:flex;align-items:center;gap:10px;font-size:13.5px;line-height:1.35;color:#cfe0f2}
+.lg2 .sw{width:30px;height:30px;flex:none}
+.oxc{display:flex;gap:8px}
+.oxc div{flex:1;text-align:center;padding:6px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--line)}
+.oxc b{display:block;font-size:20px;font-weight:800}
+.oxc span{font-size:10.5px;font-weight:700;letter-spacing:1.1px;color:var(--muted)}
+/* sayım grafiği */
+.count{display:grid;gap:9px}
+.crow{display:grid;grid-template-columns:168px 1fr 54px;gap:10px;align-items:center;font-size:14px;font-weight:600}
+.crow .cbar{height:16px;border-radius:99px;background:rgba(0,0,0,.4);overflow:hidden;box-shadow:inset 0 1px 2px rgba(0,0,0,.5)}
+.crow .cbar i{display:block;height:100%;min-width:8px;border-radius:99px;background:linear-gradient(90deg,var(--c2),var(--c));box-shadow:0 0 12px var(--c);width:0;transition:width 1.2s var(--ease)}
+.crow b{text-align:right;font-variant-numeric:tabular-nums}
+.crow .tag{font-size:10px;letter-spacing:1px;padding:2px 6px;border-radius:6px;margin-left:6px;vertical-align:1px}
+.cnote{font-size:13.5px;color:#cfe0f2;line-height:1.5}
+/* bileşen kartları */
+.comps{flex:none;padding:10px 12px 12px}
+.tiles{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.tile{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 4px 7px;border-radius:14px;background:rgba(0,0,0,.22);border:1px solid var(--line);transition:.2s var(--ease);min-height:44px}
+.tile:hover{border-color:var(--line-2)}
+.tile svg{width:32px;height:32px}
+.tile img.ic{width:32px;height:32px;object-fit:contain;filter:drop-shadow(0 2px 3px rgba(0,0,0,.45))}
+.tile img.ic[src*=platelet]{width:26px;height:26px;margin:3px 0}
+.tile .tn{font-size:12.5px;font-weight:700;white-space:nowrap}
+.tile .tc{font-size:17px;font-weight:800;font-variant-numeric:tabular-nums;color:var(--cyan);line-height:1.1}
+.tile .tc small{font-size:10px;color:var(--muted);font-weight:600;letter-spacing:.6px}
+.tile.on{border-color:rgba(53,238,252,.7);background:rgba(53,238,252,.09);box-shadow:0 0 16px rgba(53,238,252,.22)}
+.tile.flash{animation:zd-gg .8s}
+.cdef{margin-top:9px;font-size:14px;line-height:1.5;color:#cfe0f2;min-height:63px}
+.cdef b{color:#fff}
+.cdef .src{display:block;font-size:10.5px;color:var(--dim);letter-spacing:1px;margin-top:2px;font-weight:600}
+
+/* ---- kan bağışı ---- */
+.don{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,1fr);gap:18px;height:var(--S)}
+.don-l{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;min-width:0}
+.pstack{position:relative;width:min(100%,580px)}
+.pstack::before,.pstack::after{content:"";position:absolute;inset:0;border-radius:24px;background:linear-gradient(180deg,#10243c,#0b1a2c);border:1px solid rgba(73,243,255,.2);transform:rotate(-2.6deg) translate(-8px,9px)}
+.pstack::after{transform:rotate(2.2deg) translate(9px,11px)}
+.pcard{position:relative;z-index:1;border-radius:24px;padding:16px 20px 18px;background:linear-gradient(180deg,#15314f,#0c1d31);border:1.5px solid rgba(73,243,255,.65);box-shadow:0 0 26px rgba(73,243,255,.25),0 22px 44px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.07)}
+.pcard.in{animation:cardIn .55s var(--spring) both}
+.pcard.out{animation:cardOut .4s var(--ease) both}
+@keyframes cardIn{from{opacity:0;transform:translateX(60px) rotate(4deg) scale(.95)}}
+@keyframes cardOut{to{opacity:0;transform:translateX(-80px) rotate(-6deg) scale(.92)}}
+.pc-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.pc-no{font-size:13px;font-weight:700;color:var(--muted)}
+.pc-main{display:grid;grid-template-columns:148px minmax(0,1fr);gap:18px;align-items:center}
+.ava{width:148px;height:148px;border-radius:50%;padding:4px;background:conic-gradient(from 210deg,#35eefc,#a879ff,#ff6fb0,#35eefc);box-shadow:0 0 24px rgba(53,238,252,.35),0 10px 24px rgba(0,0,0,.45)}
+.ava svg{width:100%;height:100%;border-radius:50%;display:block}
+.pc-info h3{font-size:26px;font-weight:800;line-height:1.1}
+.quote{position:relative;font-size:14px;line-height:1.45;color:#d8e8f8;background:rgba(53,238,252,.08);border:1px solid rgba(53,238,252,.25);border-radius:14px 14px 14px 4px;padding:7px 12px;margin:7px 0 10px}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.facts div{background:rgba(0,0,0,.25);border:1px solid var(--line);border-radius:12px;padding:5px 10px;min-width:0}
+.facts span{display:block;font-size:10.5px;letter-spacing:1.2px;color:var(--muted);font-weight:700;text-transform:uppercase}
+.facts b{font-size:15px;font-weight:700}
+.facts .wide{grid-column:1/-1}
+.facts .bad b{color:#ff8a98}
+.facts .good b{color:#7ff3c4}
+.stamp{position:absolute;right:22px;top:58px;z-index:2;padding:5px 12px;border:3px solid;border-radius:10px;font-weight:900;font-size:17px;letter-spacing:2px;transform:rotate(-9deg) scale(1.7);opacity:0;transition:.45s var(--spring);background:rgba(5,12,22,.6)}
+.stamp.show{opacity:1;transform:rotate(-9deg) scale(1)}
+.stamp.ok{color:#2fe39b;border-color:#2fe39b;box-shadow:0 0 18px rgba(47,227,155,.45)}
+.stamp.no{color:#ff5468;border-color:#ff5468;box-shadow:0 0 18px rgba(255,84,104,.45)}
+.don-acts{display:flex;gap:64px;justify-content:center}
+.nbtn{display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:800;font-size:16px;letter-spacing:1.6px}
+.nbtn .c{width:90px;height:90px;border-radius:50%;display:grid;place-items:center;border:3px solid;background:radial-gradient(circle,rgba(255,255,255,.04),rgba(0,0,0,.3));transition:transform .2s var(--spring),box-shadow .2s}
+.nbtn:hover .c{transform:scale(1.06)}
+.nbtn:active .c{transform:scale(.94)}
+.nbtn svg{width:42px;height:42px}
+.nbtn.no{color:#ff8a78}.nbtn.no .c{border-color:#ff5468;box-shadow:0 0 20px rgba(255,84,104,.6),inset 0 0 20px rgba(255,84,104,.35)}
+.nbtn.yes{color:#35eefc}.nbtn.yes .c{border-color:#35eefc;box-shadow:0 0 20px rgba(53,238,252,.6),inset 0 0 20px rgba(53,238,252,.3)}
+.nbtn[disabled]{opacity:.35;pointer-events:none}
+.don-r{padding:16px 18px;display:flex;flex-direction:column;gap:12px;min-height:0;overflow:auto}
+.rules{list-style:none;display:grid;gap:7px}
+.rules li{display:flex;align-items:center;gap:11px;padding:9px 12px;border-radius:14px;background:rgba(0,0,0,.22);border:1px solid var(--line);font-size:14.5px;font-weight:600;transition:.3s var(--ease)}
+.rules li .ri{width:34px;height:34px;flex:none;border-radius:10px;display:grid;place-items:center;background:rgba(53,238,252,.12);color:var(--cyan)}
+.rules li .ri svg{width:20px;height:20px}
+.rules li .rs{margin-left:auto;width:26px;height:26px;flex:none;border-radius:50%;display:grid;place-items:center;opacity:0;transform:scale(.4);transition:.35s var(--spring)}
+.rules li .rs svg{width:15px;height:15px}
+.rules li.ok{border-color:rgba(47,227,155,.45)}
+.rules li.ok .rs{opacity:1;transform:none;background:var(--green);color:#032a1b}
+.rules li.no{border-color:rgba(255,84,104,.6);background:rgba(255,84,104,.1)}
+.rules li.no .rs{opacity:1;transform:none;background:var(--red);color:#fff}
+.fb{border-radius:14px;padding:11px 13px;font-size:14px;line-height:1.5;background:rgba(0,0,0,.22);border:1px solid var(--line);color:#cfe0f2;min-height:68px}
+.fb.good{border-color:rgba(47,227,155,.55);background:rgba(47,227,155,.08)}
+.fb.bad{border-color:rgba(255,84,104,.55);background:rgba(255,84,104,.08)}
+.fb b{color:#fff}
+.prog{display:flex;gap:6px;align-items:center}
+.prog i{flex:1;height:8px;border-radius:99px;background:rgba(255,255,255,.1)}
+.prog i.ok{background:var(--green);box-shadow:0 0 8px rgba(47,227,155,.6)}
+.prog i.no{background:var(--red);box-shadow:0 0 8px rgba(255,84,104,.6)}
+.prog i.cur{background:var(--cyan);box-shadow:0 0 8px rgba(53,238,252,.6)}
+/* 4 adım şeridi */
+.steps4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.st4{position:relative;padding:12px 8px 10px;border-radius:16px;background:rgba(0,0,0,.25);border:1px solid var(--line);text-align:center;animation:zd-fi .5s var(--ease) both}
+.st4:nth-child(2){animation-delay:.12s}.st4:nth-child(3){animation-delay:.24s}.st4:nth-child(4){animation-delay:.36s}
+.st4 .ic{width:54px;height:54px;margin:0 auto 7px;border-radius:50%;display:grid;place-items:center;background:radial-gradient(circle at 35% 30%,#24476b,#0e2238);border:1.5px solid rgba(53,238,252,.55);box-shadow:0 0 16px rgba(53,238,252,.25)}
+.st4 .ic svg{width:32px;height:32px}
+.st4 .no{position:absolute;top:8px;left:10px;font-size:11px;font-weight:800;color:var(--cyan)}
+.st4 b{display:block;font-size:12.5px;letter-spacing:.8px;line-height:1.25;margin-bottom:4px}
+.st4 p{font-size:12.5px;color:var(--muted);line-height:1.4}
+.st4:not(:last-child)::after{content:"";position:absolute;right:-9px;top:34px;width:8px;height:8px;border-top:2.5px solid var(--cyan);border-right:2.5px solid var(--cyan);transform:rotate(45deg);filter:drop-shadow(0 0 4px var(--cyan))}
+.kiz{display:flex;gap:12px;align-items:center;padding:12px 14px;border-radius:16px;background:linear-gradient(135deg,rgba(255,84,104,.14),rgba(255,84,104,.04));border:1px solid rgba(255,84,104,.45);font-size:14px;line-height:1.5;color:#ffe3e7}
+.kiz svg{width:40px;height:40px;flex:none}
+/* tarih modalı */
+.malp{display:flex;gap:18px;align-items:center;text-align:left;margin-top:10px}
+.malp svg{width:120px;height:120px;flex:none}
+.malp p{font-size:14.5px}
+.intro-art{width:230px;height:96px;margin:0 auto 4px;display:block}
+.zd-btn[hidden]{display:none}
+/* ---- duyarlı ---- */
+@media (max-width:1100px) and (min-width:861px){
+  .lab{grid-template-columns:var(--S) 130px minmax(0,1fr)}
+}
+@media (max-width:860px){
+  .zd-body{padding:2px 12px 16px}
+  .kl-top{flex-wrap:wrap}
+  .hist{margin-left:0}
+  .lab{grid-template-columns:minmax(0,1fr);height:auto;gap:14px}
+  .scope-wrap{margin:0 auto}
+  .ctrl{flex-direction:row;align-items:center;gap:12px}
+  .mscope{width:96px;flex:none}
+  .ctrl-r{flex:1;min-width:0}
+  .mag{flex-direction:row}
+  .mag .mh{display:none}
+  .mag button{flex:1}
+  .pane{overflow:visible}
+  .don{grid-template-columns:minmax(0,1fr);height:auto}
+  .pc-main{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .ava{width:118px;height:118px}
+  .facts{text-align:left;width:100%}
+  .don-acts{gap:40px}
+  .steps4{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .st4:nth-child(2)::after{display:none}
+  .crow{grid-template-columns:96px 1fr 46px}
+  .malp{flex-direction:column;text-align:center}
+  .tile .tn{font-size:11px;white-space:normal;text-align:center;line-height:1.15}
+  .tlist{grid-template-columns:1fr}
+  .p-head .p-step{display:none}
+  .mgrid{grid-template-columns:1fr}
+  .zd-modal{position:fixed}
+  .stamp{top:12px}
+}
+</style></head>
+<body><div id="app"></div><script src="assets/zd.js"></script><script>
+'use strict';
+/* =====================================================================
+   KAN LABORATUVARI — Mikroskop altında kan (7. sınıf, Dolaşım Sistemi)
+   ===================================================================== */
+const TAU = Math.PI * 2, rnd = (a, b) => a + Math.random() * (b - a);
+const { clamp, lerp, sfx, toast } = ZD;
+const FONT = 'Lexend, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+const mk = (w, h) => { const c = document.createElement('canvas'); c.width = Math.max(1, Math.round(w)); c.height = Math.max(1, Math.round(h)); return c; };
+const HAS_FILTER = (() => { try { const g = mk(2, 2).getContext('2d'); g.filter = 'blur(2px)'; return g.filter === 'blur(2px)'; } catch (e) { return false; } })();
+const smooth = (a, b, x) => { const t = clamp((x - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); };
+const wrapA = (d) => Math.atan2(Math.sin(d), Math.cos(d));
+function rrect(g, x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+function shade(hex, a) { const n = parseInt(hex.slice(1), 16); let r = n >> 16, g = n >> 8 & 255, b = n & 255; const t = a < 0 ? 0 : 255, p = Math.abs(a); r = Math.round((t - r) * p + r); g = Math.round((t - g) * p + g); b = Math.round((t - b) * p + b); return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1); }
+function mixHex(a, b, t) { const A = parseInt(a.slice(1), 16), B = parseInt(b.slice(1), 16); const f = (s) => Math.round(((A >> s) & 255) * (1 - t) + ((B >> s) & 255) * t); return `rgb(${f(16)},${f(8)},${f(0)})`; }
+
+/* ---------------- Kitap tanımları (birebir) ---------------- */
+const DEF = {
+  plazma: { name: 'Plazma', txt: 'Kanın sıvı kısmını oluşturur. Büyük bir miktarını suyun oluşturduğu kan plazmasında besin, atık maddeler, enzimler, hormonlar vb. bulunur.' },
+  rbc: { name: 'Alyuvar', txt: 'Kana kırmızı rengi veren ve sayısı en fazla olan hücrelerdir. Alyuvarlar, oksijen ve karbon dioksidin taşınmasında görevlidir.' },
+  wbc: { name: 'Akyuvar', txt: 'Beyaz kan hücreleri olan akyuvarlar, kanda en az sayıda bulunan hücrelerdir. Vücudun mikroplara karşı savunmasında görevlidir.' },
+  plt: { name: 'Kan pulcukları', txt: 'Yaralanmalarda damarların iç yüzeyinde pıhtılaşır ve zedelenen kısmı tıkayarak kan kaybını önler.' }
+};
+const NAME = { rbc: 'alyuvar', wbc: 'akyuvar', plt: 'kan pulcuğu' };
+const LBL = { rbc: 'ALYUVAR', wbc: 'AKYUVAR', plt: 'KAN PULCUĞU', plazma: 'PLAZMA', mic: 'MİKROP' };
+const COL = { rbc: '#ff7a8a', wbc: '#c6a8ff', plt: '#ffd36b', plazma: '#ffbb3d', mic: '#8be36a' };
+
+/* ---------------- İkonlar ---------------- */
+const ICON = {
+  plazma: `<svg viewBox="0 0 40 40" aria-hidden="true"><defs><radialGradient id="icP" cx=".4" cy=".55" r=".6"><stop offset="0" stop-color="#fff6d6"/><stop offset=".6" stop-color="#f4cf7a"/><stop offset="1" stop-color="#c98e3c"/></radialGradient></defs><path d="M20 4C26 13 31 18.5 31 25a11 11 0 0 1-22 0C9 18.5 14 13 20 4Z" fill="url(#icP)" stroke="#fff3c8" stroke-opacity=".7"/><ellipse cx="15.5" cy="23" rx="2.4" ry="4.2" fill="#fff" opacity=".55"/></svg>`,
+  // Servier Medical Art (CC BY 4.0) hücre çizimleri
+  rbc: `<img class="ic" src="assets/img/cell_rbc.webp" width="690" height="668" alt="" decoding="async">`,
+  wbc: `<img class="ic" src="assets/img/cell_neutrophil.webp" width="659" height="682" alt="" decoding="async">`,
+  plt: `<img class="ic" src="assets/img/cell_platelet.webp" width="646" height="682" alt="" decoding="async">`
+};
+const SVGI = {
+  scalpel: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21 14.5 9.5"/><path d="M14.5 9.5 20 4c1 2 .5 5-2 7.5L15 14"/></svg>',
+  shield: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"><path d="M12 3 4.5 6v5.5c0 4.6 3.2 8.2 7.5 9.5 4.3-1.3 7.5-4.9 7.5-9.5V6Z"/><path d="M8.5 12l2.5 2.5 4.5-5" stroke-linecap="round"/></svg>',
+  book: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M4 5.5C6.5 4 9.5 4 12 6c2.5-2 5.5-2 8-.5V19c-2.5-1.5-5.5-1.5-8 .5-2.5-2-5.5-2-8-.5Z"/><path d="M12 6v13.5"/></svg>',
+  quill: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M20 3C11 4 6.5 9 5 17l-1.5 4"/><path d="M20 3c-.5 6-4.5 10.5-12 12.5"/><path d="M9.5 10.5 13 11"/></svg>',
+  cake: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="9" rx="2"/><path d="M4 15c2 1.5 4 1.5 6 0s4-1.5 6 0 4 1.5 4 0M12 11V7M12 4.5v.1"/></svg>',
+  scale: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="4" width="17" height="16" rx="4"/><path d="M8.5 10a4.5 4.5 0 0 1 7 0l-2.2 2.2"/></svg>',
+  heart: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"><path d="M12 20s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.4 4.3 4.3 0 0 1 19.5 10c0 5.4-7.5 10-7.5 10Z"/><path d="M7.5 12.5h3l1.2-2.2 1.6 4 1.2-1.8h2" stroke-linecap="round"/></svg>',
+  cal: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4M12 13.5V17l2 1"/></svg>'
+};
+
+/* ---------------- Sayfa iskeleti ---------------- */
+const MODES = [{ id: 'tani', name: 'Hücreleri Tanı' }, { id: 'yara', name: 'Yaralanma' }, { id: 'mikrop', name: 'Mikrop Saldırısı' }, { id: 'oksijen', name: 'Oksijen Taşıma' }, { id: 'bagis', name: 'Kan Bağışı' }];
+const ui = ZD.mount({
+  kicker: 'SİMÜLASYON · DOLAŞIM SİSTEMİ', title: 'Kan Laboratuvarı: Mikroskop Altında Kan',
+  crumb: ['7. Sınıf Fen Bilimleri', '3. Ünite', 'Dolaşım Sistemi'],
+  stats: [{ id: 'time', label: 'Süre', value: '0:00', cls: 'cyan' }, { id: 'score', label: 'Puan', value: 0 }, { id: 'found', label: 'Bulunan', value: '0/8', cls: 'green' }, { id: 'streak', label: 'Seri', value: 0 }],
+  onHelp() { showHelp(); }, onRestart() { restartMode(); }, credit: true
+});
+
+function overlaySVG() {
+  let t = '';
+  for (let i = 0; i <= 20; i++) { const x = 30 + i * 2; const h = i % 10 === 0 ? 2.6 : i % 5 === 0 ? 1.9 : 1.1; t += `<line x1="${x}" y1="${70 - h}" x2="${x}" y2="70"/>`; }
+  return `<svg class="ov" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><defs>
+  <radialGradient id="ovVig" cx="50" cy="50" r="50" gradientUnits="userSpaceOnUse"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset=".82" stop-color="#140a02" stop-opacity=".3"/><stop offset=".95" stop-color="#05040a" stop-opacity=".86"/><stop offset="1" stop-color="#020306"/></radialGradient>
+  <radialGradient id="ovGl" cx="33" cy="25" r="30" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#fff" stop-opacity=".2"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  <filter id="ovB" x="-5%" y="-5%" width="110%" height="110%"><feGaussianBlur stdDeviation=".45"/></filter></defs>
+  <ellipse cx="34" cy="24" rx="30" ry="18" transform="rotate(-28 34 24)" fill="url(#ovGl)"/>
+  <g stroke="rgba(45,24,6,.5)" stroke-width=".22" fill="none">
+   <line x1="50" y1="8" x2="50" y2="46"/><line x1="50" y1="54" x2="50" y2="92"/><line x1="8" y1="50" x2="46" y2="50"/><line x1="54" y1="50" x2="92" y2="50"/>
+   <circle cx="50" cy="50" r="1.4"/>
+   <line x1="30" y1="70" x2="70" y2="70" stroke-width=".3"/>${t}
+  </g>
+  <g fill="rgba(45,24,6,.6)" font-size="2.6" font-family="Lexend,system-ui,sans-serif" font-weight="600" text-anchor="middle"><text x="30" y="66.4">0</text><text x="50" y="66.4">10</text><text x="70" y="66.4">20</text></g>
+  <rect width="100" height="100" fill="url(#ovVig)"/>
+  <g filter="url(#ovB)" fill="none" stroke-width="1"><circle cx="49.55" cy="49.8" r="48.6" stroke="rgba(255,50,90,.45)"/><circle cx="50.45" cy="50.2" r="48.6" stroke="rgba(40,225,255,.45)"/></g>
+  <circle cx="50" cy="50" r="49.6" fill="none" stroke="rgba(255,255,255,.12)" stroke-width=".35"/>
+  </svg>`;
+}
+
+const MSCOPE = `<svg class="mscope" viewBox="0 0 160 250" aria-label="Mikroskop: odak düğmesini çevirerek görüntüyü netleştir" role="group">
+<defs>
+ <linearGradient id="msArm" x1="0" x2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".5" stop-color="#dfe8f2"/><stop offset="1" stop-color="#93a5bb"/></linearGradient>
+ <linearGradient id="msDark" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#34496a"/><stop offset="1" stop-color="#0c1829"/></linearGradient>
+ <linearGradient id="msTube" x1="0" x2="1"><stop offset="0" stop-color="#f7fafd"/><stop offset=".55" stop-color="#c6d3e1"/><stop offset="1" stop-color="#8496ad"/></linearGradient>
+ <radialGradient id="msKnob" cx=".36" cy=".3" r=".85"><stop offset="0" stop-color="#ffffff"/><stop offset=".55" stop-color="#cfdae7"/><stop offset="1" stop-color="#6f8199"/></radialGradient>
+ <radialGradient id="msLamp"><stop offset="0" stop-color="#fffbe6"/><stop offset=".35" stop-color="#ffd36b"/><stop offset="1" stop-color="#ffb43c" stop-opacity="0"/></radialGradient>
+ <linearGradient id="msBeam" x1="0" y1="1" x2="0" y2="0"><stop offset="0" stop-color="#ffe2a0" stop-opacity=".55"/><stop offset="1" stop-color="#ffe2a0" stop-opacity="0"/></linearGradient>
+ <filter id="msGlow" x="-60%" y="-60%" width="220%" height="220%"><feGaussianBlur stdDeviation="3"/></filter>
+ <filter id="msSh" x="-30%" y="-20%" width="160%" height="150%"><feDropShadow dx="0" dy="5" stdDeviation="4" flood-color="#000" flood-opacity=".5"/></filter>
+</defs>
+<ellipse cx="82" cy="242" rx="66" ry="6" fill="#000" opacity=".35" filter="url(#msGlow)"/>
+<g filter="url(#msSh)">
+ <path d="M18 230q2-15 22-17h88q20 2 22 17 0 9-10 9H28q-10 0-10-9Z" fill="url(#msDark)" stroke="rgba(73,243,255,.55)" stroke-width="1.2"/>
+ <path d="M30 216h104" stroke="rgba(255,255,255,.18)" stroke-width="1.4" stroke-linecap="round"/>
+ <circle cx="60" cy="203" r="15" fill="url(#msLamp)" filter="url(#msGlow)"/>
+ <ellipse cx="60" cy="207" rx="13" ry="4" fill="#0a1424" stroke="rgba(255,255,255,.2)"/>
+ <ellipse cx="60" cy="205" rx="7" ry="2.4" fill="#fff4c9"/>
+ <path d="M102 214v-26q0-12 9-21 15-16 12-48-3-34-23-56l-12-12-11 10 13 13q16 19 18 46 2 28-12 44-8 9-8 24v26Z" fill="url(#msArm)" stroke="#8597ad"/>
+ <path d="M111 172q13-15 10-50" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".7"/>
+ <g id="msStage">
+  <path d="M54 162h12l-1 38h-10Z" fill="url(#msBeam)"/>
+  <rect x="22" y="152" width="84" height="10" rx="3.5" fill="url(#msDark)" stroke="rgba(255,255,255,.22)"/>
+  <rect x="30" y="147" width="62" height="5" rx="1.3" fill="rgba(200,240,255,.5)" stroke="rgba(255,255,255,.75)" stroke-width=".7"/>
+  <ellipse cx="60" cy="149.5" rx="12" ry="1.9" fill="#e0283f"/>
+  <ellipse cx="57" cy="149" rx="4" ry=".7" fill="#ff9aa6" opacity=".8"/>
+  <path d="M26 147l10-2.5M94 147l-10-2.5" stroke="#cfdae7" stroke-width="2.2" stroke-linecap="round"/>
+ </g>
+ <path d="M44 44q0-8 8-8h42q9 0 9 9v28q0 9-9 9H53q-9 0-9-9Z" fill="url(#msArm)" stroke="#8597ad"/>
+ <path d="M50 42h40" stroke="#fff" stroke-width="2" stroke-linecap="round" opacity=".8"/>
+ <g transform="rotate(-30 66 40)"><rect x="56" y="2" width="20" height="40" rx="3" fill="url(#msTube)" stroke="#8597ad"/><rect x="52" y="-3" width="28" height="11" rx="3.5" fill="url(#msDark)" stroke="rgba(73,243,255,.65)"/><path d="M60 12v26" stroke="#fff" stroke-width="2" opacity=".75" stroke-linecap="round"/></g>
+ <g id="msTurret">
+  <path d="M50 82h44l-6 12H56Z" fill="url(#msDark)" stroke="rgba(255,255,255,.2)"/>
+  <g transform="rotate(-38 72 92)"><rect x="66.5" y="93" width="11" height="15" rx="2" fill="url(#msTube)" stroke="#7e90a7"/><rect x="66.5" y="102" width="11" height="2.6" fill="#ffd23f"/></g>
+  <g transform="rotate(0 72 92)"><rect x="66" y="93" width="12" height="22" rx="2" fill="url(#msTube)" stroke="#7e90a7"/><rect x="66" y="106" width="12" height="2.8" fill="#4cc3ff"/><rect x="68.5" y="115" width="7" height="4" rx="1" fill="#2a3a52"/></g>
+  <g transform="rotate(38 72 92)"><rect x="66.5" y="93" width="11" height="28" rx="2" fill="url(#msTube)" stroke="#7e90a7"/><rect x="66.5" y="113" width="11" height="2.8" fill="#ffffff" stroke="#9fb0c4" stroke-width=".5"/><rect x="69" y="121" width="6" height="4" rx="1" fill="#2a3a52"/></g>
+ </g>
+</g>
+<g class="knob" id="knob" tabindex="0" role="slider" aria-label="Odak düğmesi" aria-valuemin="0" aria-valuemax="100" aria-valuenow="10">
+ <circle cx="114" cy="176" r="30" fill="transparent"/>
+ <circle cx="114" cy="176" r="25" fill="rgba(53,238,252,.12)" filter="url(#msGlow)"/>
+ <g id="knobRot">
+  <circle class="kring" cx="114" cy="176" r="22" fill="url(#msKnob)" stroke="#6f8199" stroke-width="1.2"/>
+  <g stroke="#7d8ea6" stroke-width="1.6" stroke-linecap="round" id="knurl"></g>
+  <circle cx="114" cy="176" r="11" fill="url(#msDark)" stroke="rgba(255,255,255,.3)"/>
+  <circle cx="114" cy="158.5" r="2.8" fill="#35eefc"/>
+  <circle cx="110.5" cy="172" r="3" fill="#fff" opacity=".35"/>
+ </g>
+</g>
+</svg>`;
+
+ui.body.innerHTML = `
+<div class="kl-top">
+  <div class="zd-seg" id="modes" role="tablist" aria-label="Simülasyon modları">${MODES.map((m, i) => `<button role="tab" data-m="${m.id}" aria-label="${m.name} modu"><i>${i + 1}</i>${m.name}</button>`).join('')}</div>
+  <button class="hist" id="histBtn" aria-label="Tarihe Not Düşenler: Marcello Malpighi"><span class="hi">${SVGI.quill}</span><span><small>TARİHE NOT DÜŞENLER</small><b>Malpighi ve “alyuvar”</b></span></button>
+</div>
+<div class="lab" id="lab">
+  <div class="scope-wrap" id="scopeWrap">
+    <div class="bezel"></div>
+    <div class="scope" id="scope">
+      <canvas id="cv" role="img" aria-label="Mikroskop görüş alanı: plazma sıvısında alyuvarlar, akyuvarlar ve kan pulcukları"></canvas>
+      ${overlaySVG()}
+      <canvas id="uc" aria-label="Görüş alanına dokunarak hücre seç"></canvas>
+      <div class="blurpill" id="blurPill"><i></i>Görüntü bulanık · Odak düğmesini çevir</div>
+    </div>
+    <div class="magtag" id="magTag">BÜYÜTME <b>400×</b></div>
+  </div>
+  <div class="ctrl" id="ctrl">
+    ${MSCOPE}
+    <div class="ctrl-r">
+      <div class="fwrap"><div class="fl"><label for="focusR">ODAK</label><span class="fstat" id="fStat">BULANIK</span></div>
+        <input type="range" class="kr" id="focusR" min="0" max="1000" value="100" aria-label="Odak ayarı kaydırıcısı"></div>
+      <div class="mag" id="mag" role="group" aria-label="Büyütme seçici"><div class="mh">BÜYÜTME</div>${[100, 400, 1000].map(m => `<button data-mag="${m}" aria-label="${m} kat büyütme">${m}×</button>`).join('')}</div>
+    </div>
+  </div>
+  <div class="panel" id="panel">
+    <div class="pane zd-card" id="pane"></div>
+    <div class="comps zd-card" id="comps"></div>
+  </div>
+</div>
+<div class="don" id="don" hidden></div>`;
+
+const $ = (s) => document.querySelector(s);
+const cv = $('#cv'), uc = $('#uc'), g = cv.getContext('2d'), u = uc.getContext('2d');
+const labEl = $('#lab'), donEl = $('#don'), paneEl = $('#pane'), compsEl = $('#comps'), scopeWrap = $('#scopeWrap');
+const knobEl = $('#knob'), knobRot = $('#knobRot'), focusR = $('#focusR'), fStat = $('#fStat'), blurPill = $('#blurPill');
+{ // tırtıklar
+  let s = ''; for (let i = 0; i < 28; i++) { const a = i / 28 * TAU; s += `<line x1="${114 + Math.cos(a) * 16.5}" y1="${176 + Math.sin(a) * 16.5}" x2="${114 + Math.cos(a) * 21}" y2="${176 + Math.sin(a) * 21}"/>`; }
+  $('#knurl').innerHTML = s;
+}
+
+/* ---------------- Durum ---------------- */
+const st = {
+  mode: 'tani', mag: 400, magL: Math.log(400), magCur: 400, focus: .1, fT: rnd(.56, .74), sharp: false, everFocused: false,
+  score: 0, streak: 0, t: 0, comp: 'rbc', zoomBlur: 0, lastBlur: -1, lastTick: .1, started: false
+};
+let Si = 480, C = 240, D = 1, k = 1;
+const FOK = .035;
+const timer = new ZD.Timer(t => ui.stat('time', ZD.Timer.fmt(t)));
+
+/* ---------------- Sprite üretimi ---------------- */
+const SPR = {};
+const BL = [0, 4, 9, 16];
+function blurInto(src, px) {
+  const c = mk(src.width, src.height), x = c.getContext('2d');
+  if (px <= 0) { x.drawImage(src, 0, 0); return c; }
+  if (HAS_FILTER) { x.filter = `blur(${px}px)`; x.drawImage(src, 0, 0); x.filter = 'none'; return c; }
+  const n = 10; x.globalAlpha = .16; for (let i = 0; i < n; i++) { const a = i / n * TAU, d = px * (.45 + .5 * (i % 2)); x.drawImage(src, Math.cos(a) * d, Math.sin(a) * d); } x.globalAlpha = .3; x.drawImage(src, 0, 0); return c;
+}
+function withSmall(c) { const s = mk(c.width / 4, c.height / 4), x = s.getContext('2d'); x.imageSmoothingQuality = 'high'; x.drawImage(c, 0, 0, s.width, s.height); c.sm = s; return c; }
+function hsl(h, s, l) { return `hsl(${((h % 360) + 360) % 360},${s}%,${l}%)`; }
+function rbcBase(v, oxy) {
+  const Z = 200, c = mk(Z, Z), x = c.getContext('2d'), R = 72, X = 100, Y = 100, h = [0, 7, -6][v];
+  const P = oxy ? { a: hsl(358 + h, 82, 61), b: hsl(354 + h, 76, 47), c: hsl(352 + h, 80, 37), d: hsl(350 + h, 85, 23), pale: '255,188,172', rim: '255,224,212', ed: '95,5,20', sh: '90,30,0' }
+    : { a: hsl(252, 55, 60), b: hsl(256, 50, 45), c: hsl(259, 54, 34), d: hsl(263, 62, 20), pale: '206,196,255', rim: '220,212,255', ed: '25,10,70', sh: '40,10,70' };
+  x.save(); if (HAS_FILTER) x.filter = 'blur(7px)'; x.fillStyle = `rgba(${P.sh},.32)`; x.beginPath(); x.ellipse(X + 6, Y + 11, R, R * .97, 0, 0, TAU); x.fill(); x.restore();
+  let gr = x.createRadialGradient(X, Y, 0, X, Y, R);
+  gr.addColorStop(0, P.a); gr.addColorStop(.36, P.a); gr.addColorStop(.62, P.b); gr.addColorStop(.86, P.c); gr.addColorStop(1, P.d);
+  x.fillStyle = gr; x.beginPath(); x.arc(X, Y, R, 0, TAU); x.fill();
+  x.save(); x.beginPath(); x.arc(X, Y, R, 0, TAU); x.clip();
+  gr = x.createLinearGradient(X - R, Y - R, X + R, Y + R); gr.addColorStop(0, 'rgba(255,255,255,.3)'); gr.addColorStop(.45, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(0,0,0,.3)');
+  x.fillStyle = gr; x.fillRect(0, 0, Z, Z);
+  gr = x.createRadialGradient(X + R * .1, Y + R * .12, 0, X, Y, R * .56); gr.addColorStop(0, `rgba(${P.pale},.6)`); gr.addColorStop(.6, `rgba(${P.pale},.16)`); gr.addColorStop(1, `rgba(${P.pale},0)`);
+  x.fillStyle = gr; x.beginPath(); x.arc(X, Y, R * .56, 0, TAU); x.fill();
+  gr = x.createRadialGradient(X + R * .15, Y + R * .17, R * .18, X + R * .05, Y + R * .06, R * .58); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(.72, 'rgba(0,0,0,0)'); gr.addColorStop(1, `rgba(${P.ed},.42)`);
+  x.fillStyle = gr; x.beginPath(); x.arc(X, Y, R * .58, 0, TAU); x.fill();
+  x.restore();
+  x.save(); if (HAS_FILTER) x.filter = 'blur(3px)'; x.lineCap = 'round';
+  x.strokeStyle = `rgba(${P.rim},.78)`; x.lineWidth = R * .13; x.beginPath(); x.arc(X, Y, R * .8, Math.PI * 1.06, Math.PI * 1.64); x.stroke();
+  x.strokeStyle = `rgba(${P.rim},.25)`; x.lineWidth = R * .1; x.beginPath(); x.arc(X, Y, R * .8, Math.PI * .08, Math.PI * .55); x.stroke(); x.restore();
+  x.save(); if (HAS_FILTER) x.filter = 'blur(1.6px)'; x.fillStyle = 'rgba(255,255,255,.66)'; x.beginPath(); x.ellipse(X - R * .45, Y - R * .5, R * .17, R * .07, -.75, 0, TAU); x.fill(); x.restore();
+  x.strokeStyle = `rgba(${P.ed},.75)`; x.lineWidth = 2.2; x.beginPath(); x.arc(X, Y, R - 1, 0, TAU); x.stroke();
+  x.strokeStyle = `rgba(${P.rim},.4)`; x.lineWidth = 1.3; x.beginPath(); x.arc(X, Y, R + .5, Math.PI * .98, Math.PI * 1.72); x.stroke();
+  return c;
+}
+function pltBase(v) {
+  const Z = 80, c = mk(Z, Z), x = c.getContext('2d'), R = 22, X = 40, Y = 40;
+  let seed = v * 97 + 13; const sr = () => { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+  const n = 7 + v % 3, P = [];
+  for (let i = 0; i < n; i++) { const a = i / n * TAU + sr() * .5, r = R * (.6 + sr() * .42); P.push([X + Math.cos(a) * r * 1.12, Y + Math.sin(a) * r * .86]); }
+  const path = (ox = 0, oy = 0) => { x.beginPath(); for (let i = 0; i <= n; i++) { const p = P[i % n], q = P[(i + 1) % n], mx = (p[0] + q[0]) / 2 + ox, my = (p[1] + q[1]) / 2 + oy; if (!i) x.moveTo(mx, my); else x.quadraticCurveTo(p[0] + ox, p[1] + oy, mx, my); } x.closePath(); };
+  x.save(); if (HAS_FILTER) x.filter = 'blur(3px)'; x.fillStyle = 'rgba(80,30,40,.3)'; path(2, 4); x.fill(); x.restore();
+  const gr = x.createRadialGradient(X - 4, Y - 5, 1, X, Y, R * 1.1); gr.addColorStop(0, '#fff3c6'); gr.addColorStop(.42, '#f1c76c'); gr.addColorStop(.8, '#c08bd2'); gr.addColorStop(1, '#8a58b4');
+  x.fillStyle = gr; path(); x.fill();
+  x.fillStyle = 'rgba(112,48,150,.6)'; for (let i = 0; i < 5; i++) { x.beginPath(); x.arc(X + (sr() - .5) * R * .9, Y + (sr() - .5) * R * .7, 1.6 + sr() * 1.6, 0, TAU); x.fill(); }
+  x.strokeStyle = 'rgba(98,42,128,.75)'; x.lineWidth = 1.4; path(); x.stroke();
+  x.fillStyle = 'rgba(255,255,255,.6)'; x.beginPath(); x.ellipse(X - 6, Y - 7, 6, 2.4, -.5, 0, TAU); x.fill();
+  return c;
+}
+function plasmaTex() {
+  const T = 256, c = mk(T, T), x = c.getContext('2d');
+  for (let i = 0; i < 44; i++) {
+    const px = Math.random() * T, py = Math.random() * T, r = rnd(14, 52), light = Math.random() < .55;
+    const col = light ? '255,250,228' : '165,105,35', a = light ? rnd(.06, .13) : rnd(.03, .075);
+    for (const ox of [-T, 0, T]) for (const oy of [-T, 0, T]) {
+      const cx = px + ox, cy = py + oy; if (cx + r < 0 || cx - r > T || cy + r < 0 || cy - r > T) continue;
+      const gr = x.createRadialGradient(cx, cy, 0, cx, cy, r); gr.addColorStop(0, `rgba(${col},${a})`); gr.addColorStop(1, `rgba(${col},0)`);
+      x.fillStyle = gr; x.beginPath(); x.arc(cx, cy, r, 0, TAU); x.fill();
+    }
+  }
+  return c;
+}
+function buildSprites() {
+  SPR.rbc = [0, 1, 2].map(v => { const b = rbcBase(v, true); return BL.map(p => withSmall(blurInto(b, p))); });
+  SPR.rbcD = [0].map(v => { const b = rbcBase(v, false); return BL.map(p => withSmall(blurInto(b, p))); });
+  SPR.plt = [0, 1, 2, 3, 4, 5].map(v => { const b = pltBase(v); return BL.map(p => withSmall(blurInto(b, p * .45))); });
+  SPR.tex = plasmaTex(); SPR.tex2 = plasmaTex();
+}
+buildSprites();
+
+/* ---------------- Çizim yardımcıları ---------------- */
+function inView(sx, sy, r) { const dx = sx - C, dy = sy - C, R = C + r; return dx * dx + dy * dy < R * R; }
+function blit(spr, R0, sx, sy, r, a, b, c, d, al) {
+  let s = spr, R = R0; if (r * D < R0 * .42 && spr.sm) { s = spr.sm; R = R0 / 4; }
+  const f = r / R * D, h = s.width / 2; g.globalAlpha = al; g.setTransform(f * a, f * b, f * c, f * d, D * sx, D * sy); g.drawImage(s, -h, -h);
+}
+function resetT() { g.setTransform(D, 0, 0, D, 0, 0); g.globalAlpha = 1; }
+function drawRBC(c, lvl, al, set, scl = 1) {
+  const r = c.r * k * (1 + .07 * c.z) * scl, sx = C + c.x * k, sy = C + c.y * k; if (!inView(sx, sy, r * 1.4)) return;
+  const fl = c.fl, ca = Math.cos(c.ax), sa = Math.sin(c.ax);
+  const m11 = ca * ca + fl * sa * sa, m12 = ca * sa * (1 - fl), m22 = sa * sa + fl * ca * ca;
+  blit((set || SPR.rbc)[set ? 0 : c.v][lvl], 72, sx, sy, r, m11, m12, m12, m22, al);
+}
+function drawPLT(c, lvl, al) {
+  const r = c.r * k * (1 + .07 * c.z), sx = C + c.x * k, sy = C + c.y * k; if (!inView(sx, sy, r * 2)) return;
+  const ca = Math.cos(c.ax), sa = Math.sin(c.ax); blit(SPR.plt[c.v][lvl], 22, sx, sy, r, ca, sa, -sa, ca, al);
+}
+function drawPlasma(ox, oy) {
+  const gr = g.createRadialGradient(Si * .44, Si * .4, Si * .02, Si * .5, Si * .5, Si * .68);
+  gr.addColorStop(0, '#fcecc0'); gr.addColorStop(.5, '#f2d38c'); gr.addColorStop(1, '#cf9a4e');
+  g.fillStyle = gr; g.fillRect(0, 0, Si, Si);
+  tileTex(SPR.tex, ox * k, oy * k, Math.max(96, 140 * k), 1);
+  tileTex(SPR.tex2, ox * k * .55, oy * k * .55, Math.max(70, 86 * k), .75);
+}
+function tileTex(tex, ox, oy, T, a) {
+  g.globalAlpha = a; const x0 = ((ox % T) + T) % T - T, y0 = ((oy % T) + T) % T - T;
+  for (let x = x0; x < Si; x += T) for (let y = y0; y < Si; y += T) g.drawImage(tex, x, y, T + .6, T + .6);
+  g.globalAlpha = 1;
+}
+function lampGlow() {
+  const gr = g.createRadialGradient(Si * .46, Si * .44, 0, Si * .5, Si * .5, Si * .55);
+  gr.addColorStop(0, 'rgba(255,253,240,.16)'); gr.addColorStop(1, 'rgba(255,253,240,0)'); g.fillStyle = gr; g.fillRect(0, 0, Si, Si);
+}
+function mkWbcDetail(c) {
+  c.gran = Array.from({ length: 30 }, () => ({ rho: Math.sqrt(Math.random()) * .86, th: rnd(0, TAU), s: rnd(.03, .055) }));
+  const t0 = rnd(0, TAU), lr = rnd(.24, .3);
+  c.lobes = [-1, 0, 1].map(i => ({ x: Math.cos(t0 + i * 1.05) * lr + Math.cos(t0) * -.08, y: Math.sin(t0 + i * 1.05) * lr + Math.sin(t0) * -.08, r: rnd(.2, .25), a: rnd(0, TAU) }));
+  c.bumps = []; c.ph = rnd(0, TAU);
+}
+const WP = new Float32Array(96);
+function wbcPath(c, sx, sy, R, t) {
+  const N = 44;
+  for (let i = 0; i < N; i++) {
+    const a = i / N * TAU;
+    let rr = 1 + .045 * Math.sin(3 * a + c.ph + t * 1.1) + .03 * Math.sin(5 * a - t * .8 + c.ph * 1.7) + .018 * Math.sin(7 * a + t * 1.6);
+    for (const b of c.bumps) { const d = wrapA(a - b.a); rr += b.amp * Math.exp(-d * d / (2 * b.w * b.w)); }
+    WP[2 * i] = sx + Math.cos(a) * R * rr; WP[2 * i + 1] = sy + Math.sin(a) * R * rr;
+  }
+  g.beginPath(); g.moveTo((WP[0] + WP[2 * (N - 1)]) / 2, (WP[1] + WP[2 * (N - 1) + 1]) / 2);
+  for (let i = 0; i < N; i++) { const j = (i + 1) % N; g.quadraticCurveTo(WP[2 * i], WP[2 * i + 1], (WP[2 * i] + WP[2 * j]) / 2, (WP[2 * i + 1] + WP[2 * j + 1]) / 2); }
+  g.closePath();
+}
+function drawWBC(c, t, al = 1, veil = 0) {
+  const R = c.r * k, sx = C + c.x * k, sy = C + c.y * k; if (!inView(sx, sy, R * 2)) return;
+  resetT(); g.save(); g.globalAlpha = al * (c.fade ?? 1);
+  if (veil) { wbcPath(c, sx, sy, R, t); g.fillStyle = `rgba(236,228,255,${.42 * veil})`; g.fill(); g.strokeStyle = `rgba(255,255,255,${.7 * veil})`; g.lineWidth = Math.max(1, R * .04); g.stroke(); g.restore(); return; }
+  wbcPath(c, sx, sy, R, t);
+  g.shadowColor = 'rgba(95,50,0,.38)'; g.shadowBlur = R * .5; g.shadowOffsetY = R * .16;
+  const gr = g.createRadialGradient(sx - R * .32, sy - R * .36, R * .05, sx, sy, R * 1.18);
+  gr.addColorStop(0, 'rgba(255,255,255,.97)'); gr.addColorStop(.45, 'rgba(241,234,255,.92)'); gr.addColorStop(.8, 'rgba(214,199,247,.9)'); gr.addColorStop(1, 'rgba(172,148,230,.94)');
+  g.fillStyle = gr; g.fill(); g.shadowColor = 'transparent'; g.shadowBlur = 0; g.shadowOffsetY = 0;
+  g.fillStyle = 'rgba(158,112,214,.5)';
+  for (const q of c.gran) { const a = q.th + Math.sin(t * .6 + q.th * 3) * .06; g.beginPath(); g.arc(sx + Math.cos(a) * q.rho * R, sy + Math.sin(a) * q.rho * R, Math.max(.6, q.s * R), 0, TAU); g.fill(); }
+  const L = c.lobes;
+  g.strokeStyle = '#6a3fc0'; g.lineWidth = R * .15; g.lineCap = 'round'; g.beginPath();
+  L.forEach((l, i) => { const x = sx + l.x * R, y = sy + l.y * R; i ? g.lineTo(x, y) : g.moveTo(x, y); }); g.stroke();
+  for (const l of L) {
+    const x = sx + l.x * R, y = sy + l.y * R, r = l.r * R;
+    const ng = g.createRadialGradient(x - r * .35, y - r * .4, r * .1, x, y, r * 1.05); ng.addColorStop(0, '#bb95f5'); ng.addColorStop(.55, '#7c4dd6'); ng.addColorStop(1, '#45228e');
+    g.fillStyle = ng; g.beginPath(); g.ellipse(x, y, r, r * .84, l.a, 0, TAU); g.fill();
+    g.fillStyle = 'rgba(255,255,255,.3)'; g.beginPath(); g.ellipse(x - r * .3, y - r * .36, r * .34, r * .15, -.6, 0, TAU); g.fill();
+  }
+  wbcPath(c, sx, sy, R, t);
+  g.strokeStyle = 'rgba(176,146,240,.38)'; g.lineWidth = Math.max(1.6, R * .13); g.stroke();
+  g.strokeStyle = 'rgba(255,255,255,.88)'; g.lineWidth = Math.max(1, R * .045); g.stroke();
+  g.fillStyle = 'rgba(255,255,255,.6)'; g.beginPath(); g.ellipse(sx - R * .45, sy - R * .5, R * .2, R * .075, -.7, 0, TAU); g.fill();
+  g.restore();
+}
+function drawMicrobe(m, t) {
+  const sx = C + m.x * k, sy = C + m.y * k, s = k * (m.sc ?? 1); if (!inView(sx, sy, 6 * s)) return;
+  resetT(); g.save(); g.translate(sx, sy); g.rotate(m.a); g.globalAlpha = m.al ?? 1;
+  const rod = m.type === 'rod', L = rod ? 2.9 : 0, W = rod ? 1.25 : 1.75, dg = m.dig || 0;
+  const n = rod ? 20 : 14; g.strokeStyle = dg ? `rgba(170,150,90,${.8 - dg * .6})` : 'rgba(150,236,110,.85)'; g.lineWidth = Math.max(.8, .13 * s); g.lineCap = 'round'; g.beginPath();
+  for (let i = 0; i < n; i++) {
+    const a = i / n * TAU, ex = L + W, px = Math.cos(a) * ex, py = Math.sin(a) * W;
+    let nx = Math.cos(a) / ex, ny = Math.sin(a) / W; const nl = Math.hypot(nx, ny); nx /= nl; ny /= nl;
+    const wig = Math.sin(t * 9 + i * 1.7 + m.ph) * .55, len = 1.25;
+    g.moveTo(px * s, py * s); g.quadraticCurveTo((px + nx * len * .5 - ny * wig * .5) * s, (py + ny * len * .5 + nx * wig * .5) * s, (px + nx * len - ny * wig * .2) * s, (py + ny * len + nx * wig * .2) * s);
+  }
+  g.stroke();
+  const gr = g.createLinearGradient(0, -W * s, 0, W * s);
+  gr.addColorStop(0, dg ? mixHex('#d7ff8f', '#e0c48a', dg) : '#d7ff8f'); gr.addColorStop(.45, dg ? mixHex('#6fd34e', '#a5824c', dg) : '#6fd34e'); gr.addColorStop(1, dg ? mixHex('#237a35', '#6b4f2a', dg) : '#237a35');
+  g.shadowColor = 'rgba(40,120,30,.5)'; g.shadowBlur = 6;
+  g.fillStyle = gr; if (rod) rrect(g, -(L + W) * s, -W * s, 2 * (L + W) * s, 2 * W * s, W * s); else { g.beginPath(); g.arc(0, 0, W * s, 0, TAU); }
+  g.fill(); g.shadowBlur = 0; g.strokeStyle = 'rgba(20,80,30,.85)'; g.lineWidth = Math.max(.8, .09 * s); g.stroke();
+  g.fillStyle = 'rgba(30,110,40,.55)'; for (let i = -1; i <= 1; i++) { g.beginPath(); g.arc(i * L * .55 * s, W * .15 * s, W * .2 * s, 0, TAU); g.fill(); }
+  g.fillStyle = 'rgba(255,255,255,.55)'; g.beginPath(); g.ellipse(-L * .25 * s, -W * .45 * s, (L * .6 + W * .45) * s, W * .2 * s, 0, 0, TAU); g.fill();
+  g.restore();
+}
+function drawGas(x, y, r, type, al = 1) {
+  const o = type === 'o2'; resetT(); g.save(); g.globalAlpha = al;
+  g.shadowColor = o ? 'rgba(255,60,90,.7)' : 'rgba(80,110,210,.7)'; g.shadowBlur = r * .9;
+  const gr = g.createRadialGradient(x - r * .35, y - r * .4, r * .1, x, y, r);
+  gr.addColorStop(0, o ? '#ffd5db' : '#eaf0ff'); gr.addColorStop(.5, o ? '#ff5a72' : '#8fa4d8'); gr.addColorStop(1, o ? '#bd1638' : '#3f5089');
+  g.fillStyle = gr; g.beginPath(); g.arc(x, y, r, 0, TAU); g.fill(); g.shadowBlur = 0;
+  g.strokeStyle = 'rgba(255,255,255,.75)'; g.lineWidth = 1; g.stroke();
+  g.fillStyle = '#fff'; g.font = `800 ${Math.max(9, Math.round(r * (o ? .95 : .78)))}px ${FONT}`; g.textAlign = 'center'; g.textBaseline = 'middle';
+  g.fillText(o ? 'O₂' : 'CO₂', x, y + r * .06); g.restore();
+}
+/* UI katmanı */
+function pill(x, y, txt, col = '#35eefc', o = {}) {
+  const fs = o.fs || 13; u.font = `700 ${fs}px ${FONT}`; const w = u.measureText(txt).width + 22, h = fs + 13;
+  const lim = Math.max(0, C - w / 2 - 12), ddx = x - C, ddy = y - C, dd = Math.hypot(ddx, ddy); if (dd > lim) { x = C + ddx / dd * lim; y = C + ddy / dd * lim; }
+  let bx = clamp(x - w / 2, 8, Si - w - 8), by = clamp(y - h / 2, 8, Si - h - 8);
+  u.save(); u.shadowColor = 'rgba(0,0,0,.5)'; u.shadowBlur = 12; u.fillStyle = o.bg || 'rgba(7,20,36,.9)'; rrect(u, bx, by, w, h, h / 2); u.fill(); u.shadowBlur = 0;
+  u.strokeStyle = col; u.lineWidth = 1.6; u.stroke();
+  u.fillStyle = o.tc || '#fff'; u.textAlign = 'center'; u.textBaseline = 'middle'; u.fillText(txt, bx + w / 2, by + h / 2 + .5); u.restore();
+  return { bx, by, w, h };
+}
+function callout(ax, ay, txt, col, al = 1, side) {
+  u.globalAlpha = al; const dx = side ?? (ax > C ? -1 : 1);
+  const lx = ax + dx * 46, ly = ay - 40;
+  u.save(); u.strokeStyle = col; u.lineWidth = 1.6; u.shadowColor = col; u.shadowBlur = 6;
+  u.beginPath(); u.moveTo(ax, ay); u.lineTo(lx, ly); u.stroke(); u.fillStyle = col; u.beginPath(); u.arc(ax, ay, 2.6, 0, TAU); u.fill(); u.restore();
+  pill(lx, ly, txt, col); u.globalAlpha = 1;
+}
+function ring(x, y, r, col, t, al = 1) {
+  u.save(); u.globalAlpha = al; u.strokeStyle = col; u.shadowColor = col; u.shadowBlur = 10; u.lineWidth = 2.4;
+  u.beginPath(); u.arc(x, y, r, 0, TAU); u.stroke();
+  u.lineWidth = 3.2; u.setLineDash([6, 7]); u.lineDashOffset = -t * 30; u.beginPath(); u.arc(x, y, r + 5, 0, TAU); u.stroke(); u.restore();
+}
+function xMark(x, y, al) {
+  u.save(); u.globalAlpha = al; u.strokeStyle = '#ff5468'; u.shadowColor = '#ff5468'; u.shadowBlur = 10; u.lineWidth = 3.4; u.lineCap = 'round';
+  u.beginPath(); u.arc(x, y, 16, 0, TAU); u.stroke(); u.beginPath(); u.moveTo(x - 6, y - 6); u.lineTo(x + 6, y + 6); u.moveTo(x + 6, y - 6); u.lineTo(x - 6, y + 6); u.stroke(); u.restore();
+}
+/* geçici etiketler (her sahne) */
+let TAGS = [];
+function tagCell(c, kind, ms = 2600) { TAGS = TAGS.filter(t => t.c !== c); TAGS.push({ c, kind, t0: st.t, ms: ms / 1000 }); if (TAGS.length > 4) TAGS.shift(); }
+function drawTags() {
+  TAGS = TAGS.filter(t => st.t - t.t0 < t.ms);
+  for (const t of TAGS) {
+    const al = Math.min(1, (t.ms - (st.t - t.t0)) * 2.5), col = COL[t.kind] || '#35eefc';
+    if (t.c) { const sx = C + t.c.x * k, sy = C + t.c.y * k, r = (t.c.r || 2) * k; ring(sx, sy, r + 5, col, st.t, al); callout(sx + r * .5, sy - r * .5, t.label || LBL[t.kind], col, al); }
+    else { ring(t.x, t.y, 14, col, st.t, al); callout(t.x, t.y - 4, LBL[t.kind], col, al); }
+  }
+}
+
+/* =====================================================================
+   SAHNE 1 — Hücreleri Tanı (torus dünya)
+   ===================================================================== */
+let CID = 0;
+function mkCell(kind, x, y, z) {
+  const c = { k: kind, x, y, z, bx: 0, by: 0, fade: 1, found: false, id: ++CID, fl: 1 };
+  if (kind === 'rbc') { c.r = 3.75 * rnd(.94, 1.06); c.v = (Math.random() * 3) | 0; const side = Math.random() < .3; c.tilt = side ? rnd(0, TAU) : rnd(-.45, .45); c.vt = Math.random() < .35 ? rnd(-.35, .35) : 0; c.ax = rnd(0, Math.PI); c.vax = rnd(-.12, .12); c.fl = .2 + .8 * Math.abs(Math.cos(c.tilt)); }
+  else if (kind === 'plt') { c.r = 1.5 * rnd(.8, 1.2); c.v = (Math.random() * 6) | 0; c.ax = rnd(0, TAU); c.vax = rnd(-.5, .5); }
+  else { c.r = 6.2 * rnd(.95, 1.08); mkWbcDetail(c); }
+  return c;
+}
+const TN = { W: 600, cells: [], specks: [], ox: 0, oy: 0 };
+function overlapAny(arr, c, pad = .4) { for (const o of arr) { if (o.z !== c.z) continue; const dx = o.x - c.x, dy = o.y - c.y, m = o.r + c.r + pad; if (dx * dx + dy * dy < m * m) return true; } return false; }
+function taniInit() {
+  const W = TN.W, H = W / 2, hash = new Map(), G = 12;
+  const key = (x, y) => Math.floor(x / G) + ',' + Math.floor(y / G);
+  const near = (c) => { const gx = Math.floor(c.x / G), gy = Math.floor(c.y / G), out = []; for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) { const b = hash.get((gx + i) + ',' + (gy + j)); if (b) out.push(...b); } return out; };
+  const add = (c) => { const kk = key(c.x, c.y); if (!hash.has(kk)) hash.set(kk, []); hash.get(kk).push(c); TN.cells.push(c); };
+  const place = (kind, z, x0, y0) => { for (let t = 0; t < 14; t++) { const c = mkCell(kind, x0 ?? rnd(-H, H), y0 ?? rnd(-H, H), z); if (!overlapAny(near(c), c)) { add(c); return c; } } return null; };
+  TN.cells = []; TN.ox = TN.oy = 0;
+  place('wbc', 0, -14, 9); place('wbc', 0, 200, -120);
+  for (let i = 0; i < 8; i++) place('wbc', 0);
+  for (let i = 0; i < 1900; i++) { const r = Math.random(); place('rbc', r < .72 ? 0 : r < .91 ? -1 : 1); }
+  for (let i = 0; i < 130; i++) { const r = Math.random(); place('plt', r < .8 ? 0 : -1); }
+  TN.specks = Array.from({ length: 160 }, () => ({ x: rnd(-H, H), y: rnd(-H, H), r: rnd(.15, .45), bx: 0, by: 0 }));
+  TN.total = { rbc: TN.cells.filter(c => c.k === 'rbc').length, plt: TN.cells.filter(c => c.k === 'plt').length, wbc: TN.cells.filter(c => c.k === 'wbc').length };
+}
+const taniViewR = () => 27.8 * 1000 / st.magCur;
+function ou(c, A, dt) { c.bx += (-c.bx * 1.2 + (Math.random() - .5) * A) * dt; c.by += (-c.by * 1.2 + (Math.random() - .5) * A) * dt; }
+const wrapW = (v, W) => ((v + W / 2) % W + W) % W - W / 2;
+function taniUpdate(dt) {
+  const fx = 2 + .6 * Math.sin(st.t * .11), fy = .5 * Math.sin(st.t * .07 + 1); TN.ox += fx * dt; TN.oy += fy * dt;
+  const W = TN.W, vr = taniViewR() + 10;
+  for (const c of TN.cells) {
+    ou(c, c.k === 'plt' ? 36 : c.k === 'rbc' ? 15 : 6, dt);
+    const pf = 1 + .14 * c.z; c.x = wrapW(c.x + (fx * pf + c.bx) * dt, W); c.y = wrapW(c.y + (fy * pf + c.by) * dt, W);
+    if (c.k === 'rbc') { if (c.vt) { c.tilt += c.vt * dt; c.fl = .2 + .8 * Math.abs(Math.cos(c.tilt)); } c.ax += c.vax * dt; }
+    else if (c.k === 'plt') c.ax += c.vax * dt;
+    if (c.fade < 1) c.fade = Math.min(1, c.fade + dt * .7);
+  }
+  for (const s of TN.specks) { ou(s, 60, dt); s.x = wrapW(s.x + (fx + s.bx) * dt, W); s.y = wrapW(s.y + (fy + s.by) * dt, W); }
+  // yumuşak itme (odak katmanı, görüş alanı içi)
+  const G = 10, hash = new Map(), list = [];
+  for (const c of TN.cells) { if (c.z !== 0 || Math.abs(c.x) > vr || Math.abs(c.y) > vr) continue; list.push(c); const kk = Math.floor(c.x / G) * 4096 + Math.floor(c.y / G); let b = hash.get(kk); if (!b) hash.set(kk, b = []); b.push(c); }
+  const kf = Math.min(1, dt * 8);
+  for (const c of list) {
+    const gx = Math.floor(c.x / G), gy = Math.floor(c.y / G);
+    for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
+      const b = hash.get((gx + i) * 4096 + gy + j); if (!b) continue;
+      for (const o of b) { if (o.id <= c.id) continue; const dx = o.x - c.x, dy = o.y - c.y, m = (o.r + c.r) * (c.k === 'rbc' && o.k === 'rbc' ? .92 : 1); const d2 = dx * dx + dy * dy; if (d2 < m * m && d2 > 1e-6) { const d = Math.sqrt(d2), p = (m - d) * .5 * kf; c.x -= dx / d * p; c.y -= dy / d * p; o.x += dx / d * p; o.y += dy / d * p; } }
+    }
+  }
+  if (GM.on && !GM.done) { GM.ensT -= dt; if (GM.ensT <= 0) { GM.ensT = 2.5; ensureTask(); } }
+}
+function layerLvl(z) { const d = st.sharp ? 0 : st.focus - st.fT; return clamp(Math.floor(Math.abs(d * 8 + z) * 2.2 + .25), 0, 3); }
+function taniDraw() {
+  drawPlasma(TN.ox, TN.oy);
+  const L = { '-1': layerLvl(-1), '0': layerLvl(0), '1': layerLvl(1) };
+  const pass = (z, al) => {
+    for (const c of TN.cells) {
+      if (c.z !== z || c.k === 'wbc') continue;
+      let lv = L[z], a = al; if (c.fade < 1) { lv = Math.max(lv, Math.round((1 - c.fade) * 3)); a *= c.fade; }
+      if (c.k === 'rbc') drawRBC(c, lv, a); else drawPLT(c, lv, a);
+    }
+  };
+  pass(-1, .72); resetT();
+  g.fillStyle = 'rgba(120,78,28,.35)';
+  for (const s of TN.specks) { const sx = C + s.x * k, sy = C + s.y * k; if (!inView(sx, sy, 2)) continue; g.beginPath(); g.arc(sx, sy, Math.max(.7, s.r * k), 0, TAU); g.fill(); }
+  pass(0, 1); resetT();
+  for (const c of TN.cells) if (c.k === 'wbc') drawWBC(c, st.t, L[0] >= 2 ? .8 : 1);
+  pass(1, .62); resetT();
+  lampGlow();
+}
+function taniDrawUI() {
+  for (const m of GM.marks) {
+    const al = m.bad ? Math.max(0, 1 - (st.t - m.t0) / 1.6) : 1;
+    if (m.bad) { if (al > 0) xMark(m.x, m.y, al); continue; }
+    const age = st.t - m.t0, la = age < 3 ? 1 : Math.max(.0, 1 - (age - 3) * 1.5);
+    if (m.c) { const sx = C + m.c.x * k, sy = C + m.c.y * k, r = m.c.r * k * (m.c.k === 'rbc' ? 1 : 1.05); if (!inView(sx, sy, 0)) continue; ring(sx, sy, r + 5, m.col, st.t, age < 3 ? 1 : .55); if (la > 0) callout(sx + r * .6, sy - r * .6, m.lab, m.col, la); }
+    else { if (age > 3.5) continue; const sx = m.x, sy = m.y; ring(sx, sy, 16, m.col, st.t, Math.min(1, 3.5 - age)); callout(sx, sy - 6, m.lab, m.col, Math.min(1, 3.5 - age)); }
+  }
+  GM.marks = GM.marks.filter(m => !(m.bad && st.t - m.t0 > 1.6) && !(!m.c && st.t - m.t0 > 3.5));
+  drawTags();
+}
+function pickIn(cells, sx, sy, kinds) {
+  let best = null, bs = 1e9;
+  for (const c of cells) {
+    if (kinds && !kinds.includes(c.k)) continue; if (c.fade < .4 || c.state === 'out' || c.state === 'dead') continue;
+    const cx = C + c.x * k, cy = C + c.y * k, r = (c.r || 1.5) * k * (c.k === 'mic' ? 1.6 : 1);
+    const hr = Math.max(r * 1.08, c.k === 'plt' || c.k === 'mic' ? 17 : 14), d = Math.hypot(cx - sx, cy - sy);
+    if (d > hr) continue; const s = d / hr * ((c.z || 0) ? 1.35 : 1) * (c.k === 'plt' ? .8 : 1); if (s < bs) { bs = s; best = c; }
+  }
+  return best;
+}
+
+/* -------- Görev oyunu -------- */
+const TASKS = [
+  { k: 'rbc', n: 3, t: '3 alyuvar bul', h: 'Kırmızı, ortası çukur disk şeklindeki hücreler. Görüş alanında en çok bunlar var.', lab: 'ALYUVAR', col: '#ff7a8a', comp: 'rbc' },
+  { k: 'wbc', n: 1, t: '1 akyuvar bul', h: 'Büyük, beyaz-lila renkli; içinde mor, boğumlu bir yapı görünen hücre. Sayıca en az olan hücre!', lab: 'AKYUVAR', col: '#c6a8ff', comp: 'wbc' },
+  { k: 'plt', n: 2, t: '2 kan pulcuğu bul', h: 'Alyuvarlardan çok daha küçük, düzensiz şekilli, sarımsı-mor parçacıklar.', lab: 'KAN PULCUĞU', col: '#ffd36b', comp: 'plt' },
+  { k: 'plasma', n: 1, t: 'Plazmaya dokun', h: 'Hücrelerin arasındaki boş, soluk sarı sıvı alanına dokun.', lab: 'PLAZMA', col: '#ffbb3d', comp: 'plazma' },
+  { k: 'side', n: 1, t: 'Yandan görünen 1 alyuvar bul', h: 'Alyuvarlar sıvıda döner. Yandan bakınca ince, uzun bir elips gibi görünür.', lab: 'ALYUVAR · YANDAN', col: '#ff7a8a', comp: 'rbc' }
+];
+const WANT = { rbc: 'alyuvar', wbc: 'akyuvar', plt: 'kan pulcuğu', plasma: 'plazma', side: 'yandan görünen alyuvar' };
+const GM = { on: false, ti: 0, got: 0, found: 0, wrong: 0, done: false, marks: [], ensT: 0 };
+function gmReset() { Object.assign(GM, { on: false, ti: 0, got: 0, found: 0, wrong: 0, done: false, marks: [], ensT: 0 }); }
+function startGame() {
+  if (GM.on) return; GM.on = true; GM.ensT = 0; selectComp(TASKS[0].comp);
+  ui.stat('found', '0/8'); renderPane();
+  if (st.mag === 100) setTimeout(() => { toast('İpucu: Hücreleri seçmek için büyütmeyi <b>400×</b> ya da <b>1000×</b> yap.', '', 3000); ZD.pointAt($('[data-mag="400"]'), { ms: 2200 }); }, 900);
+}
+function ensureTask() {
+  const tk = TASKS[GM.ti]; if (!tk || tk.k === 'plasma') return; const vr = taniViewR();
+  const inV = (c) => c.x * c.x + c.y * c.y < (vr * .82) ** 2;
+  if (tk.k === 'side') {
+    const v = TN.cells.filter(c => c.k === 'rbc' && c.z === 0 && !c.found && inV(c));
+    if (v.filter(c => c.fl < .55).length < 2) { v.slice(0, 3).forEach(c => { c.tilt = Math.PI / 2 + rnd(-.25, .25); c.vt = rnd(-.08, .08); c.fl = .2 + .8 * Math.abs(Math.cos(c.tilt)); }); }
+    return;
+  }
+  const need = tk.n - GM.got + (tk.k === 'rbc' ? 0 : 1);
+  const have = TN.cells.filter(c => c.k === tk.k && c.z === 0 && !c.found && inV(c)).length;
+  for (let i = have; i < need; i++) {
+    const pool = TN.cells.filter(c => c.k === tk.k && !inV(c) && Math.hypot(c.x, c.y) > vr * 1.3);
+    if (!pool.length) return; const c = pool[(Math.random() * pool.length) | 0];
+    for (let tr = 0; tr < 30; tr++) {
+      const a = rnd(0, TAU), rr = Math.sqrt(Math.random()) * vr * .62, x = Math.cos(a) * rr, y = Math.sin(a) * rr;
+      if (!TN.cells.some(o => o !== c && o.z === 0 && Math.hypot(o.x - x, o.y - y) < o.r + c.r + .5)) { c.x = x; c.y = y; c.z = 0; c.fade = 0; c.found = false; break; }
+    }
+  }
+}
+function taniTap(sx, sy) {
+  if (!st.sharp) { sfx('bad'); toast('Önce görüntüyü netleştir: mikroskobun <b>odak düğmesini</b> çevir.', '', 2600); ZD.pointAt(knobEl, { ms: 2200 }); return; }
+  const hit = pickIn(TN.cells, sx, sy);
+  if (!GM.on || GM.done) { // serbest inceleme
+    if (st.magCur < 160 && hit && hit.k !== 'wbc') { toast('Bu büyütmede hücreler çok küçük. 400× ya da 1000× büyütmeyi dene.', '', 2400); return; }
+    sfx('pop'); if (hit) { tagCell(hit, hit.k); selectComp(hit.k); } else { TAGS.push({ c: null, x: sx, y: sy, kind: 'plazma', t0: st.t, ms: 2.2 }); selectComp('plazma'); }
+    return;
+  }
+  const tk = TASKS[GM.ti];
+  if (st.magCur < 160 && tk.k !== 'plasma') { sfx('bad'); toast('100× büyütmede hücreler çok küçük. <b>400×</b> ya da <b>1000×</b> büyütmeyi seç.', '', 2800); ZD.pointAt($('[data-mag="400"]'), { ms: 2000 }); return; }
+  if (tk.k === 'plasma') { if (!hit) return good(null, sx, sy); return bad(tk, hit, null, sx, sy); }
+  if (!hit) return bad(tk, null, null, sx, sy);
+  if (hit.found) { toast('Bu hücreyi zaten buldun. Başka bir tane seç.', '', 1800); sfx('tap'); return; }
+  const want = tk.k === 'side' ? 'rbc' : tk.k;
+  if (hit.k !== want) return bad(tk, hit, null, sx, sy);
+  if (tk.k === 'side' && hit.fl > .6) return bad(tk, hit, 'face', sx, sy);
+  good(hit, sx, sy);
+}
+function good(hit, sx, sy) {
+  const tk = TASKS[GM.ti]; GM.got++; GM.found++; st.streak++; st.score += 100 + 25 * (st.streak - 1);
+  sfx('pop'); setTimeout(() => sfx('good'), 70);
+  if (hit) { hit.found = true; GM.marks.push({ c: hit, t0: st.t, lab: tk.lab, col: tk.col }); }
+  else GM.marks.push({ c: null, x: sx, y: sy, t0: st.t, lab: 'PLAZMA', col: tk.col });
+  selectComp(tk.comp, true);
+  ui.stat('found', GM.found + '/8', true); ui.stat('score', st.score, true); ui.stat('streak', st.streak, true);
+  toast(`<b>${tk.lab.split(' ·')[0].replace('KAN PULCUĞU', 'Kan pulcuğu').replace('ALYUVAR', 'Alyuvar').replace('AKYUVAR', 'Akyuvar').replace('PLAZMA', 'Plazma')}</b> doğru! ${tk.n > 1 ? `(${GM.got}/${tk.n})` : ''}`, 'good', 1500);
+  if (GM.got >= tk.n) { GM.ti++; GM.got = 0; GM.ensT = .4; if (GM.ti >= TASKS.length) return finishTani(); }
+  renderPane();
+}
+function bad(tk, hit, why, sx, sy) {
+  GM.wrong++; st.streak = 0; ui.stat('streak', 0); sfx('bad');
+  scopeWrap.classList.remove('zd-shake'); void scopeWrap.offsetWidth; scopeWrap.classList.add('zd-shake');
+  GM.marks.push({ bad: true, x: sx, y: sy, t0: st.t });
+  const D2 = { rbc: 'Bu bir <b>alyuvar</b>: kana kırmızı rengi verir, sayısı en fazla olan hücredir.', wbc: 'Bu bir <b>akyuvar</b>: beyaz kan hücresidir, kanda en az sayıda bulunur.', plt: 'Bu bir <b>kan pulcuğu</b>: küçük, düzensiz bir parçacıktır; yaralanmalarda pıhtılaşmayı sağlar.' };
+  let msg;
+  if (why === 'face') msg = 'Bu alyuvar yüzü bize dönük, yuvarlak görünüyor. İnce, <b>elips gibi</b> görünen bir alyuvar ara.';
+  else if (!hit) msg = 'Burası <b>plazma</b>: kanın sıvı kısmı. Bu görevde bir hücreye dokunmalısın.';
+  else if (tk.k === 'plasma') msg = D2[hit.k] + ' Plazma ise hücrelerin arasındaki sıvı kısımdır; boş bir alana dokun.';
+  else msg = D2[hit.k] + ` Şimdi <b>${WANT[tk.k]}</b> arıyorsun.`;
+  if (hit) selectComp(hit.k);
+  toast(msg, 'bad', 3600);
+}
+function finishTani() {
+  GM.done = true; sfx('level'); renderPane(); timer.stop();
+  setTimeout(() => {
+    ZD.result({
+      title: 'Kan hücrelerini tanıdın!', correct: GM.found, total: GM.found + GM.wrong, score: st.score, time: timer.t,
+      text: 'Sayım sonucu: <b>alyuvarlar en fazla</b>, <b>akyuvarlar en az</b> sayıda bulunur.',
+      extra: `<div style="margin-top:16px;text-align:left">${countHTML()}</div>`,
+      onReplay: () => restartMode()
+    });
+    setTimeout(animateBars, 450);
+  }, 1300);
+}
+function countHTML() {
+  const T = TN.total, mx = T.rbc;
+  const row = (n, v, c, c2, tag) => `<div class="crow"><span>${n}${tag ? `<span class="tag" style="background:${c}22;color:${c};border:1px solid ${c}66">${tag}</span>` : ''}</span><div class="cbar"><i data-w="${Math.max(1.2, v / mx * 100)}" style="--c:${c};--c2:${c2}"></i></div><b>${v}</b></div>`;
+  return `<div class="count">${row('Alyuvar', T.rbc, '#ff4d64', '#a3122e', 'EN FAZLA')}${row('Kan pulcuğu', T.plt, '#ffd36b', '#e5a23a')}${row('Akyuvar', T.wbc, '#c6a8ff', '#7c4dff', 'EN AZ')}</div>`;
+}
+function animateBars() { document.querySelectorAll('.cbar i[data-w]').forEach(i => { i.style.width = i.dataset.w + '%'; }); }
+
+/* =====================================================================
+   SAHNE 2 — Yaralanma (damar kesiti)
+   ===================================================================== */
+const YW = (x) => 14 + .0022 * x * x, YT = 10;
+const Y = { viewR: 55, cells: [], torn: false, g: 0, tT: 0, closure: 0, done: false, leaked: 0, rate: 0, slots: [], stuckN: 0, trapped: 0, step: 0, ox: 0, jag: [], spawnT: 0, cache: null };
+function yaraInit() {
+  Object.assign(Y, { cells: [], torn: false, g: 0, tT: 0, closure: 0, done: false, leaked: 0, rate: 0, slots: [], stuckN: 0, trapped: 0, step: 0, ox: 0, spawnT: 0 });
+  Y.jag = Array.from({ length: 10 }, () => rnd(-1.4, 1.4));
+  for (let i = 0; i < 74; i++) yAdd('rbc'); for (let i = 0; i < 16; i++) yAdd('rbc', null, -1); for (let i = 0; i < 18; i++) yAdd('plt'); yAdd('wbc', -30);
+  yaraCache();
+}
+function yAdd(kind, x0, z = 0) {
+  for (let t = 0; t < 16; t++) {
+    const x = x0 ?? rnd(-62, 62), y = rnd(-62, YW(x) - 4.5), c = mkCell(kind, x, y, z); c.state = 'flow';
+    if (kind === 'rbc') { c.tilt = rnd(-.5, .5); c.fl = .2 + .8 * Math.abs(Math.cos(c.tilt)); }
+    if (!overlapAny(Y.cells, c, .3) || t === 15) { Y.cells.push(c); return c; }
+  }
+}
+function yaraCache() {
+  const kk = (Si / 2) / Y.viewR, X = (x) => C + x * kk, P = (y) => C + y * kk;
+  const tis = mk(Si * D, Si * D), t = tis.getContext('2d'); t.setTransform(D, 0, 0, D, 0, 0);
+  t.beginPath(); for (let x = -72; x <= 72; x += 2) { const y = YW(x) + YT; x === -72 ? t.moveTo(X(x), P(y)) : t.lineTo(X(x), P(y)); } t.lineTo(X(72), Si + 20); t.lineTo(X(-72), Si + 20); t.closePath();
+  let gr = t.createLinearGradient(0, P(22), 0, Si); gr.addColorStop(0, '#f5c3ae'); gr.addColorStop(1, '#d88d7c'); t.fillStyle = gr; t.fill(); t.save(); t.clip();
+  for (let i = 0; i < 24; i++) { const y0 = rnd(26, 64); t.strokeStyle = `rgba(190,96,90,${rnd(.18, .34)})`; t.lineWidth = rnd(.5, 1.4) * kk * .5; t.beginPath(); for (let x = -70; x <= 70; x += 4) { const y = y0 + Math.sin(x * .08 + i) * 2.2 + Math.sin(x * .021 + i * 3) * 3; x === -70 ? t.moveTo(X(x), P(y)) : t.lineTo(X(x), P(y)); } t.stroke(); }
+  for (let i = 0; i < 16; i++) { const x = rnd(-56, 56), y = rnd(YW(x) + YT + 5, 60); t.fillStyle = 'rgba(255,224,212,.4)'; t.strokeStyle = 'rgba(170,82,82,.4)'; t.lineWidth = 1; t.beginPath(); t.ellipse(X(x), P(y), 4.6 * kk, 2.6 * kk, rnd(-.4, .4), 0, TAU); t.fill(); t.stroke(); t.fillStyle = 'rgba(150,80,150,.42)'; t.beginPath(); t.ellipse(X(x), P(y), 1.4 * kk, 1 * kk, 0, 0, TAU); t.fill(); }
+  t.restore();
+  const wl = mk(Si * D, Si * D), w = wl.getContext('2d'); w.setTransform(D, 0, 0, D, 0, 0);
+  const band = () => { w.beginPath(); for (let x = -72; x <= 72; x += 2) { const y = YW(x); x === -72 ? w.moveTo(X(x), P(y)) : w.lineTo(X(x), P(y)); } for (let x = 72; x >= -72; x -= 2) w.lineTo(X(x), P(YW(x) + YT)); w.closePath(); };
+  band(); gr = w.createLinearGradient(0, P(14), 0, P(14 + YT + 9)); gr.addColorStop(0, '#ff9ea4'); gr.addColorStop(.5, '#d85a6b'); gr.addColorStop(1, '#a3374e');
+  w.save(); w.shadowColor = 'rgba(80,0,20,.5)'; w.shadowBlur = 12; w.shadowOffsetY = 4; w.fillStyle = gr; w.fill(); w.restore();
+  w.save(); band(); w.clip();
+  for (let x = -70; x <= 70; x += 6.5) { for (const f of [.3, .72]) { const y = YW(x) + YT * f + rnd(-.6, .6), a = Math.atan(.0044 * x); w.strokeStyle = 'rgba(255,205,210,.45)'; w.fillStyle = 'rgba(255,170,180,.18)'; w.lineWidth = 1; w.beginPath(); w.ellipse(X(x + (f > .5 ? 3 : 0)), P(y), 3.4 * kk, 1.3 * kk, a, 0, TAU); w.fill(); w.stroke(); w.fillStyle = 'rgba(140,40,80,.5)'; w.beginPath(); w.ellipse(X(x + (f > .5 ? 3 : 0)), P(y), 1 * kk, .55 * kk, a, 0, TAU); w.fill(); } }
+  w.restore();
+  w.save(); w.beginPath(); for (let x = -72; x <= 72; x += 2) { const y = YW(x); x === -72 ? w.moveTo(X(x), P(y)) : w.lineTo(X(x), P(y)); }
+  w.shadowColor = 'rgba(255,170,180,.95)'; w.shadowBlur = 10; w.strokeStyle = '#ffe3de'; w.lineWidth = 2.6; w.stroke(); w.restore();
+  w.beginPath(); for (let x = -72; x <= 72; x += 2) { const y = YW(x) + YT; x === -72 ? w.moveTo(X(x), P(y)) : w.lineTo(X(x), P(y)); } w.strokeStyle = 'rgba(115,25,48,.75)'; w.lineWidth = 1.6; w.stroke();
+  Y.cache = { tis, wl };
+}
+function yaraCut() {
+  if (Y.torn) return; Y.torn = true; Y.tT = 0; Y.step = 1; sfx('whoosh'); setTimeout(() => sfx('bad'), 120);
+  scopeWrap.classList.remove('zd-shake'); void scopeWrap.offsetWidth; scopeWrap.classList.add('zd-shake');
+  toast('Damar duvarı yırtıldı! Kan dışarı sızmaya başlıyor…', 'bad', 2400);
+  const g0 = 7; Y.slots = [];
+  for (let j = 0; j < 4; j++) for (let x = -g0 + 1.4; x <= g0 - 1.3; x += 2.6) Y.slots.push({ x: x + (j % 2) * 1.2 - .6, y: YW(x) + 1.3 + j * 2.6, taken: null });
+  for (let x = -8.5; x <= 8.6; x += 3.4) Y.slots.push({ x, y: YW(x) - 1.6, taken: null });
+  renderPane();
+}
+function yaraUpdate(dt) {
+  Y.ox += 3.5 * dt;
+  if (Y.torn) { Y.tT += dt; Y.g = Math.min(7, Y.g + dt * 14); }
+  Y.rate *= Math.exp(-dt / 1.1);
+  const pull = Y.torn ? Math.pow(1 - Y.closure, 1.4) : 0, gx = Y.g;
+  for (const c of Y.cells) {
+    if (c.state === 'stuck' || c.state === 'trap') continue;
+    if (c.state === 'out') {
+      c.x += c.vx * dt; c.y += c.vy * dt; const dm = Math.exp(-dt * 1.3); c.vx *= dm; c.vy *= dm;
+      const lim = YW(c.x) + YT + c.r * .7; if (c.y < lim && Math.abs(c.x) > gx) c.y = lim; c.y = Math.min(c.y, 70); c.x = clamp(c.x, -70, 70);
+      if (c.vt) { c.tilt += c.vt * dt; c.fl = .2 + .8 * Math.abs(Math.cos(c.tilt)); } continue;
+    }
+    if (c.state === 'go') {
+      const s = c.slot, dx = s.x - c.x, dy = s.y - c.y, d = Math.hypot(dx, dy);
+      if (d < .5) { c.state = 'stuck'; c.x = s.x; c.y = s.y; Y.stuckN++; Y.closure = Y.stuckN / Y.slots.length; if (Y.stuckN % 3 === 1) sfx('bubble'); if (Y.step < 3) { Y.step = 3; renderPane(); } }
+      else { const sp = 10 * dt; c.x += dx / d * Math.min(sp, d) + (Math.random() - .5) * .05; c.y += dy / d * Math.min(sp, d); }
+      c.ax += dt * 2.4; continue;
+    }
+    ou(c, c.k === 'plt' ? 26 : 10, dt);
+    const v = 7 * clamp((YW(c.x) - c.y) / 18, .22, 1) * (c.z ? .8 : 1);
+    let vx = v + c.bx, vy = c.by;
+    if (pull > 0 && c.k === 'rbc' && c.z === 0) {
+      const dx = -c.x, dy = YW(0) + YT + 6 - c.y, d = Math.hypot(dx, dy), dn = Math.hypot(dx / 1.7, dy);
+      if (dn < 38) { const s = pull * (34 * (1 - dn / 38) + 8); if (Math.abs(c.x) < gx - c.r * .45) { vy += s; vx += -c.x * 1.2; } else { vx += -Math.sign(c.x) * s * .95; vy += s * .3; } }
+    }
+    c.x += vx * dt; c.y += vy * dt;
+    if (c.k === 'rbc') { c.ax += c.vax * dt; if (c.vt) { c.tilt += c.vt * dt; c.fl = .2 + .8 * Math.abs(Math.cos(c.tilt)); } } else if (c.k === 'plt') c.ax += c.vax * dt;
+    const inGap = Y.torn && Y.closure < 1 && c.z === 0 && c.k === 'rbc' && Math.abs(c.x) < gx - c.r * .35;
+    const wy = YW(c.x) - c.r * .9; if (c.y > wy && !inGap) c.y = wy;
+    if (inGap && c.y > YW(c.x) + YT * .65) {
+      c.state = 'out'; const a = rnd(.3, Math.PI - .3), sp = rnd(8, 15); c.vx = Math.cos(a) * sp; c.vy = Math.sin(a) * sp * .9; c.vt = rnd(-.6, .6);
+      Y.leaked++; Y.rate += 1; if (Y.step < 2) { Y.step = 2; renderPane(); }
+      if (Y.leaked % 2) sfx('drip'); yAdd('rbc', -62 + rnd(0, 3));
+      const outs = Y.cells.filter(o => o.state === 'out'); if (outs.length > 70) Y.cells.splice(Y.cells.indexOf(outs[0]), 1);
+    }
+    if (c.y < -64) c.y = -64; if (c.x > 62) { c.x -= 124; } if (c.x < -62) c.x += 124;
+    // pıhtıya takılan alyuvarlar
+    if (Y.closure > .35 && c.k === 'rbc' && c.z === 0 && Y.trapped < 5 && Math.abs(c.x) < gx + 3 && c.y > YW(c.x) - 6.5 && Math.random() < dt * 3) { c.state = 'trap'; Y.trapped++; c.x = clamp(c.x, -gx - 2, gx + 2); c.y = Math.min(c.y, YW(c.x) + 1); }
+  }
+  // kan pulcuklarını yaraya yönlendir
+  if (Y.torn && Y.tT > 1.6 && !Y.done) {
+    const free = Y.slots.filter(s => !s.taken);
+    if (free.length) {
+      const pl = Y.cells.filter(c => c.k === 'plt' && c.state === 'flow' && c.z === 0);
+      for (const s of free) { let best = null, bd = 1e9; for (const c of pl) { if (c.state !== 'flow') continue; const d = Math.hypot(c.x - s.x, c.y - s.y); if (d < bd) { bd = d; best = c; } } if (!best) break; best.state = 'go'; best.slot = s; s.taken = best; }
+      Y.spawnT -= dt; if (Y.spawnT <= 0 && free.some(s => !s.taken)) { Y.spawnT = .35; const c = yAdd('plt', -60 + rnd(0, 6)); if (c) c.y = YW(c.x) - rnd(3, 16); }
+    }
+    if (Y.stuckN >= Y.slots.length && !Y.done) {
+      Y.done = true; Y.closure = 1; Y.step = 4; st.score += 200; ui.stat('score', st.score, true); sfx('good'); setTimeout(() => sfx('level'), 200);
+      toast('<b>Pıhtı oluştu!</b> Kan pulcukları zedelenen kısmı tıkadı, kan kaybı önlendi.', 'good', 3600); renderPane();
+    }
+  }
+}
+function yaraDraw() {
+  drawPlasma(Y.ox, 0);
+  resetT(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(Y.cache.tis, 0, 0); resetT();
+  const lv0 = layerLvl(0), lvb = layerLvl(-1);
+  for (const c of Y.cells) if (c.state === 'out') drawRBC(c, lv0, .92);
+  resetT();
+  // yırtık boşluk dışında damar duvarı
+  const gx = Y.g, kk = k, X = (x) => C + x * kk, P = (y) => C + y * kk;
+  g.save();
+  if (Y.torn && gx > .05) {
+    g.beginPath(); g.rect(0, 0, Si, Si);
+    const yl = YW(-gx), yr = YW(gx);
+    g.moveTo(X(-gx), P(yl - 3));
+    for (let i = 0; i <= 4; i++) g.lineTo(X(-gx + Y.jag[i] * gx / 7), P(yl + i * YT / 4));
+    g.lineTo(X(-gx), P(yl + YT + 3)); g.lineTo(X(gx), P(yr + YT + 3));
+    for (let i = 4; i >= 0; i--) g.lineTo(X(gx + Y.jag[5 + i] * gx / 7), P(yr + i * YT / 4));
+    g.lineTo(X(gx), P(yr - 3)); g.closePath(); g.clip('evenodd');
+  }
+  g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(Y.cache.wl, 0, 0); g.restore(); resetT();
+  if (Y.torn && gx > .05) {
+    const a = .55 * (1 - Y.closure) + .15;
+    const gr = g.createLinearGradient(0, P(YW(0)), 0, P(YW(0) + YT + 8)); gr.addColorStop(0, `rgba(190,20,40,${a})`); gr.addColorStop(1, 'rgba(190,20,40,0)');
+    g.fillStyle = gr; g.fillRect(X(-gx - 1), P(YW(gx) - 1), (2 * gx + 2) * kk, (YT + 10) * kk);
+    g.save(); g.shadowColor = 'rgba(255,170,180,.95)'; g.shadowBlur = 8; g.fillStyle = '#ffe3de';
+    for (const s of [-1, 1]) { g.beginPath(); g.arc(X(s * gx), P(YW(gx)), 2.4, 0, TAU); g.fill(); } g.restore();
+  }
+  for (const c of Y.cells) { if (c.state !== 'flow' || c.z !== -1) continue; drawRBC(c, lvb, .68); }
+  for (const c of Y.cells) { if (c.state === 'out' || c.state === 'stuck' || c.state === 'trap' || c.z !== 0) continue; if (c.k === 'rbc') drawRBC(c, lv0, 1); else if (c.k === 'plt') drawPLT(c, lv0, 1); }
+  resetT(); for (const c of Y.cells) if (c.k === 'wbc') drawWBC(c, st.t);
+  // pıhtı: takılan alyuvarlar + kan pulcukları + ağ
+  for (const c of Y.cells) if (c.state === 'trap') drawRBC(c, lv0, 1);
+  const stuck = Y.cells.filter(c => c.state === 'stuck');
+  resetT();
+  if (stuck.length > 1) {
+    g.save(); g.strokeStyle = `rgba(255,248,220,${.35 + .5 * Y.closure})`; g.lineWidth = Math.max(1, .22 * kk); g.shadowColor = 'rgba(255,240,190,.9)'; g.shadowBlur = 5; g.beginPath();
+    for (let i = 0; i < stuck.length; i++) for (let j = i + 1; j < stuck.length; j++) { const a = stuck[i], b = stuck[j]; if (Math.hypot(a.x - b.x, a.y - b.y) < 4.4) { g.moveTo(X(a.x), P(a.y)); g.lineTo(X(b.x), P(b.y)); } }
+    for (const c of Y.cells) if (c.state === 'trap') { const s = stuck.slice().sort((p, q) => Math.hypot(p.x - c.x, p.y - c.y) - Math.hypot(q.x - c.x, q.y - c.y)).slice(0, 2); for (const p of s) { g.moveTo(X(c.x), P(c.y)); g.lineTo(X(p.x), P(p.y)); } }
+    g.stroke(); g.restore();
+  }
+  for (const c of Y.cells) {
+    if (c.k !== 'plt' || (c.state !== 'stuck' && c.state !== 'go')) continue;
+    resetT(); const sx = X(c.x), sy = P(c.y), r = c.r * kk * 1.15;
+    g.save(); g.strokeStyle = 'rgba(150,90,190,.85)'; g.lineWidth = Math.max(1, r * .18); g.lineCap = 'round'; g.beginPath();
+    for (let i = 0; i < 7; i++) { const a = c.ax + i / 7 * TAU, l = r * (1.5 + .25 * Math.sin(st.t * 3 + i)); g.moveTo(sx + Math.cos(a) * r * .7, sy + Math.sin(a) * r * .7); g.lineTo(sx + Math.cos(a) * l, sy + Math.sin(a) * l); }
+    g.stroke(); g.restore(); drawPLT(c, lv0, 1); c.r = c.r; resetT();
+  }
+  resetT(); lampGlow();
+}
+function yaraDrawUI() {
+  const P = (y) => C + y * k, X = (x) => C + x * k;
+  pill(C - Si * .02, P(-36), 'DAMARIN İÇİ · kan akışı →', '#35eefc', { fs: 12 });
+  pill(X(-36), P(YW(-36) + YT / 2), 'Damar duvarı', '#ff9aa8', { fs: 12 });
+  pill(C, P(44), 'Damarın dışı (doku)', '#f5c3ae', { fs: 12 });
+  if (Y.torn && !Y.done && Y.g > 2) { const sx = X(0), sy = P(YW(0) + YT * .5); ring(sx, sy, Y.g * k + 6, '#ff5468', st.t, .9); callout(sx + Y.g * k, sy - 8, 'YIRTIK', '#ff5468', 1, 1); }
+  if (Y.done) { const sx = X(0), sy = P(YW(0) + 3); ring(sx, sy, 8 * k, '#2fe39b', st.t, .9); callout(sx + 7 * k, sy - 6, 'PIHTI', '#2fe39b', 1, 1); }
+  drawTags();
+}
+
+/* =====================================================================
+   SAHNE 3 — Mikrop saldırısı
+   ===================================================================== */
+const MK = { viewR: 60, W: 136, cells: [], wbc: [], mic: [], bits: [], spawnLeft: 0, spawnT: 0, killed: 0, boost: 0, won: false, hist: [], histT: 0, warned: false, firstEat: false, ox: 0 };
+function mkInit() {
+  Object.assign(MK, { cells: [], wbc: [], mic: [], bits: [], spawnLeft: 9, spawnT: .4, killed: 0, boost: 0, won: false, hist: [], histT: 0, warned: false, firstEat: false, ox: 0 });
+  const H = MK.W / 2;
+  for (let i = 0; i < 64; i++) { const c = mkCell('rbc', rnd(-H, H), rnd(-H, H), Math.random() < .82 ? 0 : -1); if (!overlapAny(MK.cells, c)) MK.cells.push(c); }
+  for (let i = 0; i < 6; i++) MK.cells.push(mkCell('plt', rnd(-H, H), rnd(-H, H), 0));
+  addWBC(-22, 12, 1); addWBC(26, -16, 1);
+}
+function addWBC(x, y, fade = 0) { const w = mkCell('wbc', x, y, 0); w.fade = fade; w.speed = rnd(3.2, 3.8); w.target = null; w.eat = null; w.cool = 0; w.rt = 0; MK.wbc.push(w); return w; }
+function spawnMic(x, y, a) { const m = { k: 'mic', x, y, a: a ?? rnd(0, TAU), hd: a ?? rnd(0, TAU), type: Math.random() < .6 ? 'rod' : 'coc', ph: rnd(0, TAU), div: rnd(6.5, 9), sc: .2, al: 1, state: 'free', r: 2.4, fade: 1 }; MK.mic.push(m); return m; }
+const wd = (d) => d - MK.W * Math.round(d / MK.W);
+function callWBC() {
+  if (MK.wbc.length >= 14) { toast('Akyuvarlar zaten çok sayıda; mikropları yok etmelerini izle.', '', 2200); return; }
+  sfx('whoosh'); const n = Math.min(3, 14 - MK.wbc.length);
+  for (let i = 0; i < n; i++) { const a = rnd(0, TAU), r = MK.viewR * .9; addWBC(Math.cos(a) * r, Math.sin(a) * r, 0); }
+  MK.boost = 8; toast('<b>Akyuvar sayısı arttı!</b> Akyuvarlar mikropları daha hızlı yok ediyor.', 'good', 2400);
+  const n2 = $('#mkNote'); if (n2) { n2.classList.remove('pulse'); void n2.offsetWidth; n2.classList.add('pulse'); }
+}
+function mkUpdate(dt) {
+  const fx = 1.3, H = MK.W / 2; MK.ox += fx * dt;
+  for (const c of MK.cells) { ou(c, c.k === 'plt' ? 30 : 12, dt); c.x = wrapW(c.x + (fx * (1 + .14 * c.z) + c.bx) * dt, MK.W); c.y = wrapW(c.y + c.by * dt, MK.W); if (c.k === 'rbc') { c.ax += c.vax * dt; if (c.vt) { c.tilt += c.vt * dt; c.fl = .2 + .8 * Math.abs(Math.cos(c.tilt)); } } else c.ax += c.vax * dt; }
+  // mikroplar
+  MK.spawnT -= dt;
+  if (MK.spawnLeft > 0 && MK.spawnT <= 0) { MK.spawnLeft--; MK.spawnT = 1.25; const a = rnd(0, TAU), r = MK.viewR * .92; spawnMic(Math.cos(a) * r, Math.sin(a) * r, a + Math.PI + rnd(-.6, .6)); }
+  const free = MK.mic.filter(m => m.state === 'free');
+  for (const m of MK.mic) {
+    if (m.state !== 'free') continue;
+    m.sc = Math.min(1, m.sc + dt * 1.6); m.hd += (Math.random() - .5) * 2.4 * dt;
+    m.x = wrapW(m.x + (fx * .7 + Math.cos(m.hd) * 1.5) * dt, MK.W); m.y = wrapW(m.y + Math.sin(m.hd) * 1.5 * dt, MK.W);
+    m.a += wrapA(m.hd - m.a) * Math.min(1, dt * 2);
+    m.div -= dt;
+    if (m.div <= 0) { m.div = rnd(6.5, 9.5); if (MK.mic.length < 44) { const c = spawnMic(m.x + Math.cos(m.a) * 3, m.y + Math.sin(m.a) * 3, m.hd + rnd(-1, 1)); c.type = m.type; c.sc = .6; } }
+  }
+  if (free.length > 26 && !MK.warned) { MK.warned = true; toast('Mikroplar hızla çoğalıyor! <b>Akyuvarları çağır.</b>', 'bad', 3000); const b = $('#callBtn'); if (b) ZD.pointAt(b, { ms: 2200 }); }
+  // akyuvarlar
+  MK.boost = Math.max(0, MK.boost - dt); const bf = MK.boost > 0 ? 2.3 : 1;
+  for (const w of MK.wbc) {
+    w.fade = Math.min(1, w.fade + dt * 1.2); w.cool -= dt; w.rt -= dt;
+    if (w.eat) {
+      const m = w.eat; m.p += dt / (MK.boost > 0 ? 1.0 : 1.5); const p = Math.min(1, m.p);
+      const tx = w.x + Math.cos(w.eatA) * w.r * (.95 - .85 * Math.min(1, p * 1.4)), ty = w.y + Math.sin(w.eatA) * w.r * (.95 - .85 * Math.min(1, p * 1.4));
+      m.x += (tx - m.x) * Math.min(1, dt * 6); m.y += (ty - m.y) * Math.min(1, dt * 6);
+      const spread = 1.05 - .8 * Math.min(1, p * 1.5), amp = .55 * Math.sin(Math.min(1, p * 1.25) * Math.PI * .5) * (p > .75 ? (1 - p) * 4 : 1);
+      w.bumps = [{ a: w.eatA - spread, amp, w: .32 }, { a: w.eatA + spread, amp, w: .32 }, { a: w.eatA, amp: .25 * (1 - p), w: .5 }];
+      m.dig = smooth(.45, 1, p); m.sc = 1 - .75 * smooth(.55, 1, p);
+      if (m.p >= 1) {
+        MK.mic.splice(MK.mic.indexOf(m), 1); w.eat = null; w.cool = .35; w.bumps = []; MK.killed++;
+        for (let i = 0; i < 7; i++) MK.bits.push({ x: m.x, y: m.y, vx: rnd(-3, 3), vy: rnd(-3, 3), t: 0 });
+        st.score += 15; ui.stat('score', st.score); ui.stat('found', MK.killed, true); sfx('pop');
+      }
+      w.x = wrapW(w.x + fx * .2 * dt, MK.W); continue;
+    }
+    if (w.rt <= 0 || !w.target || w.target.state !== 'free' || !MK.mic.includes(w.target)) {
+      w.rt = .4; if (w.target && w.target.claim === w) w.target.claim = null; w.target = null; let bd = 1e9;
+      for (const m of MK.mic) { if (m.state !== 'free' || (m.claim && m.claim !== w)) continue; const d = Math.hypot(wd(m.x - w.x), wd(m.y - w.y)); if (d < bd && d < 130) { bd = d; w.target = m; } }
+      if (w.target) w.target.claim = w;
+    }
+    if (w.target) {
+      const m = w.target, dx = wd(m.x - w.x), dy = wd(m.y - w.y), d = Math.hypot(dx, dy), sp = w.speed * bf * dt;
+      w.x = wrapW(w.x + dx / d * Math.min(sp, d) + fx * .25 * dt, MK.W); w.y = wrapW(w.y + dy / d * Math.min(sp, d), MK.W);
+      w.bumps = d < 26 ? [{ a: Math.atan2(dy, dx), amp: .12 + .45 * (1 - d / 26), w: .42 }] : [{ a: Math.atan2(dy, dx), amp: .08, w: .5 }];
+      if (d < w.r + 2.4 && w.cool <= 0) {
+        w.eat = m; m.state = 'eaten'; m.p = 0; w.eatA = Math.atan2(dy, dx); w.target = null;
+        if (!MK.firstEat) { MK.firstEat = true; TAGS.push({ c: w, kind: 'wbc', label: 'AKYUVAR MİKROBU SARIYOR', t0: st.t, ms: 3.2 }); }
+      }
+    } else { w.bumps = []; w.x = wrapW(w.x + fx * .6 * dt, MK.W); }
+  }
+  for (const b of MK.bits) { b.t += dt; b.x += b.vx * dt; b.y += b.vy * dt; } MK.bits = MK.bits.filter(b => b.t < 1);
+  // kazanma
+  if (!MK.won && MK.spawnLeft === 0 && MK.mic.length === 0) {
+    MK.won = true; st.score += 150; ui.stat('score', st.score, true); sfx('win'); ZD.confetti(70);
+    toast('<b>Vücut korundu!</b> Akyuvarlar bütün mikropları sarıp yok etti.', 'good', 3600); renderPane();
+  }
+  MK.histT -= dt; if (MK.histT <= 0) { MK.histT = .5; MK.hist.push({ m: MK.mic.length, w: MK.wbc.length }); if (MK.hist.length > 70) MK.hist.shift(); drawChart(); }
+}
+function mkDraw() {
+  drawPlasma(MK.ox, 0);
+  const l0 = layerLvl(0), lb = layerLvl(-1);
+  for (const c of MK.cells) if (c.z === -1) drawRBC(c, lb, .7);
+  for (const c of MK.cells) if (c.z === 0) { if (c.k === 'rbc') drawRBC(c, l0, 1); else drawPLT(c, l0, 1); }
+  resetT();
+  for (const m of MK.mic) if (m.state === 'free') drawMicrobe(m, st.t);
+  for (const w of MK.wbc) drawWBC(w, st.t);
+  for (const w of MK.wbc) if (w.eat) { drawMicrobe(w.eat, st.t); drawWBC(w, st.t, 1, smooth(.35, .8, w.eat.p)); }
+  resetT(); for (const b of MK.bits) { g.fillStyle = `rgba(150,120,70,${1 - b.t})`; g.beginPath(); g.arc(C + b.x * k, C + b.y * k, Math.max(1, .4 * k), 0, TAU); g.fill(); }
+  lampGlow();
+}
+function mkDrawUI() {
+  if (MK.boost > 0) { u.save(); u.globalAlpha = Math.min(1, MK.boost); u.strokeStyle = 'rgba(198,168,255,.8)'; u.lineWidth = 6; u.shadowColor = '#a879ff'; u.shadowBlur = 24; u.beginPath(); u.arc(C, C, C - 4, 0, TAU); u.stroke(); u.restore(); }
+  drawTags();
+}
+function drawChart() {
+  const c = $('#mkChart'); if (!c) return; const w = c.clientWidth, h = c.clientHeight; if (!w) return;
+  if (c.width !== Math.round(w * D)) { c.width = w * D; c.height = h * D; }
+  const x = c.getContext('2d'); x.setTransform(D, 0, 0, D, 0, 0); x.clearRect(0, 0, w, h);
+  const H = MK.hist, mx = Math.max(10, ...H.map(p => Math.max(p.m, p.w))) * 1.15, N = 70;
+  x.strokeStyle = 'rgba(140,200,255,.1)'; x.lineWidth = 1; for (let i = 1; i < 4; i++) { x.beginPath(); x.moveTo(0, h * i / 4); x.lineTo(w, h * i / 4); x.stroke(); }
+  const line = (key, col) => {
+    if (H.length < 2) return; x.beginPath(); H.forEach((p, i) => { const px = (i + N - H.length) / (N - 1) * w, py = h - 4 - p[key] / mx * (h - 8); i ? x.lineTo(px, py) : x.moveTo(px, py); });
+    x.strokeStyle = col; x.lineWidth = 2.4; x.shadowColor = col; x.shadowBlur = 8; x.stroke(); x.shadowBlur = 0;
+    const lp = H[H.length - 1]; x.fillStyle = col; x.beginPath(); x.arc(w - 3, h - 4 - lp[key] / mx * (h - 8), 3.5, 0, TAU); x.fill();
+  };
+  line('m', '#8be36a'); line('w', '#c6a8ff');
+}
+
+/* =====================================================================
+   SAHNE 4 — Oksijen taşıma (akciğer kılcalı ↔ vücut hücreleri)
+   ===================================================================== */
+const OX = { viewR: 54, L: 16, Rt: 24, TW: 11, rbc: [], parts: [], speed: 8, o2: 0, co2: 0, cache: null, bubT: 0, cells: [], alv: [] };
+OX.P = 4 * OX.L + 2 * Math.PI * OX.Rt;
+function oxPos(s) {
+  const { L, Rt, P } = OX; s = ((s % P) + P) % P; const a1 = 2 * L, a2 = a1 + Math.PI * Rt, a3 = a2 + 2 * L;
+  if (s < a1) return { x: -L + s, y: -Rt, seg: 0, p: s / a1, nx: 0, ny: -1 };
+  if (s < a2) { const p = (s - a1) / (Math.PI * Rt), th = -Math.PI / 2 + p * Math.PI; return { x: L + Math.cos(th) * Rt, y: Math.sin(th) * Rt, seg: 1, p, nx: Math.cos(th), ny: Math.sin(th) }; }
+  if (s < a3) { const p = (s - a2) / a1; return { x: L - p * 2 * L, y: Rt, seg: 2, p, nx: 0, ny: 1 }; }
+  const p = (s - a3) / (Math.PI * Rt), th = Math.PI / 2 + p * Math.PI; return { x: -L + Math.cos(th) * Rt, y: Math.sin(th) * Rt, seg: 3, p, nx: Math.cos(th), ny: Math.sin(th) };
+}
+function oxInit() {
+  OX.rbc = []; OX.parts = []; OX.o2 = 0; OX.co2 = 0; const n = 11;
+  for (let i = 0; i < n; i++) {
+    const s = i * OX.P / n + rnd(-2, 2), q = oxPos(s), c = { k: 'rbc', s, r: 4.4, v: i % 3, ax: 0, fl: 1, z: 0, fade: 1, pp: q.p, ps: q.seg, x: q.x, y: q.y };
+    if (q.seg === 0) { c.o = 1; c.o2 = 2; c.co2 = 0; } else if (q.seg === 2) { c.o = 0; c.o2 = 0; c.co2 = 1; }
+    else if (q.seg === 1) { c.o = 1 - smooth(.2, .7, q.p); c.o2 = q.p < .25 ? 2 : q.p < .6 ? 1 : 0; c.co2 = q.p < .45 ? 0 : 1; }
+    else { c.o = smooth(.3, .7, q.p); c.co2 = q.p < .2 ? 1 : 0; c.o2 = q.p < .4 ? 0 : q.p < .6 ? 1 : 2; }
+    OX.rbc.push(c);
+  }
+  oxCache();
+}
+function oxCache() {
+  const kk = (Si / 2) / OX.viewR, X = (x) => C + x * kk, P = (y) => C + y * kk;
+  const cvs = mk(Si * D, Si * D), x = cvs.getContext('2d'); x.setTransform(D, 0, 0, D, 0, 0);
+  // akciğer yarısı
+  const lung = mk(Si * D, Si * D), l = lung.getContext('2d'); l.setTransform(D, 0, 0, D, 0, 0);
+  l.fillStyle = '#ee9db3'; l.fillRect(0, 0, Si, Si);
+  OX.alv = []; for (let i = 0; i < 400 && OX.alv.length < 46; i++) { const ax = rnd(-60, 4), ay = rnd(-60, 60), r = rnd(5, 8.5); if (OX.alv.every(a => Math.hypot(a.x - ax, a.y - ay) > a.r + r - 1.2)) OX.alv.push({ x: ax, y: ay, r }); }
+  for (const a of OX.alv) {
+    const gr = l.createRadialGradient(X(a.x - a.r * .3), P(a.y - a.r * .3), a.r * kk * .1, X(a.x), P(a.y), a.r * kk);
+    gr.addColorStop(0, '#fff0f4'); gr.addColorStop(.62, '#ffc3d3'); gr.addColorStop(.9, '#f08aa6'); gr.addColorStop(1, '#d9577e');
+    l.fillStyle = gr; l.beginPath(); l.arc(X(a.x), P(a.y), a.r * kk, 0, TAU); l.fill();
+    l.strokeStyle = 'rgba(176,52,92,.55)'; l.lineWidth = 1.4; l.stroke();
+    l.strokeStyle = 'rgba(214,60,90,.35)'; l.lineWidth = 1; l.beginPath(); l.arc(X(a.x), P(a.y), a.r * kk * .82, .3, 2.2); l.stroke();
+  }
+  const mL = l.createLinearGradient(X(-6), 0, X(6), 0); mL.addColorStop(0, '#000'); mL.addColorStop(1, 'rgba(0,0,0,0)');
+  l.setTransform(1, 0, 0, 1, 0, 0); l.globalCompositeOperation = 'destination-in'; l.setTransform(D, 0, 0, D, 0, 0); l.fillStyle = mL; l.fillRect(0, 0, Si, Si);
+  // vücut hücreleri yarısı
+  const body = mk(Si * D, Si * D), b = body.getContext('2d'); b.setTransform(D, 0, 0, D, 0, 0);
+  b.fillStyle = '#e6b49c'; b.fillRect(0, 0, Si, Si); OX.cells = [];
+  for (let gy = -62, row = 0; gy < 64; gy += 10.5, row++) for (let gx = -6 + (row % 2) * 6; gx < 66; gx += 12) {
+    const cx = gx + rnd(-1.6, 1.6), cy = gy + rnd(-1.6, 1.6); OX.cells.push({ x: cx, y: cy });
+    b.beginPath(); const n = 7; for (let i = 0; i <= n; i++) { const a = i / n * TAU + .2, r = 5.6 + Math.sin(i * 2.3 + cx) * .5; const px = X(cx + Math.cos(a) * r * 1.05), py = P(cy + Math.sin(a) * r * .92); i ? b.lineTo(px, py) : b.moveTo(px, py); } b.closePath();
+    const gr = b.createRadialGradient(X(cx - 1.5), P(cy - 2), .5, X(cx), P(cy), 6.5 * kk); gr.addColorStop(0, '#fff0e4'); gr.addColorStop(.6, '#f6cdb3'); gr.addColorStop(1, '#dea084');
+    b.fillStyle = gr; b.fill(); b.strokeStyle = 'rgba(176,108,86,.75)'; b.lineWidth = 1.3; b.stroke();
+    const ng = b.createRadialGradient(X(cx - .5), P(cy - .6), .3, X(cx), P(cy), 1.9 * kk); ng.addColorStop(0, '#c7a2e8'); ng.addColorStop(1, '#7650a8');
+    b.fillStyle = ng; b.beginPath(); b.ellipse(X(cx + .4), P(cy + .3), 1.9 * kk, 1.5 * kk, .4, 0, TAU); b.fill();
+  }
+  const mB = b.createLinearGradient(X(-6), 0, X(6), 0); mB.addColorStop(0, 'rgba(0,0,0,0)'); mB.addColorStop(1, '#000');
+  b.globalCompositeOperation = 'destination-in'; b.fillStyle = mB; b.fillRect(0, 0, Si, Si);
+  // birleştir
+  const gr = x.createRadialGradient(C, C, 0, C, C, Si * .6); gr.addColorStop(0, '#f8dfa6'); gr.addColorStop(1, '#d9a35a'); x.fillStyle = gr; x.fillRect(0, 0, Si, Si);
+  x.setTransform(1, 0, 0, 1, 0, 0); x.drawImage(lung, 0, 0); x.drawImage(body, 0, 0); x.setTransform(D, 0, 0, D, 0, 0);
+  // kılcal damar tüpü
+  const tube = () => { x.beginPath(); x.moveTo(X(-OX.L), P(-OX.Rt)); x.lineTo(X(OX.L), P(-OX.Rt)); x.arc(X(OX.L), P(0), OX.Rt * kk, -Math.PI / 2, Math.PI / 2); x.lineTo(X(-OX.L), P(OX.Rt)); x.arc(X(-OX.L), P(0), OX.Rt * kk, Math.PI / 2, Math.PI * 1.5); x.closePath(); };
+  x.lineJoin = 'round'; tube(); x.shadowColor = 'rgba(80,10,30,.45)'; x.shadowBlur = 14; x.strokeStyle = '#d8697f'; x.lineWidth = (OX.TW + 2.6) * kk; x.stroke(); x.shadowBlur = 0;
+  tube(); x.strokeStyle = '#f7dca2'; x.lineWidth = OX.TW * kk; x.stroke();
+  tube(); x.strokeStyle = 'rgba(255,255,255,.22)'; x.lineWidth = OX.TW * kk * .3; x.stroke();
+  OX.cache = cvs;
+}
+function oxEmit(type, from, to, onDone) { OX.parts.push({ type, from, to, t: 0, dur: rnd(.8, 1.1), arc: rnd(-1, 1), onDone }); }
+function oxUpdate(dt) {
+  for (const c of OX.rbc) {
+    c.s += OX.speed * dt; const q = oxPos(c.s); const pp = c.pp, ps = c.ps; c.x = q.x; c.y = q.y; c.nx = q.nx; c.ny = q.ny;
+    const cross = (th) => q.seg === ps && pp < th && q.p >= th;
+    if (q.seg === 0) c.o = 1; else if (q.seg === 2) c.o = 0; else if (q.seg === 1) c.o = 1 - smooth(.2, .7, q.p); else c.o = smooth(.3, .7, q.p);
+    const tgt = (sign) => ({ x: q.x + q.nx * sign * rnd(9, 13) + rnd(-2, 2), y: q.y + q.ny * sign * rnd(9, 13) + rnd(-2, 2) });
+    if (q.seg === 1) {
+      if ((cross(.25) || cross(.6)) && c.o2 > 0) { c.o2--; oxEmit('o2', { x: q.x, y: q.y }, tgt(Math.random() < .5 ? 1 : -1), () => { OX.o2++; ui.stat('found', OX.o2, true); }); bub(); }
+      if (cross(.45)) { const f = tgt(Math.random() < .5 ? 1 : -1); oxEmit('co2', f, c, () => { c.co2 = 1; }); }
+    } else if (q.seg === 3) {
+      if (cross(.2) && c.co2 > 0) { c.co2 = 0; oxEmit('co2', { x: q.x, y: q.y }, tgt(Math.random() < .5 ? 1 : -1), () => { OX.co2++; }); bub(); }
+      if (cross(.4) || cross(.6)) { oxEmit('o2', tgt(Math.random() < .5 ? 1 : -1), c, () => { c.o2 = Math.min(2, c.o2 + 1); bub(); }); }
+    }
+    c.pp = q.p; c.ps = q.seg;
+  }
+  for (const p of OX.parts) { p.t += dt / p.dur; if (p.t >= 1 && !p.fin) { p.fin = true; p.onDone && p.onDone(); } }
+  OX.parts = OX.parts.filter(p => p.t < 1.35);
+  OX.bubT -= dt;
+}
+function bub() { if (OX.bubT <= 0) { sfx('bubble'); OX.bubT = .35; } }
+function oxDraw() {
+  resetT(); g.setTransform(1, 0, 0, 1, 0, 0); g.drawImage(OX.cache, 0, 0); resetT();
+  // akış okları
+  g.save(); g.strokeStyle = 'rgba(160,90,40,.35)'; g.lineWidth = 2; g.lineCap = 'round'; g.lineJoin = 'round';
+  for (let i = 0; i < 14; i++) { const s = (i / 14) * OX.P + (st.t * OX.speed) % (OX.P / 14), q = oxPos(s); const a = Math.atan2(q.ny, q.nx) + Math.PI / 2, sx = C + q.x * k, sy = C + q.y * k, l = 5;
+    g.beginPath(); g.moveTo(sx - Math.cos(a - .6) * l, sy - Math.sin(a - .6) * l); g.lineTo(sx, sy); g.lineTo(sx - Math.cos(a + .6) * l, sy - Math.sin(a + .6) * l); g.stroke(); }
+  g.restore();
+  const l0 = layerLvl(0);
+  for (const c of OX.rbc) {
+    c.ax = 0; c.fl = 1; drawRBC(c, l0, 1, SPR.rbcD); if (c.o > .02) drawRBC(c, l0, c.o, null);
+    resetT(); const sx = C + c.x * k, sy = C + c.y * k, R = c.r * k, br = 2.85 * k;
+    const ang = Math.atan2(c.ny || -1, c.nx || 0);
+    for (let i = 0; i < c.o2; i++) { const a = ang + Math.PI + (i ? .75 : -.75); drawGas(sx + Math.cos(a) * R * .95, sy + Math.sin(a) * R * .95, br, 'o2'); }
+    if (c.co2) { const a = ang; drawGas(sx + Math.cos(a) * R * .95, sy + Math.sin(a) * R * .95, br * 1.08, 'co2'); }
+  }
+  for (const p of OX.parts) {
+    const e = smooth(0, 1, Math.min(1, p.t)), fx = p.from.x, fy = p.from.y, tx = p.to.x, ty = p.to.y;
+    const dx = tx - fx, dy = ty - fy, d = Math.hypot(dx, dy) || 1, off = Math.sin(Math.PI * e) * p.arc * 3;
+    const x = fx + dx * e - dy / d * off, y = fy + dy * e + dx / d * off;
+    const toCell = !!p.to.k, al = toCell ? 1 : (p.t > 1 ? Math.max(0, 1 - (p.t - 1) / .35) : 1);
+    if (toCell && p.t >= 1) continue;
+    drawGas(C + x * k, C + y * k, 3.1 * k * (toCell ? 1 : 1 + .12 * Math.min(1, p.t)), p.type, al);
+  }
+  resetT(); lampGlow();
+}
+function oxDrawUI() {
+  const X = (x) => C + x * k, P = (y) => C + y * k;
+  if (Si < 400) { pill(X(-21), C, 'AKCİĞER', '#ff9fb8', { fs: 10.5 }); pill(X(21), C, 'VÜCUT HÜCRELERİ', '#f3c7a6', { fs: 10.5 }); }
+  else { pill(X(-22), P(-38), 'AKCİĞER KILCALI', '#ff9fb8', { fs: 12 }); pill(X(22), P(-38), 'VÜCUT HÜCRELERİ', '#f3c7a6', { fs: 12 }); }
+  const fs = Si < 400 ? 10 : 11.5;
+  pill(C, P(-13), 'Oksijen oranı zengin kan  →', '#ff3b55', { fs });
+  pill(C, P(13), '←  Oksijen oranı düşük kan', '#7d8bff', { fs });
+  drawTags();
+}
+
+/* ---------------- Sahne kaydı ---------------- */
+const SC = {
+  tani: { viewR: taniViewR, update: taniUpdate, draw: taniDraw, ui: taniDrawUI, tap: taniTap, init: taniInit, cells: () => TN.cells },
+  yara: { viewR: () => Y.viewR, update: yaraUpdate, draw: yaraDraw, ui: yaraDrawUI, init: yaraInit, cells: () => Y.cells, tap: genericTap(() => Y.cells.filter(c => c.state !== 'out')) },
+  mikrop: { viewR: () => MK.viewR, update: mkUpdate, draw: mkDraw, ui: mkDrawUI, init: mkInit, cells: () => MK.cells.concat(MK.wbc), tap: genericTap(() => MK.wbc.concat(MK.mic.filter(m => m.state === 'free'), MK.cells)) },
+  oksijen: { viewR: () => OX.viewR, update: oxUpdate, draw: oxDraw, ui: oxDrawUI, init: oxInit, cells: () => OX.rbc, tap: oxTap }
+};
+function genericTap(get) {
+  return (sx, sy) => {
+    const hit = pickIn(get(), sx, sy); sfx('pop');
+    if (hit) { tagCell(hit, hit.k); if (hit.k !== 'mic') selectComp(hit.k); }
+    else { TAGS.push({ c: null, x: sx, y: sy, kind: 'plazma', t0: st.t, ms: 2 }); selectComp('plazma'); }
+  };
+}
+function oxTap(sx, sy) {
+  const hit = pickIn(OX.rbc, sx, sy); sfx('pop');
+  if (hit) { const rich = hit.o > .5; TAGS.push({ c: hit, kind: 'rbc', label: rich ? 'OKSİJEN TAŞIYAN ALYUVAR' : 'CO₂ TAŞIYAN ALYUVAR', t0: st.t, ms: 2.6 }); selectComp('rbc'); toast(rich ? 'Bu alyuvar akciğerden oksijen aldı; oksijeni vücut hücrelerine taşıyor.' : 'Bu alyuvar oksijenini bıraktı; vücut hücrelerinden aldığı karbon dioksidi akciğere taşıyor.', '', 3000); }
+}
+function sceneCount() {
+  const vr = SC[st.mode].viewR(), o = { rbc: 0, wbc: 0, plt: 0 };
+  for (const c of SC[st.mode].cells()) { if (c.state === 'out' || c.fade < .5) continue; if (c.x * c.x + c.y * c.y < vr * vr) o[c.k] = (o[c.k] || 0) + 1; }
+  return o;
+}
+
+/* =====================================================================
+   PANEL
+   ===================================================================== */
+const CHECK = ZD.I.check;
+// Yaralanma: gerçek görünüm (Servier Medical Art çizimi) — bilgi penceresi
+function showReal() {
+  ZD.modal({ cls: 'real-m', dismiss: true, html: `<span class="zd-chip red">GERÇEKTE NASIL GÖRÜNÜR?</span><h2>Yaralanma ve pıhtılaşma</h2>
+    <img src="assets/img/coagulation.webp" width="1393" height="845" alt="Deri ve damar kesiti: sağlam damar, yaralanmada kanın sızması ve kan pulcuklarının oluşturduğu pıhtı" decoding="async">
+    <div class="cap"><span>1. Sağlam damar</span><span>2. Yaralanma: kan sızar</span><span>3. Pıhtı yarayı tıkar</span></div>
+    <p>Kan pulcukları zedelenen damarın iç yüzeyinde pıhtılaşır ve yarayı tıkayarak kan kaybını önler.</p>`,
+    actions: [{ label: 'Simülasyona dön', cls: 'ghost' }] });
+}
+function renderPane() {
+  const m = st.mode; let h = '';
+  if (m === 'tani') {
+    const tk = TASKS[GM.ti];
+    if (!st.everFocused) {
+      h = `<div class="p-head"><span class="zd-chip amber">HAZIRLIK</span><span class="p-step">Mikroskobu ayarla</span></div>
+      <div class="task warn"><div class="tk">1. ADIM</div><div class="tt">Görüntüyü netleştir</div><div class="td">Mikroskobun <b>odak düğmesini</b> çevir ya da <b>ODAK</b> kaydırıcısını sürükle. Hücreler netleşince görev başlar.</div>
+      <div class="netlik"><span>NETLİK</span><div class="zd-meter amber"><i id="netM"></i></div></div></div>
+      <p class="p-small">Kan; plazma ve kan hücrelerinden oluşur. Kan hücreleri yapı ve görevlerine göre alyuvar, akyuvar ve kan pulcukları olmak üzere üç gruba ayrılır.</p>`;
+    } else if (GM.done) {
+      h = `<div class="p-head"><span class="zd-chip green">SAYIM SONUCU</span><span class="p-step">8/8 bulundu</span></div>
+      <div class="p-title">Bu kan örneğindeki hücre sayıları</div>${countHTML()}
+      <p class="cnote">Kana kırmızı rengi veren <b>alyuvarlar sayıca en fazladır</b>; beyaz kan hücreleri olan <b>akyuvarlar en az</b> sayıda bulunur. Şimdi görüş alanına dokunarak hücreleri serbestçe inceleyebilirsin.</p>
+      <div class="row"><button class="zd-btn ghost sm" id="reTani">${ZD.I.restart}Tekrar oyna</button></div>`;
+    } else {
+      const dots = Array.from({ length: tk.n }, (_, i) => `<i class="${i < GM.got ? 'on' : ''}"></i>`).join('');
+      h = `<div class="p-head"><span class="zd-chip">GÖREV ${GM.ti + 1}/${TASKS.length}</span><span class="p-step">Hücreleri Tanı</span></div>
+      <div class="task"><div class="tk">YÖNERGE</div><div class="tt">${tk.t}<span class="dots">${dots}</span></div><div class="td">${tk.h}</div></div>
+      <ol class="tlist">${TASKS.map((t, i) => `<li class="${i < GM.ti ? 'ok' : i === GM.ti ? 'cur' : ''}"><span class="b">${i < GM.ti ? CHECK : i + 1}</span>${t.t}<span class="n">${i < GM.ti ? t.n : i === GM.ti ? GM.got : 0}/${t.n}</span></li>`).join('')}</ol>`;
+    }
+  } else if (m === 'yara') {
+    const S = ['Damar duvarı zedelendi; kenar çizgisi kırıldı.', 'Alyuvarlar yırtıktan dışarı sızıyor: kan kaybı başladı.', 'Kan pulcukları yaraya doğru hareket edip birikiyor.', 'Kan pulcukları pıhtılaştı, zedelenen kısmı tıkadı: kan kaybı önlendi.'];
+    h = `<div class="p-head"><span class="zd-chip red">SENARYO</span><span class="p-ttl">Yaralanma ve pıhtılaşma</span><span class="p-step">400× · Damar kesiti</span></div>
+    <p class="p-text"><b>Damarı çiz</b>; yırtıktan sızan kanı ve kan pulcuklarının yarayı nasıl tıkadığını izle.</p>
+    <div class="row"><button class="zd-btn red" id="cutBtn" ${Y.torn ? 'disabled' : ''}>${SVGI.scalpel}Damarı çiz</button><button class="zd-btn ghost sm" id="yRe" aria-label="Senaryoyu yeniden başlat">${ZD.I.restart}Yeniden</button><button class="zd-btn ghost sm" id="yReal" aria-label="Gerçekte nasıl görünür?">${SVGI.book}Gerçekte nasıl?</button></div>
+    <ol class="steps">${S.map((s, i) => `<li class="${Y.step > i + 1 || (Y.step === 4 && i === 3) ? (i === 3 ? 'fin' : 'done') : Y.step === i + 1 ? 'act' : ''}"><b>${Y.step > i + 1 || (Y.step === 4) ? CHECK : i + 1}</b><span>${s}</span></li>`).join('')}</ol>
+    <div class="mgrid"><div><div class="mrow"><span>Kan kaybı hızı</span><b id="yRateT">—</b></div><div class="zd-meter red"><i id="yRate"></i></div></div>
+    <div><div class="mrow"><span>Pıhtı oluşumu</span><b id="yClT">0%</b></div><div class="zd-meter amber"><i id="yCl"></i></div></div></div>`;
+  } else if (m === 'mikrop') {
+    h = `<div class="p-head"><span class="zd-chip green">SAVUNMA</span><span class="p-ttl">Mikrop saldırısı</span><span class="p-step">${MK.won ? 'Mikroplar yok edildi' : 'Mikroplar kana girdi'}</span></div>
+    <p class="p-text">Akyuvarlar vücudu mikroplara karşı savunur: mikropları sarar ve yok eder.</p>
+    <div class="row"><button class="zd-btn purple" id="callBtn">${SVGI.shield}Akyuvarları çağır</button>${MK.won ? `<button class="zd-btn ghost sm" id="mkRe">${ZD.I.restart}Yeni dalga</button>` : ''}
+    <div class="mk-stats"><div><b id="mkM" style="color:#8be36a">0</b><span>Mikrop</span></div><div><b id="mkW" style="color:#c6a8ff">0</b><span>Akyuvar</span></div><div><b id="mkK">0</b><span>Yok edilen</span></div></div></div>
+    <div class="chart"><canvas id="mkChart"></canvas><div class="legend"><span><i style="background:#8be36a"></i>Mikrop sayısı</span><span><i style="background:#c6a8ff"></i>Akyuvar sayısı</span></div></div>
+    <div class="note" id="mkNote">${SVGI.book}<span><b>Kitaptan:</b> Hastalanan insanların kanındaki akyuvar sayısı artar.</span></div>`;
+  } else if (m === 'oksijen') {
+    h = `<div class="p-head"><span class="zd-chip">MODEL</span><span class="p-ttl">Oksijen taşıma</span><span class="p-step">Akciğer kılcalı ↔ Vücut hücreleri</span></div>
+    <p class="p-quote">“Alyuvarlar, oksijen ve karbon dioksidin taşınmasında görevlidir.”</p>
+    <div class="lg2">
+      <div><svg class="sw" viewBox="0 0 30 30"><circle cx="15" cy="15" r="12" fill="#e8394e"/><circle cx="15" cy="15" r="5" fill="#ffb3aa" opacity=".5"/></svg><span><b>Oksijen oranı zengin kan:</b> alyuvar akciğerde O₂ alır, parlak kırmızı olur.</span></div>
+      <div><svg class="sw" viewBox="0 0 30 30"><circle cx="15" cy="15" r="12" fill="#5a49b8"/><circle cx="15" cy="15" r="5" fill="#cfc6ff" opacity=".45"/></svg><span><b>Oksijen oranı düşük kan:</b> vücut hücrelerine O₂ bırakır, CO₂ alır.</span></div>
+    </div>
+    <div class="row"><div class="zd-seg" id="oxSpd" role="group" aria-label="Etkinlik"><button data-s="8" class="${OX.speed === 8 ? 'on' : ''}">Dinlenme</button><button data-s="16" class="${OX.speed === 16 ? 'on' : ''}">Spor</button></div>
+      <div class="oxc" style="flex:1"><div><b id="oxO" style="color:#ff6b7d">0</b><span>O₂ BIRAKILAN</span></div><div><b id="oxC" style="color:#9fb3e8">0</b><span>CO₂ BIRAKILAN</span></div></div></div>
+    <p class="p-small" id="oxNote">${OX.speed === 16 ? 'Spor yaparken hücrelerin oksijen ihtiyacı artar; kalp atış hızı artar ve kan daha hızlı dolaşır.' : 'Şemada kalp gösterilmemiştir: kan akciğerlerden kalbe, kalpten vücuda gider.'}</p>`;
+  }
+  paneEl.innerHTML = h; paneTick(true);
+  const b = (id, f) => { const e = $(id); if (e) e.onclick = f; };
+  b('#reTani', () => { sfx('click'); restartMode(); });
+  b('#cutBtn', () => yaraCut());
+  b('#yRe', () => { sfx('click'); yaraInit(); renderPane(); });
+  b('#callBtn', () => callWBC());
+  b('#mkRe', () => { sfx('click'); mkInit(); renderPane(); });
+  b('#yReal', () => { sfx('click'); showReal(); });
+  document.querySelectorAll('#oxSpd button').forEach(btn => btn.onclick = () => { sfx('click'); OX.speed = +btn.dataset.s; renderPane(); });
+  if (m === 'tani' && GM.done) setTimeout(animateBars, 60);
+}
+let paneT = 0;
+function paneTick(force) {
+  const m = st.mode;
+  if (m === 'tani') { const n = $('#netM'); if (n) n.style.width = (st.sharp ? 100 : Math.max(4, (1 - Math.abs(st.focus - st.fT) / .65) * 100)) + '%'; }
+  if (m === 'yara') {
+    const r = Y.done ? 0 : Math.min(1, Y.rate / 3.2), e = $('#yRate'); if (e) e.style.width = (r * 100) + '%';
+    const t = $('#yRateT'); if (t) t.textContent = !Y.torn ? 'Yok' : Y.done ? 'Durdu' : r > .55 ? 'Yüksek' : r > .2 ? 'Azalıyor' : Y.leaked ? 'Düşük' : 'Başlıyor';
+    const c = $('#yCl'); if (c) c.style.width = (Y.closure * 100) + '%'; const ct = $('#yClT'); if (ct) ct.textContent = Math.round(Y.closure * 100) + '%';
+    ui.stat('found', Math.round(Y.closure * 100) + '%');
+  }
+  if (m === 'mikrop') { const a = $('#mkM'), b = $('#mkW'), c = $('#mkK'); if (a) { a.textContent = MK.mic.length; b.textContent = MK.wbc.length; c.textContent = MK.killed; } if (force) setTimeout(drawChart, 30); }
+  if (m === 'oksijen') { const a = $('#oxO'), b = $('#oxC'); if (a) { a.textContent = OX.o2; b.textContent = OX.co2; } }
+  if (m !== 'bagis') updateComps();
+}
+function renderComps() {
+  const t = (id, n) => `<button class="tile ${st.comp === id ? 'on' : ''}" data-c="${id}" aria-label="${DEF[id].name} bilgi kartı">${ICON[id]}<span class="tn">${n}</span><span class="tc" id="cnt-${id}">${id === 'plazma' ? '<small>SIVI</small>' : '0'}</span></button>`;
+  compsEl.innerHTML = `<div class="tiles">${t('plazma', 'Plazma')}${t('rbc', 'Alyuvar')}${t('wbc', 'Akyuvar')}${t('plt', 'Kan pulcukları')}</div>
+  <div class="cdef" id="cdef"></div>`;
+  compsEl.querySelectorAll('.tile').forEach(b => b.onclick = () => { sfx('tap'); selectComp(b.dataset.c, true); });
+  selectComp(st.comp);
+}
+function selectComp(id, flash) {
+  st.comp = id; compsEl.querySelectorAll('.tile').forEach(b => { b.classList.toggle('on', b.dataset.c === id); if (flash && b.dataset.c === id) { b.classList.remove('flash'); void b.offsetWidth; b.classList.add('flash'); } });
+  const d = $('#cdef'); if (d) d.innerHTML = `<b>${DEF[id].name}:</b> ${DEF[id].txt}<span class="src">DERS KİTABI TANIMI · görüş alanındaki sayılar üstte</span>`;
+}
+function updateComps() {
+  const o = sceneCount();
+  for (const id of ['rbc', 'wbc', 'plt']) { const e = $('#cnt-' + id); if (e) e.textContent = o[id] || 0; }
+}
+
+/* =====================================================================
+   SAHNE 5 — Kan Bağışı (kart oyunu)
+   ===================================================================== */
+const PEOPLE = [
+  { ad: 'Ayşe', age: 34, kg: 62, g: 'K', last: 5, sick: false, q: 'Kızılay’ın kan bağışı çağrısını gördüm, ben de katılmak istiyorum.', av: { skin: '#f3c7a6', hair: '#5a3423', hs: 'long', shirt: '#14b8a6', bg1: '#2a5576', bg2: '#0f2a44' } },
+  { ad: 'Mehmet', age: 17, kg: 68, g: 'E', last: null, sick: false, q: 'Kan stokları azalmış! Ben de hemen kan vermek istiyorum.', av: { skin: '#e8b58f', hair: '#1f1a17', hs: 'short', shirt: '#ff8a3d', bg1: '#3b4f7a', bg2: '#151f3a' } },
+  { ad: 'Zeynep', age: 25, kg: 47, g: 'K', last: null, sick: false, q: 'Sağlığım yerinde, ilk kez bağış yapmayı düşünüyorum.', av: { skin: '#f5d0b5', hair: '#2c1c14', hs: 'bun', shirt: '#a879ff', bg1: '#4a3a7a', bg2: '#1b1638' } },
+  { ad: 'Hasan', age: 45, kg: 82, g: 'E', last: 4, sick: false, q: 'Düzenli bağışçıyım; son bağışımı birkaç ay önce yaptım.', av: { skin: '#d9a07a', hair: '#4a4038', hs: 'short', shirt: '#3b82f6', mus: true, gray: .35, bg1: '#24506e', bg2: '#0d2236' } },
+  { ad: 'Elif', age: 29, kg: 58, g: 'K', last: 3, sick: false, q: 'Geçen bağışımdan sonra kendimi çok iyi hissettim, yine gelmek istiyorum.', av: { skin: '#f0c4a2', hair: '#b0325a', hs: 'hijab', shirt: '#ec4899', bg1: '#5a2c52', bg2: '#22102a' } },
+  { ad: 'Mustafa', age: 68, kg: 75, g: 'E', last: 12, sick: false, q: 'Gençliğimden beri kan bağışı yaparım, bu yıl da gelmek istiyorum.', av: { skin: '#e2ae8c', hair: '#d9dde3', hs: 'bald', shirt: '#64748b', beard: true, glasses: true, bg1: '#3a4a5c', bg2: '#141c26' } },
+  { ad: 'Selin', age: 40, kg: 66, g: 'K', last: 8, sick: true, sickTxt: 'Önemli bir sağlık problemi var, tedavi görüyor', q: 'Bir süredir tedavi görüyorum ama yine de yardım etmek istiyorum.', av: { skin: '#f3c7a6', hair: '#b4532a', hs: 'curly', shirt: '#22c55e', bg1: '#2c5a46', bg2: '#0f241c' } },
+  { ad: 'Burak', age: 22, kg: 71, g: 'E', last: null, sick: false, q: 'Üniversitede afişleri gördüm; ilk bağışımı yapmaya hazırım!', av: { skin: '#c68863', hair: '#3a2416', hs: 'short2', shirt: '#0ea5e9', bg1: '#1f4f6e', bg2: '#0b1f30' } }
+];
+function avatar(p, id) {
+  const a = p.av, sk = a.skin, skD = shade(sk, -.2), hc = a.gray ? mixHex(a.hair, '#c9ced6', a.gray) : a.hair, hcx = hc.startsWith('rgb') ? '#8a8a8a' : hc;
+  const hairG = `<linearGradient id="hr${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(hcx, .28)}"/><stop offset="1" stop-color="${shade(hcx, -.28)}"/></linearGradient>`;
+  let back = '', front = '';
+  if (a.hs === 'long') { back = `<path d="M33 58C30 30 46 21 60 21c15 0 31 9 28 37l4 38c-10 5-21-3-21-3H49s-11 8-21 3Z" fill="url(#hr${id})"/>`; front = `<path d="M37 55c-1-20 12-28 24-28 13 0 24 8 22 27-6-12-17-18-28-15-8 2-14 8-18 16Z" fill="url(#hr${id})"/><path d="M48 31c5-2 12-2 17 0" stroke="#fff" stroke-opacity=".3" stroke-width="2" fill="none" stroke-linecap="round"/>`; }
+  else if (a.hs === 'short' || a.hs === 'short2') { front = `<path d="M37 56c-3-22 11-30 24-30 14 0 26 9 22 31-3-10-9-17-20-18-10-1-19 4-23 12-1 2-2 4-3 5Z" fill="url(#hr${id})"/>${a.hs === 'short2' ? `<path d="M44 33c6-6 20-7 28 0-8-3-19-3-28 0Z" fill="${shade(hcx, .35)}"/>` : ''}<path d="M47 32c6-3 14-3 20 0" stroke="#fff" stroke-opacity=".25" stroke-width="2" fill="none" stroke-linecap="round"/>`; }
+  else if (a.hs === 'bun') { back = `<circle cx="60" cy="22" r="10" fill="url(#hr${id})"/>`; front = `<path d="M37 56c-2-21 11-29 23-29 14 0 25 9 23 29-5-11-14-17-24-16-9 1-17 7-22 16Z" fill="url(#hr${id})"/>`; }
+  else if (a.hs === 'bald') { front = `<path d="M37.5 64c-2-9-1-15 2-20l3 1c-1 6-1 12 0 19ZM82.5 64c2-9 1-15-2-20l-3 1c1 6 1 12 0 19Z" fill="${hcx}"/>`; }
+  else if (a.hs === 'curly') { let s = ''; for (let i = 0; i < 13; i++) { const t = Math.PI * (1.05 + i / 12 * .9), r = 25; s += `<circle cx="${60 + Math.cos(t) * r}" cy="${52 + Math.sin(t) * r * 1.05}" r="${7.5 - Math.abs(i - 6) * .25}" fill="url(#hr${id})"/>`; } back = s + `<circle cx="36" cy="70" r="7" fill="url(#hr${id})"/><circle cx="84" cy="70" r="7" fill="url(#hr${id})"/>`; front = `<path d="M40 48c4-10 12-14 20-14 9 0 17 4 21 14-6-6-13-8-21-8s-15 2-20 8Z" fill="url(#hr${id})"/>`; }
+  else if (a.hs === 'hijab') { back = `<path d="M29 60c-2-30 15-41 31-41s33 11 31 41c0 20-6 36-31 40-25-4-31-20-31-40Z" fill="url(#hr${id})"/><path d="M26 112c2-16 14-24 34-26 20 2 32 10 34 26Z" fill="url(#hr${id})"/>`; front = `<path d="M37 52c2-16 12-23 23-23s21 7 23 23c-6-9-14-13-23-13s-17 4-23 13Z" fill="url(#hr${id})"/><path d="M45 31c8-4 22-4 30 0" stroke="#fff" stroke-opacity=".3" stroke-width="2" fill="none" stroke-linecap="round"/>`; }
+  const ears = a.hs === 'hijab' ? '' : `<ellipse cx="38" cy="59" rx="4.2" ry="6.2" fill="${skD}"/><ellipse cx="82" cy="59" rx="4.2" ry="6.2" fill="${skD}"/>`;
+  const beard = a.beard ? `<path d="M40 61c1 17 9 25 20 25s19-8 20-25c-4 9-10 12-20 12s-16-3-20-12Z" fill="${hcx}" opacity=".95"/>` : '';
+  const mus = (a.mus || a.beard) ? `<path d="M51 68.5q9-5 18 0-9 2.6-18 0Z" fill="${a.beard ? hcx : shade(a.hair, -.1)}"/>` : '';
+  const gl = a.glasses ? `<g fill="rgba(180,220,255,.18)" stroke="#2a3346" stroke-width="2"><rect x="42.5" y="51" width="14" height="11" rx="4"/><rect x="63.5" y="51" width="14" height="11" rx="4"/></g><path d="M56.5 56h7" stroke="#2a3346" stroke-width="2"/>` : '';
+  return `<svg viewBox="0 0 120 120" aria-hidden="true"><defs>
+  <radialGradient id="bg${id}" cx=".5" cy=".3" r=".8"><stop offset="0" stop-color="${a.bg1}"/><stop offset="1" stop-color="${a.bg2}"/></radialGradient>
+  <radialGradient id="sk${id}" cx=".4" cy=".35" r=".75"><stop offset="0" stop-color="${shade(sk, .14)}"/><stop offset=".7" stop-color="${sk}"/><stop offset="1" stop-color="${skD}"/></radialGradient>
+  <linearGradient id="sh${id}" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${shade(a.shirt, .18)}"/><stop offset="1" stop-color="${shade(a.shirt, -.35)}"/></linearGradient>${hairG}</defs>
+  <rect width="120" height="120" fill="url(#bg${id})"/>
+  <circle cx="60" cy="48" r="44" fill="#fff" opacity=".05"/>
+  ${back}
+  <path d="M16 122c2-22 20-33 44-33s42 11 44 33Z" fill="url(#sh${id})"/>
+  <path d="M30 104c6-8 16-12 30-12" stroke="#fff" stroke-opacity=".22" stroke-width="2.4" fill="none" stroke-linecap="round"/>
+  <path d="M51 74h18l1 17q-10 7-20 0Z" fill="${skD}"/>
+  ${ears}
+  <ellipse cx="60" cy="56" rx="22" ry="25" fill="url(#sk${id})"/>
+  ${beard}${front}
+  <path d="M46 50q5-3 10-.5M64 49.5q5-2.5 10 .5" stroke="${shade(hcx, -.25)}" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+  <ellipse cx="51" cy="57" rx="2.4" ry="2.9" fill="#1d2433"/><ellipse cx="69" cy="57" rx="2.4" ry="2.9" fill="#1d2433"/>
+  <circle cx="51.9" cy="55.9" r=".85" fill="#fff"/><circle cx="69.9" cy="55.9" r=".85" fill="#fff"/>
+  <path d="M60 60q-1.8 4.6.6 6" stroke="${skD}" stroke-width="1.7" fill="none" stroke-linecap="round"/>
+  <ellipse cx="45.5" cy="65.5" rx="4" ry="2.4" fill="#ff7a7a" opacity=".22"/><ellipse cx="74.5" cy="65.5" rx="4" ry="2.4" fill="#ff7a7a" opacity=".22"/>
+  ${mus}<path d="M53 71q7 5 14 0" stroke="#8f3444" stroke-width="2.3" fill="none" stroke-linecap="round"/>
+  ${gl}
+  <ellipse cx="60" cy="56" rx="22" ry="25" fill="none" stroke="rgba(255,255,255,.22)"/>
+  <ellipse cx="51" cy="40" rx="8" ry="3.4" fill="#fff" opacity=".14" transform="rotate(-20 51 40)"/>
+  </svg>`;
+}
+const lastTxt = (m) => m == null ? 'Daha önce bağış yapmadı' : m >= 12 ? (m / 12) + ' yıl önce' : m + ' ay önce';
+function evalP(p) {
+  const need = p.g === 'K' ? 4 : 3;
+  return [
+    { id: 'age', ok: p.age >= 18 && p.age <= 65, why: p.age < 18 ? `${p.age} yaşında; 18 yaşından küçükler kan bağışı yapamaz (18-65 yaş).` : `${p.age} yaşında; kan bağışçısı 18-65 yaş aralığında olmalıdır.` },
+    { id: 'kg', ok: p.kg > 50, why: `${p.kg} kg; kan bağışçısının 50 kg üzerinde olması gerekir.` },
+    { id: 'sick', ok: !p.sick, why: 'Önemli bir sağlık problemi var; kan bağışçısı sağlıklı olmalıdır.' },
+    { id: 'gap', ok: p.last == null || p.last >= need, why: `Son bağıştan bu yana ${p.last} ay geçmiş; ${p.g === 'K' ? 'kadınlar dört ayda' : 'erkekler üç ayda'} bir kan verebilir.` }
+  ];
+}
+const RULES = [{ id: 'age', ic: SVGI.cake, t: '18-65 yaş aralığında' }, { id: 'kg', ic: SVGI.scale, t: '50 kg üzerinde' }, { id: 'sick', ic: SVGI.heart, t: 'Önemli sağlık problemi yok' }, { id: 'gap', ic: SVGI.cal, t: 'Kadınlar 4 ayda, erkekler 3 ayda bir' }];
+const BG = { order: [], i: 0, res: [], answered: false, done: false };
+function bagisInit() { BG.order = ZD.shuffle(PEOPLE.map((_, i) => i)); BG.i = 0; BG.res = []; BG.answered = false; BG.done = false; ui.stat('found', '0/8'); renderDon(); }
+function renderDon() {
+  donEl.innerHTML = `<div class="don-l"><div class="pstack" id="pstack"></div>
+    <div class="don-acts"><button class="nbtn no" id="bNo" aria-label="Bağış yapamaz"><span class="c">${ZD.I.x}</span>YAPAMAZ</button><button class="nbtn yes" id="bYes" aria-label="Bağış yapabilir"><span class="c">${CHECK}</span>YAPABİLİR</button></div></div>
+    <div class="don-r zd-card" id="donR"></div>`;
+  $('#bNo').onclick = () => answer(false); $('#bYes').onclick = () => answer(true);
+  renderCard(); renderDonR();
+}
+function renderCard() {
+  const p = PEOPLE[BG.order[BG.i]], ps = $('#pstack'); if (!p) return;
+  ps.innerHTML = `<article class="pcard in" id="pcard" aria-live="polite"><div class="pc-head"><span class="zd-chip">BAĞIŞÇI BİLGİ FORMU</span><span class="pc-no">${BG.i + 1} / ${PEOPLE.length}</span></div>
+  <div class="pc-main"><div class="ava">${avatar(p, 'p' + BG.i)}</div><div class="pc-info"><h3>${p.ad}</h3><div class="quote">“${p.q}”</div>
+  <div class="facts"><div data-f="age"><span>Yaş</span><b>${p.age}</b></div><div data-f="kg"><span>Kilo</span><b>${p.kg} kg</b></div>
+  <div><span>Cinsiyet</span><b>${p.g === 'K' ? 'Kadın' : 'Erkek'}</b></div><div data-f="gap"><span>Son bağış</span><b>${lastTxt(p.last)}</b></div>
+  <div class="wide" data-f="sick"><span>Sağlık durumu</span><b>${p.sick ? p.sickTxt : 'Sağlıklı, önemli bir sağlık problemi yok'}</b></div></div></div></div>
+  <div class="stamp" id="stamp"></div></article>`;
+  $('#bNo').disabled = false; $('#bYes').disabled = false; BG.answered = false;
+}
+function renderDonR(fb) {
+  const r = $('#donR'); if (BG.done) return renderSteps();
+  r.innerHTML = `<div class="p-head"><span class="zd-chip red">KAN BAĞIŞI</span><span class="p-step">Bu kişi kan bağışı yapabilir mi?</span></div>
+  <ul class="rules" id="rules">${RULES.map(x => `<li data-r="${x.id}"><span class="ri">${x.ic}</span>${x.t}<span class="rs"></span></li>`).join('')}</ul>
+  <div class="fb ${fb ? fb.cls : ''}" id="fb">${fb ? fb.html : 'Bağışçı bilgi formunu oku. Kitaptaki koşullara göre karar ver: <b>Yapabilir</b> mi, <b>Yapamaz</b> mı?'}</div>
+  <div class="prog">${PEOPLE.map((_, i) => `<i class="${BG.res[i] === true ? 'ok' : BG.res[i] === false ? 'no' : i === BG.i ? 'cur' : ''}"></i>`).join('')}</div>
+  <div class="row" style="justify-content:flex-end"><button class="zd-btn sm" id="bNext" ${BG.answered ? '' : 'hidden'}>${BG.i < PEOPLE.length - 1 ? 'Sıradaki kişi' : 'Sonuçları gör'}${ZD.I.arrowR}</button></div>`;
+  const n = $('#bNext'); if (n) n.onclick = () => { sfx('click'); nextP(); };
+}
+function answer(yes) {
+  if (BG.answered || BG.done) return; BG.answered = true;
+  const p = PEOPLE[BG.order[BG.i]], ev = evalP(p), ok = ev.every(e => e.ok), right = yes === ok;
+  BG.res[BG.i] = right;
+  if (right) { st.streak++; st.score += 100 + 20 * (st.streak - 1); sfx('good'); toast(right && ok ? `<b>Doğru!</b> ${p.ad} kan bağışı yapabilir.` : `<b>Doğru!</b> ${p.ad} kan bağışı yapamaz.`, 'good', 1800); }
+  else { st.streak = 0; sfx('bad'); const pc = $('#pcard'); pc.classList.remove('zd-shake'); void pc.offsetWidth; pc.classList.add('zd-shake'); }
+  ui.stat('score', st.score, true); ui.stat('streak', st.streak, true); ui.stat('found', (BG.i + 1) + '/8', true);
+  const fails = ev.filter(e => !e.ok);
+  const html = (right ? '<b>Doğru karar.</b> ' : '<b>Yanlış karar.</b> ') + (ok ? `${p.ad} bütün koşulları sağlıyor${p.last != null ? `; ${p.g === 'K' ? 'kadınlar dört ayda' : 'erkekler üç ayda'} bir kan verebilir ve son bağışının üzerinden ${p.last} ay geçmiş` : ''}. <b>Bağış yapabilir.</b>` : `${p.ad}: ${fails.map(f => f.why).join(' ')} <b>Bağış yapamaz.</b>`);
+  renderDonR({ cls: right ? 'good' : 'bad', html });
+  ev.forEach(e => { const li = document.querySelector(`#rules li[data-r="${e.id}"]`); if (li) { li.classList.add(e.ok ? 'ok' : 'no'); li.querySelector('.rs').innerHTML = e.ok ? CHECK : ZD.I.x; } const f = document.querySelector(`.facts [data-f="${e.id}"]`); if (f) f.classList.add(e.ok ? 'good' : 'bad'); });
+  const s = $('#stamp'); s.textContent = ok ? 'UYGUN' : 'UYGUN DEĞİL'; s.className = 'stamp show ' + (ok ? 'ok' : 'no'); sfx('pop');
+  $('#bNo').disabled = true; $('#bYes').disabled = true;
+}
+function nextP() {
+  const pc = $('#pcard'); if (pc) { pc.classList.remove('in'); pc.classList.add('out'); } sfx('whoosh');
+  setTimeout(() => { BG.i++; if (BG.i >= PEOPLE.length) return finishBagis(); renderCard(); renderDonR(); }, 330);
+}
+const STEP_IC = [
+  `<svg viewBox="0 0 32 32"><defs><linearGradient id="s1g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset="1" stop-color="#bfe6f2"/></linearGradient></defs><rect x="7" y="5" width="18" height="23" rx="3" fill="url(#s1g)"/><rect x="11" y="3" width="10" height="5" rx="2" fill="#35eefc"/><path d="M11 13h10M11 17h10M11 21h6" stroke="#4a6a86" stroke-width="2" stroke-linecap="round"/></svg>`,
+  `<svg viewBox="0 0 32 32" fill="none" stroke-linecap="round"><path d="M9 4v8a6 6 0 0 0 12 0V4" stroke="#dbe8f5" stroke-width="2.4"/><path d="M15 18v4a5 5 0 0 0 10 0v-3" stroke="#dbe8f5" stroke-width="2.4"/><circle cx="25" cy="16.5" r="3.4" fill="#35eefc"/><circle cx="9" cy="4" r="1.6" fill="#fff"/><circle cx="21" cy="4" r="1.6" fill="#fff"/></svg>`,
+  `<svg viewBox="0 0 32 32"><defs><linearGradient id="s3g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ff7a8a"/><stop offset="1" stop-color="#b3122f"/></linearGradient></defs><path d="M16 3c5 7 9 11.5 9 16.5a9 9 0 0 1-18 0C7 14.5 11 10 16 3Z" fill="url(#s3g)"/><ellipse cx="12.5" cy="18" rx="2" ry="3.6" fill="#fff" opacity=".5"/><path d="M12 21h8M16 17v8" stroke="#fff" stroke-width="2.2" stroke-linecap="round"/></svg>`,
+  `<svg viewBox="0 0 32 32"><defs><linearGradient id="s4g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffd36b"/><stop offset="1" stop-color="#ff8a3d"/></linearGradient></defs><path d="M8 10h14l-1.6 16a2 2 0 0 1-2 1.8h-6.8a2 2 0 0 1-2-1.8Z" fill="url(#s4g)"/><path d="M8 10h14" stroke="#fff" stroke-width="2" stroke-linecap="round"/><path d="M17 10l3-7" stroke="#35eefc" stroke-width="2" stroke-linecap="round"/><path d="M22 13h2.5a3 3 0 0 1 0 6H21" fill="none" stroke="#ffe6b0" stroke-width="2"/></svg>`
+];
+const STEPS = [['KAYIT', 'Bağışçı Bilgi Formu doldurulur.'], ['DOKTOR MUAYENESİ', 'Doktor formu değerlendirir, kısa bir muayene yapar.'], ['KAN ALMA', 'Şartlar uygunsa hijyenik şartlarda, tek kullanımlık malzemelerle kan alınır.'], ['İKRAM VE İSTİRAHAT', '10-15 dakika dinlenilir; meyve suyu sıvı kaybını giderir.']];
+const stepsHTML = () => `<div class="steps4">${STEPS.map((s, i) => `<div class="st4"><span class="no">${i + 1}</span><div class="ic">${STEP_IC[i]}</div><b>${s[0]}</b><p>${s[1]}</p></div>`).join('')}</div>`;
+const KIZ = `<div class="kiz"><svg viewBox="0 0 40 40"><defs><radialGradient id="kzg" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#ff9aa6"/><stop offset="1" stop-color="#c8102e"/></radialGradient></defs><path d="M20 3c6 9 12 15 12 22a12 12 0 0 1-24 0C8 18 14 12 20 3Z" fill="url(#kzg)"/><path d="M14 25a6 6 0 0 0 6 6" stroke="#fff" stroke-width="2.4" fill="none" stroke-linecap="round" opacity=".8"/></svg><span><b>Kan bağışı toplumsal dayanışmayı güçlendirir.</b> 18-65 yaş arası, 50 kg üzerindeki, önemli sağlık problemi bulunmayan her birey kan bağışı yapabilir. Bağış için Türk Kızılaya veya hastanelerdeki ilgili birimlere başvurulabilir.</span></div>`;
+function renderSteps() {
+  const r = $('#donR'), ok = BG.res.filter(Boolean).length;
+  r.innerHTML = `<div class="p-head"><span class="zd-chip green">TAMAMLANDI</span><span class="p-step">${ok}/8 doğru karar</span></div>
+  <div class="p-title">Kan Bağışında 4 Adım</div>${stepsHTML()}${KIZ}
+  <div class="row" style="justify-content:flex-end"><button class="zd-btn ghost sm" id="bRe">${ZD.I.restart}Tekrar oyna</button></div>`;
+  $('#bRe').onclick = () => { sfx('click'); restartMode(); };
+}
+function finishBagis() {
+  BG.done = true; const ok = BG.res.filter(Boolean).length; sfx('level');
+  $('#pstack').innerHTML = `<article class="pcard in" style="text-align:center"><span class="zd-chip green">8 KİŞİ DEĞERLENDİRİLDİ</span><h3 style="font-size:28px;font-weight:800;margin:10px 0 6px">${ok} doğru karar</h3>
+  <p class="p-text">Uygun bağışçılar: ${PEOPLE.filter(p => evalP(p).every(e => e.ok)).map(p => p.ad).join(', ')}.</p>
+  <div style="display:flex;justify-content:center;gap:6px;margin-top:12px;flex-wrap:wrap">${BG.order.map((pi, i) => `<div style="width:52px;height:52px;border-radius:50%;padding:2px;background:${BG.res[i] ? 'var(--green)' : 'var(--red)'}">${avatar(PEOPLE[pi], 'f' + i).replace('<svg ', '<svg style="width:100%;height:100%;border-radius:50%" ')}</div>`).join('')}</div></article>`;
+  document.querySelector('.don-acts').style.display = 'none';
+  renderSteps();
+  setTimeout(() => ZD.result({ title: 'Kan bağışı uzmanı!', correct: ok, total: 8, score: st.score, time: timer.t, text: 'Kan bağışı, toplumsal dayanışmayı güçlendirir.', extra: `<div style="margin-top:14px">${stepsHTML()}</div>`, onReplay: () => restartMode() }), 900);
+}
+
+/* =====================================================================
+   KONTROLLER
+   ===================================================================== */
+function setFocus(v, quiet) {
+  st.focus = clamp(v, 0, 1);
+  focusR.value = Math.round(st.focus * 1000); focusR.style.setProperty('--p', (st.focus * 100) + '%');
+  knobRot.setAttribute('transform', `rotate(${st.focus * 600} 114 176)`); knobEl.setAttribute('aria-valuenow', Math.round(st.focus * 100));
+  $('#msStage').style.transform = `translateY(${(.5 - st.focus) * 10}px)`;
+  if (!quiet && Math.abs(st.focus - st.lastTick) > .022) { st.lastTick = st.focus; sfx('tick'); }
+  const was = st.sharp; st.sharp = Math.abs(st.focus - st.fT) < FOK;
+  if (st.sharp !== was) {
+    fStat.textContent = st.sharp ? 'NET' : 'BULANIK'; fStat.classList.toggle('ok', st.sharp);
+    if (st.sharp) {
+      if (!st.everFocused) { st.everFocused = true; sfx('good'); toast('<b>Görüntü netleşti!</b> Artık kan hücrelerini inceleyebilirsin.', 'good', 2400); ZD.hideHand(); if (st.mode === 'tani') { startGame(); } }
+      else sfx('pop');
+    }
+  }
+  blurPill.classList.toggle('show', !st.sharp && st.mode !== 'bagis');
+}
+focusR.addEventListener('input', () => setFocus(focusR.value / 1000));
+(function knobDrag() {
+  let drag = false, last = 0, cx = 0, cy = 0;
+  knobEl.addEventListener('pointerdown', e => { e.preventDefault(); drag = true; knobEl.setPointerCapture(e.pointerId); const r = knobEl.getBoundingClientRect(); cx = r.left + r.width / 2; cy = r.top + r.height / 2; last = Math.atan2(e.clientY - cy, e.clientX - cx); ZD.hideHand(); });
+  knobEl.addEventListener('pointermove', e => { if (!drag) return; const a = Math.atan2(e.clientY - cy, e.clientX - cx); const d = wrapA(a - last); last = a; setFocus(st.focus + d / (TAU * 1.667)); });
+  const end = () => { drag = false; }; knobEl.addEventListener('pointerup', end); knobEl.addEventListener('pointercancel', end);
+  knobEl.addEventListener('wheel', e => { e.preventDefault(); setFocus(st.focus - Math.sign(e.deltaY) * .012); }, { passive: false });
+  knobEl.addEventListener('keydown', e => { if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { setFocus(st.focus + .01); e.preventDefault(); } if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { setFocus(st.focus - .01); e.preventDefault(); } });
+})();
+function setMag(m, quiet) {
+  if (st.mode !== 'tani' && !quiet) { toast('Bu senaryoda büyütme <b>400×</b> olarak sabittir.', '', 1800); return; }
+  if (st.mag !== m && !quiet) sfx('whoosh');
+  st.mag = m; document.querySelectorAll('#mag button').forEach(b => b.classList.toggle('on', +b.dataset.mag === m));
+  $('#magTag').innerHTML = `BÜYÜTME <b>${m}×</b>`;
+  $('#msTurret').style.transform = `rotate(${m === 100 ? 38 : m === 400 ? 0 : -38}deg)`;
+  if (!quiet && st.mode === 'tani' && m === 100 && GM.on && !GM.done) toast('100× büyütmede örneğin geniş bir alanını görürsün; hücreleri seçmek için 400× ya da 1000× kullan.', '', 2600);
+}
+document.querySelectorAll('#mag button').forEach(b => b.onclick = () => setMag(+b.dataset.mag));
+uc.addEventListener('pointerdown', e => {
+  if (st.mode === 'bagis') return; const r = uc.getBoundingClientRect(); const sx = (e.clientX - r.left) * Si / r.width, sy = (e.clientY - r.top) * Si / r.height;
+  const dx = sx - C, dy = sy - C; if (dx * dx + dy * dy > C * C * .96) return;
+  ZD.hideHand(); k = (Si / 2) / SC[st.mode].viewR(); SC[st.mode].tap(sx, sy);
+});
+document.querySelectorAll('#modes button').forEach(b => b.onclick = () => { if (b.dataset.m !== st.mode) { sfx('whoosh'); setMode(b.dataset.m); } });
+$('#histBtn').onclick = () => {
+  sfx('click');
+  ZD.modal({
+    dismiss: true, actions: [{ label: 'Kapat', cls: 'ghost' }],
+    html: `<span class="zd-chip amber">TARİHE NOT DÜŞENLER</span><h2>Marcello Malpighi <small style="font-size:16px;color:var(--muted);font-weight:600">(1628-1694)</small></h2>
+    <div class="malp"><svg viewBox="0 0 120 120" aria-hidden="true"><defs><radialGradient id="mpB" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#5a4128"/><stop offset="1" stop-color="#21160c"/></radialGradient><linearGradient id="mpR" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fff1c4"/><stop offset=".5" stop-color="#ffbb3d"/><stop offset="1" stop-color="#9a5f12"/></linearGradient><linearGradient id="mpS" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e9cfa0"/><stop offset="1" stop-color="#b98d55"/></linearGradient></defs>
+    <circle cx="60" cy="60" r="56" fill="url(#mpB)" stroke="url(#mpR)" stroke-width="5"/><circle cx="60" cy="60" r="49" fill="none" stroke="#ffbb3d" stroke-opacity=".35"/>
+    <path d="M26 112c2-20 16-30 34-30s32 10 34 30Z" fill="#1a120a"/><path d="M50 82l10 12 10-12" fill="#f2e6cf"/>
+    <path d="M34 62c-6-26 6-42 26-42s32 16 26 42c4 12 2 26-6 34-4-8-6-16-6-22H46c0 6-2 14-6 22-8-8-10-22-6-34Z" fill="url(#mpS)" opacity=".9"/>
+    <ellipse cx="60" cy="56" rx="15" ry="19" fill="#e6c08e"/><path d="M47 46c4-8 22-8 26 0-6-3-20-3-26 0Z" fill="#c69a5f"/>
+    <path d="M52 55h4M64 55h4M58 60l-1 5h3M54 70q6 3 12 0" stroke="#5a3d1e" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+    <p>İtalyan bir doktor ve bilim insanı olan Malpighi, üniversite eğitimi sırasında mikroskopla canlı dokular üzerinde incelemeler yapmıştır. İç organlar üzerindeki titiz gözlemleri sayesinde dolaşım sisteminin yalnızca atardamar ve toplardamarlardan oluşmadığını fark etmiştir. Bilim dünyası <b style="color:#fff">“kılcal damar”</b> ve <b style="color:#fff">“alyuvar”</b> sözcüklerini Malpighi’den duymuştur.</p></div>`
+  });
+};
+
+/* ---------------- Mod geçişi ---------------- */
+const FOUND_LBL = { tani: 'Bulunan', yara: 'Pıhtı', mikrop: 'Yok edilen', oksijen: 'O₂ teslim', bagis: 'Kart' };
+function setMode(m) {
+  st.mode = m; TAGS = []; ZD.hideHand(); if (st.started) timer.start();
+  document.querySelectorAll('#modes button').forEach(b => { b.classList.toggle('on', b.dataset.m === m); b.setAttribute('aria-selected', b.dataset.m === m); });
+  const lbl = document.querySelector('[data-stat="found"] .l'); if (lbl) lbl.textContent = FOUND_LBL[m];
+  const bag = m === 'bagis'; labEl.hidden = bag; donEl.hidden = !bag;
+  document.querySelectorAll('#mag button').forEach(b => b.disabled = m !== 'tani');
+  if (m === 'tani') { setMag(st.mag, true); ui.stat('found', GM.found + '/8'); }
+  else setMag(400, true);
+  if (bag) { bagisInit(); blurPill.classList.remove('show'); return; }
+  blurPill.classList.toggle('show', !st.sharp);
+  layout(true);
+  if (m !== 'tani') SC[m].init();
+  if (m === 'yara') ui.stat('found', '0%'); if (m === 'mikrop') ui.stat('found', 0); if (m === 'oksijen') ui.stat('found', 0);
+  st.comp = { tani: 'rbc', yara: 'plt', mikrop: 'wbc', oksijen: 'rbc' }[m];
+  renderComps(); renderPane();
+  if (m === 'yara') setTimeout(() => { if (st.mode === 'yara' && !Y.torn) ZD.pointAt($('#cutBtn'), { ms: 2400 }); }, 500);
+  if (m === 'mikrop') setTimeout(() => { if (st.mode === 'mikrop') toast('Mikroplar kana girdi! Akyuvarların onları sarıp yok etmesini izle.', '', 2600); }, 300);
+}
+function restartMode() {
+  ZD.hideHand(); st.score = 0; st.streak = 0; ui.stat('score', 0); ui.stat('streak', 0); timer.reset(); timer.start();
+  if (st.mode === 'tani') { gmReset(); TAGS = []; taniInit(); ui.stat('found', '0/8'); if (st.everFocused) startGame(); renderPane(); }
+  else setMode(st.mode);
+}
+const HELP = {
+  tani: { t: 'Hücreleri Tanı', s: ['Mikroskobun <strong>odak düğmesini</strong> çevir ya da <strong>ODAK</strong> kaydırıcısını sürükle; görüntü netleşsin.', 'Büyütmeyi <strong>400×</strong> veya <strong>1000×</strong> yap; hücreler büyüsün. 100× büyütmede geniş bir alan görürsün.', 'Yönerge kartında istenen hücreyi bul ve üzerine dokun. 8 bulgunun hepsini tamamla.', 'Sonunda sayım sonucunu incele: hangi hücre en fazla, hangisi en az?'] },
+  yara: { t: 'Yaralanma', s: ['Görüş alanında bir damarın kesiti var: üstte damarın içi, altta damarın dışı.', '<strong>Damarı çiz</strong> düğmesine bas; damar duvarı yırtılsın.', 'Alyuvarların dışarı sızmasını ve kan pulcuklarının yaraya toplanıp pıhtı oluşturmasını izle.', 'Paneldeki adımları ve kan kaybı göstergesini takip et.'] },
+  mikrop: { t: 'Mikrop Saldırısı', s: ['Yeşil, tüylü canlılar mikroplardır; zamanla çoğalırlar.', 'Akyuvarlar mikropları takip eder, sarar ve yok eder.', 'Mikroplar çoğalırsa <strong>Akyuvarları çağır</strong> düğmesine bas: akyuvar sayısı artar.', 'Grafikte mikrop ve akyuvar sayısının nasıl değiştiğini izle.'] },
+  oksijen: { t: 'Oksijen Taşıma', s: ['Alyuvarlar akciğer kılcalı ile vücut hücreleri arasında dolaşır.', 'Akciğerde O₂ alır, CO₂ bırakır: parlak kırmızı olur.', 'Vücut hücrelerinde O₂ bırakır, CO₂ alır: koyu mavimsi-mora döner.', '<strong>Spor</strong> seçeneğiyle kanın daha hızlı dolaştığını gör. Bir alyuvara dokunarak ne taşıdığını öğren.'] },
+  bagis: { t: 'Kan Bağışı', s: ['Her kartta bir kişinin bağışçı bilgi formu var.', 'Yaşı, kilosu, sağlık durumu ve son bağış zamanına bak.', 'Kitaptaki koşullara göre <strong>Yapabilir</strong> ya da <strong>Yapamaz</strong> düğmesine bas.', '8 kişiden sonra kan bağışının 4 adımını öğren.'] }
+};
+function showHelp() {
+  const h = HELP[st.mode];
+  ZD.intro({ kicker: 'NASIL OYNANIR? · ' + h.t.toLocaleUpperCase('tr'), title: h.t, steps: h.s, start: 'Devam', onStart: () => pointFirst() });
+}
+function pointFirst() {
+  if (st.mode === 'tani' && !st.sharp) ZD.pointAt(knobEl, { ms: 3000 });
+  else if (st.mode === 'tani' && st.mag === 100) ZD.pointAt($('[data-mag="400"]'), { ms: 2500 });
+  else if (st.mode === 'yara' && !Y.torn) ZD.pointAt($('#cutBtn'), { ms: 2500 });
+  else if (st.mode === 'mikrop') ZD.pointAt($('#callBtn'), { ms: 2500 });
+  else if (st.mode === 'bagis') ZD.pointAt($('#bYes'), { ms: 2500 });
+}
+
+/* ---------------- Yerleşim ---------------- */
+let lastS = 0;
+function layout(force) {
+  const mob = innerWidth < 861, body = ui.body, cw = body.clientWidth - (mob ? 24 : 44);
+  let S;
+  if (mob) S = Math.min(cw, 460);
+  else { const ref = st.mode === 'bagis' ? donEl : labEl; const top = ref.getBoundingClientRect().top + scrollY; const availH = innerHeight - top - 54; S = Math.min(availH, cw - (innerWidth < 1100 ? 130 : 150) - 440 - 32, 640); }
+  S = Math.max(280, Math.floor(S));
+  document.documentElement.style.setProperty('--S', S + 'px');
+  const nSi = S - 32, nD = Math.min(2, window.devicePixelRatio || 1);
+  if (!force && nSi === Si && nD === D && S === lastS) return; lastS = S;
+  Si = nSi; C = Si / 2; D = nD;
+  for (const c of [cv, uc]) { c.width = Math.round(Si * D); c.height = Math.round(Si * D); c.style.width = Si + 'px'; c.style.height = Si + 'px'; }
+  if (st.mode === 'yara' && Y.cells.length) yaraCache();
+  if (st.mode === 'oksijen' && OX.rbc.length) oxCache();
+}
+addEventListener('resize', () => layout());
+
+/* ---------------- Ana döngü ---------------- */
+let last = performance.now(), pT = 0;
+function loop(now) {
+  const dt = Math.min(.05, (now - last) / 1000); last = now; st.t += dt;
+  const tl = Math.log(st.mag), dl = tl - st.magL; st.magL += dl * Math.min(1, dt * 5); st.magCur = Math.exp(st.magL);
+  st.zoomBlur = Math.min(4, Math.abs(dl) * 5);
+  const sc = SC[st.mode];
+  if (sc && st.mode !== 'bagis') {
+    sc.update(dt); k = (Si / 2) / sc.viewR();
+    g.setTransform(D, 0, 0, D, 0, 0); g.globalAlpha = 1; g.clearRect(0, 0, Si, Si); sc.draw(); resetT();
+    u.setTransform(D, 0, 0, D, 0, 0); u.clearRect(0, 0, Si, Si); sc.ui();
+    const err = Math.abs(st.focus - st.fT); let px = st.sharp ? 0 : Math.min(11, (err - FOK) * 34 + .6); px += st.zoomBlur;
+    if (Math.abs(px - st.lastBlur) > .05) { cv.style.filter = px > .06 ? `blur(${px.toFixed(2)}px) saturate(${(1 - Math.min(.25, px / 40)).toFixed(2)})` : 'none'; st.lastBlur = px; }
+  }
+  pT -= dt; if (pT <= 0) { pT = .2; if (st.mode !== 'bagis') paneTick(); }
+  requestAnimationFrame(loop);
+}
+
+/* ---------------- Başlat ---------------- */
+taniInit(); layout(true); setMode('tani'); setFocus(st.focus, true); setMag(400, true);
+requestAnimationFrame(loop);
+const INTRO_ART = `<svg class="intro-art" viewBox="0 0 230 96" aria-hidden="true"><defs>
+<radialGradient id="iaR" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#ff9d97"/><stop offset=".42" stop-color="#ef5a5e"/><stop offset=".74" stop-color="#c81e30"/><stop offset="1" stop-color="#7d0c19"/></radialGradient>
+<radialGradient id="iaW" cx=".38" cy=".35" r=".7"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#e3d8ff"/><stop offset="1" stop-color="#a98fe6"/></radialGradient>
+<radialGradient id="iaN" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#b58cf2"/><stop offset="1" stop-color="#4a2596"/></radialGradient>
+<radialGradient id="iaBg" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#f6d58f"/><stop offset=".8" stop-color="#d29a4c"/><stop offset="1" stop-color="#3b2408"/></radialGradient>
+<filter id="iaG"><feGaussianBlur stdDeviation="6"/></filter></defs>
+<circle cx="115" cy="48" r="46" fill="#35eefc" opacity=".25" filter="url(#iaG)"/>
+<circle cx="115" cy="48" r="44" fill="url(#iaBg)" stroke="#49f3ff" stroke-width="2"/>
+<g><circle cx="95" cy="36" r="13" fill="url(#iaR)"/><circle cx="95" cy="36" r="5.5" fill="#ffb3aa" opacity=".45"/>
+<ellipse cx="122" cy="66" rx="12" ry="6" fill="url(#iaR)" transform="rotate(-20 122 66)"/>
+<circle cx="140" cy="34" r="12" fill="url(#iaR)"/><circle cx="140" cy="34" r="5" fill="#ffb3aa" opacity=".45"/>
+<circle cx="98" cy="66" r="11" fill="url(#iaR)"/><circle cx="98" cy="66" r="4.5" fill="#ffb3aa" opacity=".45"/>
+<circle cx="120" cy="40" r="14" fill="url(#iaW)" stroke="#fff"/><circle cx="114" cy="42" r="4" fill="url(#iaN)"/><circle cx="120" cy="36" r="4" fill="url(#iaN)"/><circle cx="126" cy="43" r="4" fill="url(#iaN)"/>
+<path d="M142 58c2-2 5-1 5 1s-3 3-5 2-1-2 0-3Z" fill="#e8b86a"/><path d="M83 50c2-2 5-1 5 1s-3 3-5 2-1-2 0-3Z" fill="#e8b86a"/></g>
+<path d="M86 20a40 40 0 0 1 30-14" stroke="#fff" stroke-opacity=".5" stroke-width="3" fill="none" stroke-linecap="round"/></svg>`;
+ZD.intro({
+  kicker: 'SİMÜLASYON · KANIN YAPISI', title: 'Kan Laboratuvarı', art: INTRO_ART,
+  text: 'Bir damla kanı mikroskopla incele: plazma, alyuvar, akyuvar ve kan pulcuklarını tanı; yaralanmada, mikrop saldırısında ve oksijen taşınmasında görevlerini izle; kan bağışı koşullarını öğren.',
+  steps: ['Mikroskobun <strong>odak düğmesini</strong> çevirerek bulanık görüntüyü netleştir.', '<strong>100× · 400× · 1000×</strong> büyütmeler arasında geçiş yap.', 'Üstteki 5 moddan birini seç ve yönergeleri takip et.'],
+  start: 'Başla', onStart: () => { timer.start(); st.started = true; setTimeout(() => ZD.pointAt(knobEl, { ms: 3200 }), 350); }
+});
+</script></body></html>

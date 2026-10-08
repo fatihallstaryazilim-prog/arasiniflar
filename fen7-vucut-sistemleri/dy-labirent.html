@@ -1,0 +1,658 @@
+<!doctype html><html lang="tr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Doğru Çıkışı Bul</title><link rel="stylesheet" href="assets/zd.css">
+<style>
+/* ===================== D/Y Labirenti ===================== */
+.zd-body{position:relative}
+.dy{position:relative;height:clamp(500px,calc(100vh - 182px),900px);padding:4px 18px 16px}
+.dy-board{position:relative;width:100%;height:100%;border-radius:22px;
+  background:
+    radial-gradient(700px 360px at 50% 0%,rgba(53,238,252,.07),transparent 70%),
+    radial-gradient(600px 300px at 50% 100%,rgba(47,227,155,.05),transparent 70%),
+    linear-gradient(180deg,rgba(6,16,30,.55),rgba(4,12,24,.75));
+  border:1px solid rgba(140,200,255,.12);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.02),inset 0 20px 60px rgba(0,0,0,.35);
+  overflow:hidden}
+.dy-board svg.lay{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.dy-board svg.tracks{z-index:1}
+.dy-board svg.fx{z-index:5;pointer-events:none}
+.dy-pcb{position:absolute;inset:0;z-index:0;opacity:.55;pointer-events:none;
+  -webkit-mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,#000 20%,transparent 85%);mask-image:radial-gradient(ellipse 70% 70% at 50% 50%,#000 20%,transparent 85%)}
+
+.trk-base{fill:none;stroke:#11263d;stroke-width:9;stroke-linecap:round;stroke-linejoin:round}
+.trk-in{fill:none;stroke:rgba(80,170,230,.22);stroke-width:2;stroke-linecap:round;stroke-dasharray:2 7}
+.trk-lit{fill:none;stroke:#7ff6ff;stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round;filter:url(#glow)}
+.trk-lit.ok{stroke:#3ff0a8}
+.trk-lit.bad{stroke:#ff5468}
+.trk-route{fill:none;stroke:#3ff0a8;stroke-width:3;stroke-dasharray:3 9;stroke-linecap:round;opacity:.95;filter:url(#glow);animation:dy-march 1s linear infinite}
+@keyframes dy-march{to{stroke-dashoffset:-24}}
+.pad{fill:#0b1a2d;stroke:rgba(110,200,255,.35);stroke-width:2}
+.pad.on{stroke:#7ff6ff;fill:#0f3442}
+
+/* ---- düğümler ---- */
+.node{position:absolute;z-index:3;padding:12px 16px 12px 18px;border-radius:16px;
+  background:linear-gradient(180deg,rgba(38,68,104,.62),rgba(14,30,52,.78));
+  border:1.5px solid rgba(140,200,255,.18);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 -10px 22px rgba(0,0,0,.18),0 12px 28px rgba(0,0,0,.35);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  color:#a9bdd3;font-weight:500;line-height:1.38;text-align:center;
+  transition:opacity .4s var(--ease),transform .45s var(--spring),border-color .3s,box-shadow .35s,color .3s,background .3s;
+  opacity:.6;cursor:default}
+.node::after{content:"";position:absolute;left:14px;right:14px;top:1px;height:40%;border-radius:14px 14px 40% 40%;
+  background:linear-gradient(180deg,rgba(255,255,255,.07),transparent);pointer-events:none}
+.node p{font-size:15px}
+.node.l0 p{font-size:17px;font-weight:600}
+.node.l1 p{font-size:16px;font-weight:600}
+.node .lv{position:absolute;left:-11px;top:-11px;width:26px;height:26px;border-radius:50%;display:grid;place-items:center;
+  font-size:12px;font-weight:800;color:#06303a;background:linear-gradient(180deg,#9df8ff,#35d4e6);box-shadow:0 0 0 3px #0b1a2d,0 4px 10px rgba(0,0,0,.4);opacity:.7}
+.node .tag{position:absolute;right:12px;top:-13px;display:none;align-items:center;gap:5px;padding:3px 10px;border-radius:99px;
+  font-size:12px;font-weight:800;letter-spacing:.6px;white-space:nowrap;background:#0d2a3c;border:1.5px solid var(--cyan);color:var(--cyan);box-shadow:0 4px 12px rgba(0,0,0,.35)}
+.node .tag svg{width:13px;height:13px}
+.node.visited,.node.active{opacity:1;color:#eef6ff}
+.node.visited{border-color:rgba(127,246,255,.55)}
+.node.visited .tag{display:inline-flex}
+.node.active{border-color:#7ff6ff;transform:scale(1.035);
+  background:linear-gradient(180deg,rgba(46,92,132,.85),rgba(16,38,64,.9));
+  box-shadow:0 0 0 1px rgba(127,246,255,.4),0 0 26px rgba(53,238,252,.45),0 0 70px rgba(53,238,252,.15),inset 0 1px 0 rgba(255,255,255,.15),0 16px 34px rgba(0,0,0,.45)}
+.node.active .lv{opacity:1}
+.node.active::before{content:"";position:absolute;inset:-7px;border-radius:21px;border:1.5px solid rgba(127,246,255,.5);animation:dy-breath 1.8s ease-in-out infinite;pointer-events:none}
+@keyframes dy-breath{50%{inset:-12px;opacity:0}}
+.node.rv{opacity:.85;cursor:pointer}
+.node.rv .tag{display:inline-flex}
+.node.good{border-color:rgba(63,240,168,.8);box-shadow:0 0 0 1px rgba(63,240,168,.3),0 0 22px rgba(47,227,155,.3),0 12px 28px rgba(0,0,0,.35)}
+.node.good .tag{border-color:var(--green);color:var(--green);background:#0b2e24}
+.node.wrong{border-color:rgba(255,84,104,.9);box-shadow:0 0 0 1px rgba(255,84,104,.35),0 0 24px rgba(255,84,104,.35),0 12px 28px rgba(0,0,0,.35);background:linear-gradient(180deg,rgba(80,30,48,.75),rgba(34,14,26,.85))}
+.node.wrong .tag{border-color:var(--red);color:#ff9aa6;background:#3a1420}
+.node.neutral .tag{border-color:rgba(140,200,255,.35);color:#9fb6cf;background:#0d1d30}
+
+/* ---- D/Y rozetleri ---- */
+.bdg{position:absolute;z-index:4;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;display:grid;place-items:center;
+  font-weight:900;font-size:15px;color:#fff;pointer-events:none;transition:transform .35s var(--spring),opacity .3s,box-shadow .3s;opacity:.55}
+.bdg.d{background:radial-gradient(circle at 35% 30%,#7dffc9,#16b979 70%);box-shadow:0 0 0 3px #08182a,0 4px 10px rgba(0,0,0,.4)}
+.bdg.y{background:radial-gradient(circle at 35% 30%,#ff9aa6,#e0334a 70%);box-shadow:0 0 0 3px #08182a,0 4px 10px rgba(0,0,0,.4)}
+.bdg.live{pointer-events:auto;cursor:pointer;opacity:1;transform:scale(1.5);font-size:15px}
+.bdg.live.d{box-shadow:0 0 0 3px #08182a,0 0 18px rgba(47,227,155,.75),0 6px 14px rgba(0,0,0,.45)}
+.bdg.live.y{box-shadow:0 0 0 3px #08182a,0 0 18px rgba(255,84,104,.75),0 6px 14px rgba(0,0,0,.45)}
+.bdg.live::after{content:"";position:absolute;inset:-6px;border-radius:50%;border:2px solid currentColor;animation:zd-ring 1.4s infinite}
+.bdg.live.d::after{color:#3ff0a8}.bdg.live.y::after{color:#ff7385}
+.bdg.live:hover{transform:scale(1.65)}
+.bdg.live:active{transform:scale(1.4)}
+.bdg.used{opacity:1;transform:scale(1.1)}
+.bdg.dim{opacity:.22}
+
+/* ---- çıkış kapıları ---- */
+.door{position:absolute;z-index:3;border-radius:46px 46px 12px 12px;overflow:hidden;
+  background:linear-gradient(180deg,#04101d,#071a2b);
+  border:2px solid rgba(110,200,255,.35);
+  box-shadow:0 0 0 4px rgba(8,22,38,.9),0 0 18px rgba(53,238,252,.12),inset 0 0 18px rgba(0,0,0,.6),0 12px 26px rgba(0,0,0,.4);
+  transition:border-color .4s,box-shadow .5s,opacity .4s,transform .45s var(--spring);opacity:.72}
+.door .core{position:absolute;inset:0;background:radial-gradient(ellipse 60% 70% at 50% 60%,rgba(127,246,255,.0),transparent);transition:background .6s}
+.door .leaf{position:absolute;top:0;bottom:0;width:50%;transition:transform .9s cubic-bezier(.6,0,.2,1);
+  background:linear-gradient(180deg,#1c3654,#0f2138);box-shadow:inset 0 1px 0 rgba(255,255,255,.1)}
+.door .leaf.l{left:0;border-right:1px solid rgba(127,246,255,.35);background:linear-gradient(90deg,#1a3150,#21406a 70%,#16304d)}
+.door .leaf.r{right:0;border-left:1px solid rgba(127,246,255,.35);background:linear-gradient(270deg,#1a3150,#21406a 70%,#16304d)}
+.door .leaf::after{content:"";position:absolute;top:22%;bottom:22%;width:3px;border-radius:3px;background:rgba(127,246,255,.35)}
+.door .leaf.l::after{right:7px}.door .leaf.r::after{left:7px}
+.door .num{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:2;pointer-events:none;line-height:1}
+.door .num b{font-size:28px;font-weight:900;color:#dff9ff;text-shadow:0 0 14px rgba(53,238,252,.6)}
+.door .num span{font-size:12px;font-weight:700;letter-spacing:1.6px;color:#9fd7e6;margin-top:3px;text-transform:uppercase}
+.door.reach{opacity:1;border-color:#7ff6ff}
+.door.open .leaf.l{transform:translateX(-92%)}
+.door.open .leaf.r{transform:translateX(92%)}
+.door.open.win{border-color:#3ff0a8;box-shadow:0 0 0 4px rgba(8,22,38,.9),0 0 30px rgba(47,227,155,.75),0 0 80px rgba(47,227,155,.35),inset 0 0 30px rgba(47,227,155,.35)}
+.door.open.win .core{background:radial-gradient(ellipse 70% 80% at 50% 60%,rgba(170,255,215,.95),rgba(47,227,155,.6) 45%,rgba(10,60,40,.4) 80%)}
+.door.open.win .num b,.door.open.win .num span{color:#043222;text-shadow:0 0 10px rgba(255,255,255,.7)}
+.door.open.lose{border-color:#ffbb3d;box-shadow:0 0 0 4px rgba(8,22,38,.9),0 0 26px rgba(255,187,61,.55),inset 0 0 26px rgba(255,187,61,.3)}
+.door.open.lose .core{background:radial-gradient(ellipse 70% 80% at 50% 60%,rgba(255,226,160,.85),rgba(255,140,60,.45) 50%,rgba(60,20,10,.4) 85%)}
+.door.open.lose .num b,.door.open.lose .num span{color:#3a1a00;text-shadow:0 0 10px rgba(255,255,255,.6)}
+.door.target{opacity:1;border-color:#3ff0a8;box-shadow:0 0 0 4px rgba(8,22,38,.9),0 0 22px rgba(47,227,155,.6)}
+.door.target::before{content:"DOĞRU ÇIKIŞ";position:absolute;left:50%;bottom:6px;transform:translateX(-50%);z-index:3;font-size:9.5px;font-weight:800;letter-spacing:1px;color:#3ff0a8;white-space:nowrap}
+.door.open.win.target::before{color:#043222}
+
+/* ---- üst bilgi şeritleri ---- */
+.dy-legend{position:absolute;left:16px;top:14px;z-index:6;display:flex;flex-direction:column;gap:8px}
+.dy-legend .row{display:flex;align-items:center;gap:8px;font-size:14px;color:#c9d8ea;font-weight:600}
+.dy-legend .k{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-weight:900;font-size:13px;color:#fff}
+.dy-legend .k.d{background:radial-gradient(circle at 35% 30%,#7dffc9,#16b979 70%)}
+.dy-legend .k.y{background:radial-gradient(circle at 35% 30%,#ff9aa6,#e0334a 70%)}
+.dy-step{font-size:12px;font-weight:800;letter-spacing:1.6px;color:var(--cyan);text-transform:uppercase}
+.dy-steps{display:flex;gap:6px;margin-top:2px}
+.dy-steps i{width:30px;height:6px;border-radius:6px;background:rgba(255,255,255,.12)}
+.dy-steps i.on{background:var(--cyan);box-shadow:0 0 10px var(--cyan-glow)}
+.dy-acts{position:absolute;right:14px;top:12px;z-index:6;display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;max-width:36%}
+.dy-acts[hidden]{display:none}
+
+/* ---- telefon: odak kartı ---- */
+.dy-focus{display:none}
+.mini .dy{height:auto;padding:4px 10px 14px}
+.mini .dy-board{height:208px}
+.mini .dy-legend,.mini .bdg,.mini .door .num span,.mini .node .tag,.mini .node .lv{display:none}
+.mini .node{padding:0;width:20px!important;height:20px!important;border-radius:50%;opacity:.5}
+.mini .node p,.mini .node::after,.mini .node::before{display:none}
+.mini .node.active{transform:scale(1.25)}
+.mini .node.wrong,.mini .node.good{opacity:1}
+.mini .door{border-radius:16px 16px 6px 6px;box-shadow:0 0 0 2px rgba(8,22,38,.9)}
+.mini .door .num b{font-size:16px}
+.mini .door.target::before{display:none}
+.mini .dy-acts{position:static;max-width:none;justify-content:center;margin-top:12px}
+.mini .dy-focus{display:block;margin-top:12px}
+.fcard{position:relative;padding:18px 18px 16px;border-radius:22px;
+  background:linear-gradient(180deg,rgba(44,84,124,.7),rgba(14,32,56,.85));border:1.5px solid rgba(127,246,255,.55);
+  box-shadow:0 0 24px rgba(53,238,252,.25),inset 0 1px 0 rgba(255,255,255,.12),0 16px 34px rgba(0,0,0,.4)}
+.fcard .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.fcard p{font-size:19px;font-weight:600;line-height:1.42;min-height:84px;display:flex;align-items:center;justify-content:center;text-align:center}
+.fcard.swap p{animation:dy-in .45s var(--ease)}
+@keyframes dy-in{from{opacity:0;transform:translateY(12px)}}
+.fbtns{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.fbtn{height:60px;border-radius:18px;display:flex;align-items:center;justify-content:center;gap:10px;font-size:18px;font-weight:800;color:#fff;
+  box-shadow:0 6px 0 rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .12s}
+.fbtn b{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:rgba(0,0,0,.2);font-size:17px}
+.fbtn.d{background:linear-gradient(180deg,#3ff0a8,#13a96d)}
+.fbtn.y{background:linear-gradient(180deg,#ff7385,#d72a42)}
+.fbtn:active{transform:translateY(4px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
+.fbtn[disabled]{filter:grayscale(.7) brightness(.6)}
+.fdoor{display:none;position:relative;height:150px;margin:0 auto;width:150px}
+.fcard.arrive p,.fcard.arrive .fbtns{display:none}
+.fcard.arrive .fdoor{display:block}
+.fdoor .door{position:absolute;inset:0;opacity:1}
+.fdoor .door .num b{font-size:46px}
+.mini .fdoor .door .num span{display:block;font-size:13px}
+.dy[hidden]{display:none}
+.bdg.route{opacity:.95}
+
+/* ---- set seçici ---- */
+.pick{position:relative;height:clamp(500px,calc(100vh - 182px),900px);z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;padding:18px;
+  background:radial-gradient(ellipse at 50% 30%,rgba(10,30,52,.92),rgba(5,12,22,.97))}
+.pick[hidden]{display:none}
+.pick h2{font-size:26px;font-weight:800;text-align:center}
+.pick h2 small{display:block;font-size:14px;font-weight:500;color:var(--muted);margin-top:6px}
+.pgrid{display:grid;grid-template-columns:repeat(4,minmax(0,250px));gap:18px;width:100%;justify-content:center}
+.pcard{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px;padding:18px 14px 18px;border-radius:22px;text-align:center;
+  background:linear-gradient(180deg,rgba(40,72,110,.6),rgba(12,28,48,.8));border:1.5px solid rgba(140,200,255,.22);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.08),0 14px 30px rgba(0,0,0,.35);transition:transform .3s var(--spring),border-color .25s,box-shadow .3s}
+.pcard:hover,.pcard:focus-visible{transform:translateY(-5px);border-color:var(--cyan);box-shadow:0 0 26px rgba(53,238,252,.35),0 18px 34px rgba(0,0,0,.4);outline:none}
+.pcard svg{width:118px;height:118px;filter:drop-shadow(0 10px 14px rgba(0,0,0,.45))}
+.pcard img.org{width:118px;height:118px;object-fit:contain;filter:drop-shadow(0 10px 14px rgba(0,0,0,.5));background:radial-gradient(circle at 50% 52%,rgba(220,245,255,.2),rgba(220,245,255,0) 68%);border-radius:50%}
+.pcard b{font-size:19px;font-weight:800}
+.pcard span{font-size:13.5px;color:var(--muted)}
+.pcard .st{position:absolute;top:12px;right:12px;font-size:11px}
+.pcard .go{margin-top:6px;display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:99px;font-size:14px;font-weight:700;color:#03222a;background:linear-gradient(180deg,var(--cyan),var(--cyan-2))}
+.pcard .go svg{width:16px;height:16px;filter:none}
+
+/* ---- sonuç raporu ---- */
+.rep{text-align:left;margin-top:14px;display:grid;gap:10px}
+.rep li{list-style:none;display:grid;grid-template-columns:30px 1fr;gap:12px;padding:12px 14px;border-radius:14px;background:rgba(0,0,0,.24);border:1px solid var(--line)}
+.rep li.bad{border-color:rgba(255,84,104,.5);background:rgba(80,20,36,.35)}
+.rep li.ok{border-color:rgba(47,227,155,.4)}
+.rep .ic{width:30px;height:30px;border-radius:50%;display:grid;place-items:center}
+.rep .ic svg{width:16px;height:16px}
+.rep li.ok .ic{background:var(--green);color:#032a1b}
+.rep li.bad .ic{background:var(--red);color:#fff}
+.rep q{display:block;font-size:15px;font-weight:600;color:#eef6ff;line-height:1.4;quotes:none}
+.rep .ans{font-size:13px;font-weight:700;margin-top:5px;color:#9fb6cf}
+.rep .ans em{font-style:normal;padding:1px 8px;border-radius:6px;margin:0 2px}
+.rep .ans em.d{background:rgba(47,227,155,.18);color:#5ff5b5}
+.rep .ans em.y{background:rgba(255,84,104,.18);color:#ff9aa6}
+.rep .ex{font-size:14px;color:#c4d6ea;line-height:1.5;margin-top:6px}
+.rep-hd{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:4px}
+.rep-door{width:64px;height:76px;position:relative}
+.rep-door .door{position:absolute;inset:0;opacity:1}
+.dy-modal .box{width:min(640px,100%)}
+.dy-modal .box p{font-size:15px}
+.route{display:inline-flex;gap:6px;align-items:center;margin-top:8px;font-size:13px;color:var(--muted);font-weight:600;flex-wrap:wrap;justify-content:center}
+.route em{font-style:normal;width:26px;height:26px;border-radius:50%;display:inline-grid;place-items:center;font-weight:900;color:#fff;font-size:13px}
+.route em.d{background:#16b979}.route em.y{background:#e0334a}
+
+@media (max-width:760px){
+  .pgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .pcard{padding:14px 10px}
+  .pcard svg,.pcard img.org{width:84px;height:84px}
+  .pcard b{font-size:17px}
+  .pick{height:auto;min-height:560px;justify-content:flex-start}
+  .pick h2{font-size:21px}
+}
+</style></head>
+<body><div id="app"></div><script src="assets/zd.js"></script><script>
+(function(){
+'use strict';
+/* ===================== İÇERİK (ders kitabı · Neler Öğrendik?) =====================
+   Düğüm sırası: 0 kök · 1 kökün D kolu · 2 kökün Y kolu · 3,4 (1'in D/Y) · 5,6 (2'nin D/Y)
+   Çıkışlar: 3 → 1/2 · 4 → 3/4 · 5 → 5/6 · 6 → 7/8 (D sol, Y sağ — kitaptaki oklar gibi) */
+const SETS = {
+  sindirim:{ name:'Sindirim', full:'Sindirim Sistemi', nodes:[
+    {t:'Proteinlerin kimyasal sindirimi ağızda başlar, ince bağırsakta son bulur.', a:'Y', e:'Ağızda tükürükteki enzimlerle karbonhidratların kimyasal sindirimi başlar. Proteinlerin kimyasal sindirimi midede başlar, ince bağırsakta tamamlanır.'},
+    {t:'Yutak, yemek borusu ve kalın bağırsakta fiziksel sindirim gerçekleşir.', a:'Y', e:'Yutak ve yemek borusu besinleri iletir; kalın bağırsakta su, bazı mineral ve vitaminler emilir. Bu yapılarda sindirim gerçekleşmez.'},
+    {t:'Pankreas öz suyu protein, karbohidrat ve yağların kimyasal sindirimini gerçekleştirir.', a:'D', e:'Pankreas, öz suyunu bir kanal yardımıyla ince bağırsağa gönderir; pankreas öz suyu protein, karbonhidrat ve yağların kimyasal sindirimini sağlar.'},
+    {t:'Hazır ve paketli gıdalar yemek sindirim sistemi yapı ve organlarına zarar verir.', a:'D', e:'Aşırı yağlı, paketli ve ayaküstü yemekler mide rahatsızlıklarına ve aşırı kiloya yol açabilir.'},
+    {t:'İnce bağırsakta bulunan villuslar besinlerin emilimini hızlandırır.', a:'D', e:'Villuslar girintili çıkıntılı yapısıyla ince bağırsağın iç yüzeyini genişletir; böylece emilim hızlı olur.'},
+    {t:'Suyun kimyasal sindirimi kalın bağırsakta tamamlanır.', a:'Y', e:'Su sindirilmez. Kalın bağırsakta sindirilmeyen besinlerden geriye kalan su emilir.'},
+    {t:'Karaciğerin salgıladığı safra sıvısı kalın bağırsağa gönderilir.', a:'Y', e:'Safra sıvısı safra kesesinde toplanır ve bir kanal yardımıyla ince bağırsağa gönderilir.'}
+  ]},
+  dolasim:{ name:'Dolaşım', full:'Dolaşım Sistemi', nodes:[
+    {t:'Kalp, yalnızca oksijen oranı yüksek kanı pompalar.', a:'Y', e:'Kalbin sağ tarafı oksijen oranı düşük kanı akciğerlere, sol tarafı oksijen oranı yüksek kanı tüm vücuda pompalar.'},
+    {t:'Kan bağışı ülkemizde yalnızca Türk Kızılaya yapılır.', a:'Y', e:'Kan bağışı için Türk Kızılaya veya hastanelerde bulunan ilgili birimlere başvurulabilir.'},
+    {t:'Organ bağışı yapmak gönüllülük esasına dayanır.', a:'D', e:'18 yaşından büyük, akli dengesi yerinde herkes gönüllü olarak organ bağışında bulunabilir.'},
+    {t:'Kalp, kanın damarlar yoluyla vücuda dağılmasını sağlar.', a:'D', e:'Kalp, kasılıp gevşeyerek kanı damarlarda dolaştıran özel kas dokusundan bir organdır.'},
+    {t:'Düzenli egzersiz kan dolaşımını yavaşlatır.', a:'Y', e:'Spor ve düzenli egzersiz kan dolaşımını hızlandırır; hareketsizlik dolaşım rahatsızlıklarına yol açabilir.'},
+    {t:'Sigara ve alkol tüketimi kan damarlarına zarar verir.', a:'D', e:'Sigara ve alkol kan damarlarına zarar verir; dolaşım sistemi sağlığı için bunlardan uzak durulmalıdır.'},
+    {t:'Kan bağışı yardımlaşma duygusunu geliştirir.', a:'D', e:'Kan bağışı toplumsal dayanışmayı ve yardımlaşma duygusunu güçlendirir.'}
+  ]},
+  solunum:{ name:'Solunum', full:'Solunum Sistemi', nodes:[
+    {t:'Akciğerler sağ ve sol olmak üzere iki parçadan oluşur.', a:'D', e:'Akciğerler göğüs kafesi içinde sağ ve sol iki parçadır; sağ akciğer soldakinden büyüktür.'},
+    {t:'Tütün ürünleri sadece solunum sistemi sağlığına zarar verir.', a:'Y', e:'Tütün ürünleri yalnızca solunum sistemine değil dolaşım sistemine de zarar verir.'},
+    {t:'Soğuk havalarda ağızdan nefes almak solunum sistemi organlarını korur.', a:'Y', e:'Burun havayı nemlendirir, ısıtır; kıllar toz ve mikropları tutar. Soğukta ağızdan nefes almak organları korumaz.'},
+    {t:'Diyafram, akciğerlerin hacminin artıp azalmasına yardımcı olan bir kastır.', a:'D', e:'Diyafram solunuma yardımcı bir kastır: kasılıp düzleşince akciğer hacmi artar, gevşeyip kubbeleşince azalır.'},
+    {t:'Kaburga kasları nefes alırken gevşer, nefes verirken kasılır.', a:'Y', e:'Tam tersi: soluk alırken kaburgalar arası kaslar kasılır, soluk verirken gevşer.'},
+    {t:'Kapalı alanları düzenli olarak havalandırmak solunum sistemi sağlığı için önemlidir.', a:'D', e:'Kapalı mekânları havalandırmak temiz hava sağlar ve solunum sistemini korur.'},
+    {t:'Açık alanlarda egzersiz yapmak solunum sistemi sağlığı için önemlidir.', a:'D', e:'Temiz havada yürüyüş ve egzersiz akciğerleri ve solunum kaslarını güçlendirir.'}
+  ]},
+  bosaltim:{ name:'Boşaltım', full:'Boşaltım Sistemi', nodes:[
+    {t:'Vücudun sağlıklı kalabilmesi için düzenli ve yeterli miktarda su içilmesi gerekir.', a:'D', e:'Yeterli su; böbrek taşı ve idrar yolu enfeksiyonu riskini azaltır, vücut sıcaklığını düzenler.'},
+    {t:'Deri, boşaltıma yardımcı bir organdır.', a:'D', e:'Deri terleme ile su ve tuzun bir kısmını vücuttan atar; boşaltıma yardımcı organdır.'},
+    {t:'Böbrek ve deri, aynı atık maddeleri vücuttan uzaklaştıran organlardır.', a:'Y', e:'Böbrekler fazla su, tuz, üre gibi atıkları uzaklaştırır; deri terleme ile su ve tuzun bir kısmını atar.'},
+    {t:'İdrar kesesi, kandaki atık maddeleri süzerek idrar oluşturur.', a:'Y', e:'Kanı süzerek idrarı böbrekler oluşturur. İdrar kesesi (mesane) idrarı yalnızca depolar.'},
+    {t:'Terleme, vücut sıcaklığının düzenlenmesine katkıda bulunur.', a:'D', e:'Terleme ile hem su ve tuz atılır hem de vücut sıcaklığı dengelenir.'},
+    {t:'Karbon dioksit, tuz ve su, soluk verildiğinde akciğerlerden dışarı atılır.', a:'Y', e:'Soluk verildiğinde akciğerlerden karbon dioksit ve su buharı atılır; tuz akciğerlerden atılmaz.'},
+    {t:'Böbrekler; karbon dioksit, fazla su, sindirim atıkları gibi maddeleri vücuttan uzaklaştırır.', a:'Y', e:'Karbon dioksiti akciğerler, sindirilmeyen besin atıklarını kalın bağırsak uzaklaştırır. Böbrekler kanı süzer.'}
+  ]}
+};
+const ORDER = ['sindirim','dolasim','solunum','bosaltim'];
+// doğru çıkışı veriden hesapla
+function correctRoute(set){ let i=0, steps=[]; while(i<7){ const a=SETS[set].nodes[i].a; steps.push({i,a}); i = 2*i + (a==='D'?1:2); } return {steps, exit:i-7}; }
+
+/* ===================== Organ görselleri (Servier Medical Art, CC BY 4.0) ===================== */
+const org = (n, w, h) => `<img class="org" src="assets/img/${n}.webp" width="${w}" height="${h}" alt="" decoding="async">`;
+const ICON = {
+  sindirim: org('stomach', 1342, 1376),
+  dolasim: org('heart_ext', 1022, 1386),
+  solunum: org('lungs', 1386, 1315),
+  bosaltim: org('urinary', 795, 1356)
+};
+
+/* ===================== Durum ===================== */
+const Q = new URLSearchParams(location.search);
+let cur = ORDER.includes(Q.get('set')) ? Q.get('set') : null;
+const S = { node:0, picks:[], busy:false, done:false, score:0, totalTime:0, results:{} };
+let mini = false, timer;
+
+const ui = ZD.mount({
+  kicker:'D/Y LABİRENTİ · NELER ÖĞRENDİK?', title:'Doğru Çıkışı Bul',
+  crumb:['7. Sınıf Fen Bilimleri','3. Ünite','Vücudumuzdaki Sistemler'],
+  stats:[{id:'set',label:'Set',value:'—',cls:'cyan'},{id:'score',label:'Puan',value:0},{id:'time',label:'Süre',value:'0:00'}],
+  onHelp(){ showHelp(true); },
+  onRestart(){ if(cur) startSet(cur); else showPicker(); },
+  credit: true
+});
+timer = new ZD.Timer(t => ui.stat('time', ZD.Timer.fmt(t)));
+
+ui.body.innerHTML = `
+<div class="dy" id="dy">
+  <div class="dy-board" id="board">
+    <svg class="dy-pcb" id="pcb" aria-hidden="true"></svg>
+    <svg class="lay tracks" id="tracks" aria-hidden="true"></svg>
+    <div id="nodes"></div>
+    <svg class="lay fx" id="fx" aria-hidden="true"></svg>
+    <div class="dy-legend" id="legend">
+      <span class="dy-step" id="stepLbl">Adım 1 / 3</span>
+      <div class="dy-steps" id="stepBar"><i></i><i></i><i></i></div>
+      <div class="row"><span class="k d">D</span>Doğru ise sol kol</div>
+      <div class="row"><span class="k y">Y</span>Yanlış ise sağ kol</div>
+    </div>
+    <div class="dy-acts" id="acts" hidden></div>
+  </div>
+  <div class="dy-focus" id="focus">
+    <div class="fcard" id="fcard">
+      <div class="hd"><span class="zd-chip" id="fstep">Adım 1 / 3</span><span class="zd-chip purple" id="fset">Set</span></div>
+      <p id="ftext"></p>
+      <div class="fdoor" id="fdoor"></div>
+      <div class="fbtns"><button class="fbtn d" id="fD" aria-label="Doğru"><b>D</b>Doğru</button><button class="fbtn y" id="fY" aria-label="Yanlış"><b>Y</b>Yanlış</button></div>
+    </div>
+  </div>
+  <div class="dy-acts" id="actsM" hidden></div>
+</div>
+<div class="pick" id="pick" hidden>
+  <h2>Bir set seç<small>Her sette 7 ifade ve 8 çıkış kapısı var. İfadelere D ya da Y diyerek doğru çıkışı bul.</small></h2>
+  <div class="pgrid" id="pgrid"></div>
+</div>`;
+
+const $ = s => document.getElementById(s);
+const board = $('board'), tracks = $('tracks'), fx = $('fx'), nodesEl = $('nodes');
+const NS = 'http://www.w3.org/2000/svg';
+const svgEl = (tag, at={}) => { const e = document.createElementNS(NS, tag); for (const k in at) e.setAttribute(k, at[k]); return e; };
+
+/* ---- devre kartı dokusu (dekoratif) ---- */
+function drawPCB(){
+  const p = $('pcb'), W = board.clientWidth, H = board.clientHeight; p.setAttribute('viewBox', `0 0 ${W} ${H}`); p.innerHTML='';
+  let seed = 7; const r = () => (seed = (seed * 9301 + 49297) % 233280) / 233280;
+  const g = svgEl('g', {fill:'none', stroke:'rgba(90,170,230,.16)', 'stroke-width':1.4});
+  for (let k=0;k<26;k++){
+    let x = Math.round(r()*W/24)*24, y = Math.round(r()*H/24)*24, d = `M${x} ${y}`;
+    for (let s=0;s<3;s++){ const L = 24*(1+Math.floor(r()*4)); if (r()<.5) x += (r()<.5?-L:L); else y += (r()<.5?-L:L); d += ` L${x} ${y}`; if (r()<.4){ const q=24; x+=q; y+=q; d+=` L${x} ${y}`;} }
+    g.appendChild(svgEl('path', {d}));
+    g.appendChild(svgEl('circle', {cx:x, cy:y, r:3, fill:'rgba(90,170,230,.18)'}));
+  }
+  p.appendChild(g);
+}
+
+/* ---- düğüm DOM ---- */
+let nodeEls = [], doorEls = [], badgeEls = {}, paths = {}, lits = {}, anchors = [];
+function doorHTML(n){ return `<div class="core"></div><div class="leaf l"></div><div class="leaf r"></div><div class="num"><b>${n}</b><span>Çıkış</span></div>`; }
+function buildBoard(){
+  nodesEl.innerHTML = ''; nodeEls = []; doorEls = []; badgeEls = {};
+  const set = SETS[cur];
+  set.nodes.forEach((n, i) => {
+    const lvl = i===0?0:i<3?1:2;
+    const el = ZD.h('div', {class:`node l${lvl}`, 'data-i':i, role:'group', 'aria-label':`İfade: ${n.t}`}, `<span class="lv">${lvl+1}</span><p>${n.t}</p><span class="tag"></span>`);
+    el.addEventListener('click', () => { if (S.done) ZD.toast(`<b>${n.a==='D'?'Doğru':'Yanlış'} ifade.</b> ${n.e}`, n.a==='D'?'good':'', 4200); });
+    nodesEl.appendChild(el); nodeEls.push(el);
+  });
+  for (let e=0;e<8;e++){ const d = ZD.h('div', {class:'door', 'aria-label':`${e+1}. Çıkış`}, doorHTML(e+1)); nodesEl.appendChild(d); doorEls.push(d); }
+  for (let c=1;c<=14;c++){
+    const isD = c % 2 === 1;
+    const b = ZD.h('button', {class:`bdg ${isD?'d':'y'}`, 'aria-label': isD?'Doğru (D)':'Yanlış (Y)', tabindex:-1}, isD?'D':'Y');
+    b.addEventListener('click', () => { const p = Math.floor((c-1)/2); if (p===S.node && !S.busy && !S.done) choose(isD?'D':'Y'); });
+    nodesEl.appendChild(b); badgeEls[c] = b;
+  }
+}
+
+/* ---- yerleşim ---- */
+function layout(){
+  mini = window.innerWidth < 760;
+  document.getElementById('app').classList.toggle('mini', mini);
+  const W = board.clientWidth, H = board.clientHeight;
+  if (!W) return;
+  anchors = [];
+  const xs = i => { if (i===0) return W/2; if (i<3) return W*(i===1?.25:.75); return W*((2*(i-3)+1)/8); };
+  const ex = e => W*((2*e+1)/16);
+  if (!mini){
+    const wR = Math.min(500, W*.42), w2 = Math.min(440, W*.4), w3 = W/4 - 24, wE = Math.min(118, W/8 - 18), hE = Math.min(96, Math.max(76, H*.15));
+    nodeEls.forEach((el,i) => { el.style.width = (i===0?wR:i<3?w2:w3) + 'px'; el.style.height=''; });
+    const h = [nodeEls[0].offsetHeight, Math.max(nodeEls[1].offsetHeight, nodeEls[2].offsetHeight), Math.max(...nodeEls.slice(3).map(e=>e.offsetHeight))];
+    const pad = 18, gap = Math.max(40, (H - pad*2 - h[0]-h[1]-h[2]-hE) / 3);
+    const tops = [pad+6, pad+6+h[0]+gap, pad+6+h[0]+gap+h[1]+gap];
+    const tE = tops[2] + h[2] + gap;
+    nodeEls.forEach((el,i) => {
+      const lvl = i===0?0:i<3?1:2, x = xs(i), w = el.offsetWidth, hh = el.offsetHeight;
+      const t = tops[lvl] + (h[lvl]-hh)/2; // satır içinde ortala
+      el.style.left = (x - w/2) + 'px'; el.style.top = t + 'px';
+      anchors[i] = {x, top:t, bot:t+hh};
+    });
+    doorEls.forEach((d,e) => { d.style.width = wE+'px'; d.style.height = hE+'px'; d.style.left = (ex(e)-wE/2)+'px'; d.style.top = tE+'px'; anchors[7+e] = {x:ex(e), top:tE, bot:tE+hE}; });
+  } else {
+    const ys = [20, 70, 120], tE = 156, hE = 40, wE = Math.min(34, W/8-8);
+    nodeEls.forEach((el,i) => { const lvl = i===0?0:i<3?1:2, x = xs(i); el.style.left = (x-10)+'px'; el.style.top = (ys[lvl]-10)+'px'; anchors[i] = {x, top:ys[lvl]-10, bot:ys[lvl]+10}; });
+    doorEls.forEach((d,e) => { d.style.width = wE+'px'; d.style.height = hE+'px'; d.style.left = (ex(e)-wE/2)+'px'; d.style.top = tE+'px'; anchors[7+e] = {x:ex(e), top:tE, bot:tE+hE}; });
+  }
+  drawTracks(W, H);
+  drawPCB();
+  placeBall(ballAt, true);
+}
+
+function pathD(c){
+  const p = Math.floor((c-1)/2), A = anchors[p], B = anchors[c];
+  const px = A.x, pb = A.bot, cx = B.x, ct = B.top;
+  const m = pb + (ct - pb) * .45, dir = Math.sign(cx - px) || 1;
+  const r = Math.min(mini?8:16, Math.abs(cx-px)/2, (ct-pb)*.4);
+  return {d:`M${px} ${pb} V${m-r} Q${px} ${m} ${px+dir*r} ${m} H${cx-dir*r} Q${cx} ${m} ${cx} ${m+r} V${ct}`, mx:(px+cx)/2, my:m};
+}
+function drawTracks(W, H){
+  tracks.setAttribute('viewBox', `0 0 ${W} ${H}`); fx.setAttribute('viewBox', `0 0 ${W} ${H}`);
+  tracks.innerHTML = `<defs>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3.2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>`;
+  const gBase = svgEl('g'), gIn = svgEl('g'), gLit = svgEl('g'), gPad = svgEl('g');
+  paths = {}; lits = {};
+  for (let c=1;c<=14;c++){
+    const P = pathD(c);
+    gBase.appendChild(svgEl('path', {d:P.d, class:'trk-base', 'stroke-width': mini?5:9}));
+    gIn.appendChild(svgEl('path', {d:P.d, class:'trk-in'}));
+    const lit = svgEl('path', {d:P.d, class:'trk-lit'}); lit.style.opacity = 0; gLit.appendChild(lit);
+    paths[c] = lit; lits[c] = lit;
+    const b = badgeEls[c]; if (b){ b.style.left = P.mx + 'px'; b.style.top = P.my + 'px'; }
+    if (mini){
+      const isD = c%2===1; gPad.appendChild(svgEl('circle', {cx:P.mx, cy:P.my, r:4, fill:isD?'#16b979':'#e0334a', opacity:.7}));
+    }
+  }
+  for (let i=0;i<7;i++){ const A = anchors[i]; if(!mini) gPad.appendChild(svgEl('circle', {cx:A.x, cy:A.bot+1, r:5, class:'pad', 'data-p':i})); }
+  for (let e=0;e<8;e++){ const A = anchors[7+e]; if(!mini) gPad.appendChild(svgEl('circle', {cx:A.x, cy:A.top-1, r:4, class:'pad'})); }
+  tracks.append(gBase, gIn, gLit, gPad);
+  // giriş ışığı
+  restyleLit();
+}
+function restyleLit(){
+  // seçilmiş kolları tekrar çiz (yeniden boyutlandırmada)
+  let i = 0;
+  S.picks.forEach((a, k) => { const c = 2*i + (a==='D'?1:2); const L = lits[c]; if (L){ L.style.opacity = 1; L.style.strokeDasharray = ''; L.style.strokeDashoffset = ''; if (S.done){ L.classList.add(a===SETS[cur].nodes[i].a?'ok':'bad'); } } i = c; });
+  if (S.done) drawRoute();
+}
+
+/* ---- ışık topu ---- */
+let ballAt = 0, ballG = null, sparks = [];
+function makeBall(){
+  fx.innerHTML = `<defs>
+   <radialGradient id="halo"><stop offset="0" stop-color="#e9feff" stop-opacity=".95"/><stop offset=".25" stop-color="#7ff6ff" stop-opacity=".75"/><stop offset=".6" stop-color="#35eefc" stop-opacity=".25"/><stop offset="1" stop-color="#35eefc" stop-opacity="0"/></radialGradient>
+  </defs><g id="sparks"></g><g id="ball"><circle r="22" fill="url(#halo)"><animate attributeName="r" values="18;24;18" dur="1.6s" repeatCount="indefinite"/></circle><circle r="6.5" fill="#fff"/></g>`;
+  ballG = fx.querySelector('#ball');
+}
+function placeBall(i, quiet){
+  ballAt = i; const A = anchors[i]; if (!A || !ballG) return;
+  const y = i >= 7 ? A.top + 10 : A.bot + 1;
+  ballG.setAttribute('transform', `translate(${A.x} ${y})`);
+  ballG.style.opacity = i >= 7 ? 0 : 1;
+}
+function spark(x, y, col){
+  const g = fx.querySelector('#sparks'); if (!g) return;
+  const c = svgEl('circle', {cx:x + (Math.random()-.5)*6, cy:y + (Math.random()-.5)*6, r:2 + Math.random()*2.4, fill:col||'#9ff9ff'});
+  g.appendChild(c); sparks.push({el:c, life:1});
+  if (sparks.length > 40){ const s = sparks.shift(); s.el.remove(); }
+}
+function tickSparks(){ sparks.forEach(s => { s.life -= .05; s.el.setAttribute('opacity', Math.max(0, s.life)); s.el.setAttribute('r', Math.max(.2, +s.el.getAttribute('r')*.95)); }); sparks = sparks.filter(s => { if (s.life <= 0){ s.el.remove(); return false; } return true; }); }
+function travel(c){
+  return new Promise(res => {
+    const L = lits[c], len = L.getTotalLength();
+    L.style.opacity = 1; L.style.strokeDasharray = len; L.style.strokeDashoffset = len;
+    const dur = ZD.clamp(len * 2.1, 650, 1250), t0 = performance.now();
+    ZD.sfx('whoosh');
+    const ease = t => t<.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2, 3)/2;
+    (function f(now){
+      const t = Math.min(1, (now - t0) / dur), e = ease(t), pt = L.getPointAtLength(len*e);
+      L.style.strokeDashoffset = len * (1-e);
+      ballG.setAttribute('transform', `translate(${pt.x} ${pt.y})`);
+      spark(pt.x, pt.y); tickSparks();
+      if (t < 1) requestAnimationFrame(f);
+      else { L.style.strokeDasharray = ''; L.style.strokeDashoffset = ''; let n=0; (function fade(){ tickSparks(); if (++n<25) requestAnimationFrame(fade); })(); res(); }
+    })(t0);
+  });
+}
+
+/* ===================== Oyun akışı ===================== */
+function setActive(i){
+  nodeEls.forEach((el,k) => el.classList.toggle('active', k===i));
+  Object.entries(badgeEls).forEach(([c,b]) => {
+    const p = Math.floor((c-1)/2), live = p===i && !S.done;
+    b.classList.toggle('live', live); b.tabIndex = live ? 0 : -1;
+  });
+  const step = S.picks.length;
+  $('stepLbl').textContent = `Adım ${Math.min(3, step+1)} / 3`;
+  [...$('stepBar').children].forEach((x,k) => x.classList.toggle('on', k < step + (i<7?1:0)));
+  // telefon kartı
+  const fc = $('fcard');
+  $('fstep').textContent = `Adım ${Math.min(3, step+1)} / 3`;
+  if (i < 7){ fc.classList.remove('arrive'); $('ftext').textContent = SETS[cur].nodes[i].t; fc.classList.remove('swap'); void fc.offsetWidth; fc.classList.add('swap'); }
+  $('fD').disabled = $('fY').disabled = false;
+}
+
+function startSet(key){
+  cur = key; ZD.hideHand();
+  history.replaceState(null, '', '?set=' + key);
+  $('pick').hidden = true; $('dy').hidden = false;
+  S.node = 0; S.picks = []; S.busy = false; S.done = false;
+  $('acts').hidden = true; $('actsM').hidden = true;
+  ui.stat('set', SETS[key].name); $('fset').textContent = SETS[key].name;
+  buildBoard(); makeBall(); layout();
+  placeBall(0); setActive(0);
+  timer.reset(); timer.start();
+  ui.stat('score', S.score);
+}
+
+async function choose(a){
+  if (S.busy || S.done) return;
+  S.busy = true; ZD.hideHand(); ZD.sfx('tap');
+  const i = S.node, c = 2*i + (a==='D'?1:2);
+  S.picks.push(a);
+  const el = nodeEls[i];
+  el.classList.remove('active'); el.classList.add('visited');
+  el.querySelector('.tag').innerHTML = `Seçimin: ${a}`;
+  badgeEls[c].classList.add('used'); badgeEls[c].classList.remove('live');
+  const other = badgeEls[a==='D'?c+1:c-1]; other.classList.add('dim'); other.classList.remove('live');
+  Object.values(badgeEls).forEach(b => b.classList.remove('live'));
+  $('fD').disabled = $('fY').disabled = true;
+  const fc = $('fcard'); if (mini){ $('ftext').style.opacity = .35; }
+  await travel(c);
+  $('ftext').style.opacity = '';
+  if (c < 7){
+    S.node = c; placeBall(c); ZD.sfx('pop'); setActive(c); S.busy = false;
+  } else {
+    S.node = c; arrive(c - 7);
+  }
+}
+
+function arrive(e){
+  S.done = true; timer.stop();
+  const set = SETS[cur], R = correctRoute(cur), win = e === R.exit;
+  const correct = S.picks.filter((a,k) => { let i=0; for(let j=0;j<k;j++) i = 2*i + (S.picks[j]==='D'?1:2); return set.nodes[i].a === a; }).length;
+  ballG.style.transition = 'opacity .4s'; ballG.style.opacity = 0;
+  const d = doorEls[e]; d.classList.add('reach');
+  // telefon: büyük kapı
+  const fc = $('fcard'), fd = $('fdoor');
+  fd.innerHTML = `<div class="door reach">${doorHTML(e+1)}</div>`; fc.classList.add('arrive');
+  $('fstep').textContent = `${e+1}. Çıkış`;
+  setTimeout(() => {
+    [d, fd.firstChild].forEach(x => x.classList.add('open', win?'win':'lose'));
+    if (win){ ZD.sfx('win'); ZD.confetti(); ZD.toast(`Harika! <b>${e+1}. Çıkış</b> doğru çıkış.`, 'good', 2600); }
+    else { ZD.sfx('bad'); [d, fd.firstChild].forEach(x => { x.classList.add('zd-shake'); }); ZD.toast(`${e+1}. Çıkış'a ulaştın. Doğru çıkış <b>${R.exit+1}. Çıkış</b> idi.`, 'bad', 3200); }
+  }, 350);
+  // puan
+  const tm = timer.t, bonus = win ? 200 + Math.max(0, Math.round(90 - tm)) * 2 : 0;
+  const gained = correct*100 + bonus;
+  S.score += gained; ui.stat('score', S.score, true);
+  S.totalTime += tm;
+  S.results[cur] = {win, correct, exit:e+1, target:R.exit+1, gained};
+  try { const best = ZD.store.get('dy-best', {}); best[cur] = Math.max(best[cur]||0, correct + (win?1:0)); ZD.store.set('dy-best', best); } catch(_){}
+  // geri izleme
+  setTimeout(() => review(e, R), 900);
+  setTimeout(() => showReport(e, R, win, correct, gained), win ? 2100 : 2300);
+}
+
+function drawRoute(){
+  const R = correctRoute(cur); const g = svgEl('g', {id:'route'});
+  R.steps.forEach(s => { const c = 2*s.i + (s.a==='D'?1:2); g.appendChild(svgEl('path', {d:paths[c].getAttribute('d'), class:'trk-route'})); badgeEls[c] && badgeEls[c].classList.add('route'); });
+  const old = tracks.querySelector('#route'); old && old.remove();
+  tracks.insertBefore(g, tracks.lastChild);
+}
+function review(e, R){
+  const set = SETS[cur];
+  // seçilen kolların rengini doğruluğa göre boya
+  let i = 0;
+  S.picks.forEach(a => { const c = 2*i + (a==='D'?1:2), ok = set.nodes[i].a === a; lits[c].classList.add(ok?'ok':'bad'); i = c; });
+  drawRoute();
+  doorEls[R.exit].classList.add('target');
+  // düğümleri işaretle
+  const visited = []; i = 0; S.picks.forEach(a => { visited.push([i,a]); i = 2*i + (a==='D'?1:2); });
+  nodeEls.forEach((el, k) => {
+    el.classList.remove('active'); el.classList.add('rv');
+    const v = visited.find(x => x[0]===k), ans = set.nodes[k].a, tag = el.querySelector('.tag');
+    if (v){
+      const ok = v[1] === ans; el.classList.add(ok?'good':'wrong');
+      tag.innerHTML = ok ? `${ZD.I.check} ${ans} · Doğru seçim` : `${ZD.I.x} Seçimin ${v[1]} · Doğrusu ${ans}`;
+      if (!ok) { el.classList.add('zd-shake'); setTimeout(() => el.classList.remove('zd-shake'), 500); }
+    } else { el.classList.add('neutral'); tag.innerHTML = `Doğrusu: ${ans}`; }
+  });
+  Object.values(badgeEls).forEach(b => b.classList.remove('live'));
+  showActs();
+}
+function nextKey(){ return ORDER[(ORDER.indexOf(cur)+1) % ORDER.length]; }
+function allDone(){ return ORDER.every(k => S.results[k]); }
+function showActs(){
+  const nextLbl = allDone() ? 'Sonuçlar' : `Sonraki set: ${SETS[nextKey()].name}`;
+  const html = `<button class="zd-btn ghost sm" data-a="rep">Raporu aç</button><button class="zd-btn amber sm" data-a="retry">${ZD.I.restart}Yeniden dene</button><button class="zd-btn green sm" data-a="next">${nextLbl}${ZD.I.arrowR}</button>`;
+  [$('acts'), $('actsM')].forEach(box => { box.innerHTML = html; box.hidden = mini ? box.id==='acts' : box.id==='actsM'; box.querySelectorAll('button').forEach(b => b.onclick = () => { ZD.sfx('click'); act(b.dataset.a); }); });
+}
+let lastReport = null;
+function act(a){
+  if (a==='retry') startSet(cur);
+  else if (a==='next'){ if (allDone()) finalResult(); else startSet(nextKey()); }
+  else if (a==='rep' && lastReport) lastReport();
+}
+function showReport(e, R, win, correct, gained){
+  const set = SETS[cur];
+  const open = () => {
+    let i = 0; const rows = S.picks.map(a => { const n = set.nodes[i], ok = n.a === a; const row = `<li class="${ok?'ok':'bad'}"><span class="ic">${ok?ZD.I.check:ZD.I.x}</span><div><q>${n.t}</q>
+      <div class="ans">Seçimin <em class="${a.toLowerCase()}">${a}</em> · Doğrusu <em class="${n.a.toLowerCase()}">${n.a}</em></div><div class="ex">${n.e}</div></div></li>`; i = 2*i + (a==='D'?1:2); return row; }).join('');
+    const firstBad = (() => { let i=0; for (const a of S.picks){ if (set.nodes[i].a !== a) return i; i = 2*i+(a==='D'?1:2);} return -1; })();
+    const route = `<div class="route">Doğru yol: ${R.steps.map(s => `<em class="${s.a.toLowerCase()}">${s.a}</em>`).join('<span>→</span>')}<span>→ ${R.exit+1}. Çıkış</span></div>`;
+    const m = ZD.modal({ cls:'dy-modal', html:`
+      <div class="rep-hd"><div class="rep-door"><div class="door open ${win?'win':'lose'}">${doorHTML(e+1)}</div></div></div>
+      <span class="zd-chip ${win?'green':'red'}" style="margin-top:12px">${set.full} · +${gained} puan</span>
+      <h2>${win ? 'Doğru çıkışı buldun!' : `Doğru çıkış ${R.exit+1}. Çıkış idi`}</h2>
+      <p>${win ? 'Üç kararın da doğru. Işık topu seni doğru kapıya götürdü.' : `${e+1}. Çıkış'a ulaştın. İlk hatan <b style="color:#ff9aa6">${firstBad===0?'ilk':firstBad<3?'ikinci':'üçüncü'} ifadede</b> oldu; kırmızı işaretli kartlara bak.`}</p>
+      ${route}
+      <ul class="rep">${rows}</ul>`,
+      actions:[
+        {label:'Haritayı incele', cls:'ghost'},
+        {label:ZD.I.restart+'Yeniden dene', cls:'amber', onClick:() => startSet(cur)},
+        {label:(allDone()?'Sonuçlar':'Sonraki set')+ZD.I.arrowR, cls:'green', onClick:() => act('next')}
+      ]});
+    return m;
+  };
+  lastReport = open; open();
+}
+function finalResult(){
+  const keys = ORDER.filter(k => S.results[k]);
+  const wins = keys.filter(k => S.results[k].win).length, dec = keys.reduce((s,k) => s + S.results[k].correct, 0);
+  ZD.result({ title: wins===4 ? 'Labirent ustası!' : 'Labirent tamamlandı', correct:dec, total:keys.length*3, score:S.score, time:S.totalTime,
+    text:`4 setin <b>${wins}</b> tanesinde doğru çıkışı buldun. Aşağıda her sette ulaştığın çıkış var (yeşil: doğru çıkış).`,
+    extra:`<div class="zd-res-grid" style="grid-template-columns:repeat(4,1fr)">${keys.map(k => `<div><b style="color:${S.results[k].win?'var(--green)':'#ff9aa6'}">${S.results[k].exit}<small style="font-size:13px">. Çıkış</small></b><span>${SETS[k].name}</span></div>`).join('')}</div>`,
+    onReplay(){ S.score = 0; S.totalTime = 0; S.results = {}; ui.stat('score', 0); startSet(ORDER[0]); } });
+}
+
+/* ---- set seçici ---- */
+function showPicker(){
+  timer.stop(); ui.stat('set', '—');
+  const best = ZD.store.get('dy-best', {});
+  $('pgrid').innerHTML = ORDER.map(k => `<button class="pcard" data-k="${k}" aria-label="${SETS[k].full} setini başlat">
+     ${best[k]!=null ? `<span class="zd-chip ${best[k]===4?'green':''} st">${best[k]===4?'Çözüldü':'Denendi'}</span>` : ''}
+     ${ICON[k]}<b>${SETS[k].full}</b><span>7 ifade · 8 çıkış</span><span class="go">Başla ${ZD.I.arrowR}</span></button>`).join('');
+  $('pgrid').querySelectorAll('.pcard').forEach(b => b.onclick = () => { ZD.sfx('click'); startSet(b.dataset.k); });
+  $('pick').hidden = false; $('dy').hidden = true;
+}
+
+function showHelp(point){
+  ZD.intro({ kicker:'NASIL OYNANIR?', title:'Doğru Çıkışı Bul',
+    text:'Ders kitabındaki "Neler Öğrendik?" labirentinin dijital hâli. En üstteki ifadeden başla; her ifade için karar ver.',
+    steps:['İfade <strong style="color:#fff">doğruysa D</strong> (yeşil, sol kol), <strong style="color:#fff">yanlışsa Y</strong> (kırmızı, sağ kol) rozetine dokun. Klavyede <strong style="color:#fff">D</strong>/<strong style="color:#fff">Y</strong> ya da ←/→ da olur.',
+           'Işık topu seçtiğin kol boyunca bir sonraki ifadeye kayar. Yanlış karar verirsen de ilerlersin!',
+           'Üç karardan sonra 8 çıkış kapısından birine ulaşırsın. Doğru çıkış yeşil parıltıyla açılır; değilse hatalı kararların kırmızıyla gösterilir.'],
+    start: cur ? 'Oyna' : 'Set seç',
+    onStart(){
+      if (!cur) { showPicker(); return; }
+      if (point && !S.done){ const b = mini ? $('fD') : badgeEls[2*S.node+1]; b && setTimeout(() => ZD.pointAt(b, {ms:2600}), 300); }
+    }});
+}
+
+/* ---- klavye ---- */
+window.addEventListener('keydown', e => {
+  if (!cur || S.done || S.busy || document.querySelector('.zd-modal.show')) return;
+  const k = e.key.toLocaleUpperCase('tr');
+  if (k==='D' || e.key==='ArrowLeft') { e.preventDefault(); choose('D'); }
+  else if (k==='Y' || e.key==='ArrowRight') { e.preventDefault(); choose('Y'); }
+});
+$('fD').onclick = () => choose('D');
+$('fY').onclick = () => choose('Y');
+let rT; window.addEventListener('resize', () => { clearTimeout(rT); rT = setTimeout(() => { if (cur){ const wasMini = mini; layout(); if (S.done) { restyleLit(); showActs(); } else if (!S.busy) placeBall(S.node); } }, 120); });
+
+/* ---- açılış ---- */
+if (cur){ startSet(cur); timer.stop(); showHelp(true); const st = document.querySelector('.zd-modal .zd-btn'); st && st.addEventListener('click', () => timer.start()); }
+else { cur = null; showPicker(); showHelp(false); }
+// açılış: bilgi kartı kapanana kadar süre durur
+})();
+</script></body></html>

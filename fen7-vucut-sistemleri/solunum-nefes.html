@@ -1,0 +1,1207 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Soluk Al, Soluk Ver · Solunum Sistemi Simülasyonu</title>
+<link rel="stylesheet" href="assets/zd.css">
+<style>
+  .zd-body{padding:2px 16px 16px}
+  .sim{display:grid;grid-template-columns:268px minmax(0,1fr) 318px;grid-template-rows:auto minmax(0,1fr);gap:10px 12px;
+    height:clamp(500px,calc(100vh - 210px),900px)}
+  .bar{grid-column:1/-1;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .bar .sp{flex:1}
+  .lbl-s{font-size:11px;font-weight:700;letter-spacing:1.6px;color:var(--muted);text-transform:uppercase}
+  .sim .zd-seg button{min-height:44px;padding:8px 15px;font-size:13.5px}
+  .sim .zd-seg.dis{opacity:.4;pointer-events:none}
+  .tgl{display:inline-flex;align-items:center;gap:9px;padding:6px 14px 6px 7px;border-radius:999px;background:rgba(0,0,0,.35);border:1px solid var(--line);
+    font-size:13.5px;font-weight:600;color:var(--muted);min-height:44px;transition:.2s var(--ease)}
+  .tgl i{width:40px;height:24px;border-radius:99px;background:#24384f;position:relative;transition:.25s;flex:none;box-shadow:inset 0 1px 3px rgba(0,0,0,.5)}
+  .tgl i::after{content:"";position:absolute;left:3px;top:3px;width:18px;height:18px;border-radius:50%;background:#cfe0f2;transition:.3s var(--spring)}
+  .tgl.on{color:var(--text);border-color:rgba(47,227,155,.45)}
+  .tgl.on i{background:linear-gradient(180deg,#3ff0a8,#16b979)}
+  .tgl.on i::after{left:19px;background:#fff}
+  .tgl.dis{opacity:.4;pointer-events:none}
+
+  .lp,.rp{display:flex;flex-direction:column;gap:10px;min-height:0;min-width:0}
+  .mp{flex:1;min-height:0;display:flex;flex-direction:column;gap:8px;overflow:auto;scrollbar-width:thin}
+  .mp>.card{padding:14px 15px}
+  .card{background:linear-gradient(180deg,rgba(26,48,76,.72),rgba(14,30,50,.72));border:1px solid var(--line);border-radius:18px;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.05),0 14px 34px rgba(0,0,0,.28)}
+  .ttl{font-size:11.5px;font-weight:800;letter-spacing:1.8px;color:var(--cyan);text-transform:uppercase}
+
+  /* sahne */
+  .scene{position:relative;min-height:0;min-width:0;border-radius:22px;overflow:hidden;
+    background:radial-gradient(55% 60% at 45% 52%,rgba(53,238,252,.08),transparent 70%),radial-gradient(30% 30% at 88% 84%,rgba(255,59,85,.07),transparent 70%),rgba(3,10,20,.38);
+    border:1px solid var(--line);box-shadow:inset 0 0 40px rgba(53,238,252,.05)}
+  .scene svg,.scene canvas{position:absolute;inset:0;width:100%;height:100%}
+  .scene canvas{pointer-events:none}
+  .scene svg text{font-family:var(--font)}
+  .scene .part{transition:filter .2s}
+  .scene.pick .part{cursor:pointer}
+  .scene.pick .part:hover{filter:url(#fHover)}
+  .scene .part.sel{filter:url(#fSel)!important}
+  .scene .part.okf{filter:url(#fOk)!important}
+  .scene .part.badf{filter:url(#fBad)!important}
+  .scene #bcG.part.sel{filter:url(#fSelT)!important} .scene #bcG.part.okf{filter:url(#fOkT)!important} .scene #bcG.part.badf{filter:url(#fBadT)!important}
+  #labels{transition:opacity .35s}
+  .scene.nolabels #labels,.scene.mob #labels{opacity:0;pointer-events:none}
+  .lbl rect{fill:rgba(7,20,37,.86);stroke:rgba(53,238,252,.55);stroke-width:1.3}
+  .lbl text{fill:#eef6ff;font-size:16px;font-weight:700}
+  .lbl text .sub{font-size:12.5px;font-weight:600}
+  .lbl .ld{stroke:rgba(53,238,252,.75);stroke-width:1.6;fill:none}
+  .lbl .ldot{fill:#35eefc;stroke:#04222a;stroke-width:1.5}
+  .lbl.info rect{fill:rgba(7,20,37,.6);stroke-dasharray:4 3}
+  .lbl.sel rect,.lbl.okf rect{stroke:#fff;stroke-width:2}
+  .scene-tag{position:absolute;left:14px;top:12px;display:flex;gap:8px;align-items:center;pointer-events:none;z-index:2}
+  .ph-pill{padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800;letter-spacing:1.4px;background:rgba(0,0,0,.45);border:1px solid var(--line);color:var(--muted);transition:.3s}
+  .ph-pill.p-in{color:#04262c;background:linear-gradient(180deg,#9ff8ff,#35eefc);border-color:#35eefc;box-shadow:0 0 18px rgba(53,238,252,.45)}
+  .ph-pill.p-out{color:#fff;background:linear-gradient(180deg,#b993ff,#7c4dff);border-color:#b993ff;box-shadow:0 0 18px rgba(168,121,255,.45)}
+  .ph-pill.p-hold{color:#3a2300;background:linear-gradient(180deg,#ffd36b,#ffa41b);border-color:#ffd36b;box-shadow:0 0 18px rgba(255,187,61,.45)}
+
+  /* basılı tut butonu */
+  .holdwrap{display:flex;flex-direction:column;gap:6px}
+  .hold{position:relative;width:100%;min-height:66px;border-radius:22px;overflow:hidden;display:flex;align-items:center;gap:12px;padding:10px 16px;
+    background:linear-gradient(180deg,#1d4166,#10253e);border:2px solid rgba(73,243,255,.85);color:#fff;
+    box-shadow:0 0 0 1px rgba(53,238,252,.25),0 0 22px rgba(53,238,252,.38),0 7px 0 rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.16);
+    touch-action:none;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;transition:transform .14s var(--ease),box-shadow .2s,border-color .2s}
+  .hold:hover{filter:brightness(1.06)}
+  .hold .fill{position:absolute;left:0;top:0;bottom:0;width:0;background:linear-gradient(90deg,rgba(53,238,252,.18),rgba(53,238,252,.42));pointer-events:none}
+  .hold .fill::after{content:"";position:absolute;right:0;top:0;bottom:0;width:3px;background:#bff8ff;box-shadow:0 0 12px #35eefc}
+  .hold.on{transform:translateY(5px);border-color:#3ff0a8;box-shadow:0 0 0 1px rgba(47,227,155,.45),0 0 36px rgba(47,227,155,.55),0 2px 0 rgba(0,0,0,.38),inset 0 1px 0 rgba(255,255,255,.16)}
+  .hold.on .fill{background:linear-gradient(90deg,rgba(47,227,155,.22),rgba(47,227,155,.5))}
+  .hold .ic{width:48px;height:48px;flex:none;position:relative;filter:drop-shadow(0 4px 6px rgba(0,0,0,.4))}
+  .hold .t{position:relative;text-align:left;display:flex;flex-direction:column;gap:2px;line-height:1.15}
+  .hold .t b{font-size:16px;font-weight:800;letter-spacing:.3px}
+  .hold .t small{font-size:12.5px;color:#bfe9f5;font-weight:500}
+  .hold.ring{animation:hring 1.4s infinite}
+  @keyframes hring{50%{box-shadow:0 0 0 6px rgba(53,238,252,.25),0 0 30px rgba(53,238,252,.55),0 7px 0 rgba(0,0,0,.38)}}
+  .zd-howto strong{color:#fff;font-weight:800}
+  kbd{font-family:var(--font);font-size:11px;font-weight:700;padding:1px 6px;border-radius:6px;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2)}
+
+  /* bilgi kartı */
+  .info .hd{display:flex;align-items:center;gap:10px;margin:8px 0 6px}
+  .info .sw{width:16px;height:16px;border-radius:50%;flex:none;box-shadow:0 0 0 3px rgba(255,255,255,.08),0 0 12px currentColor}
+  .info h3{font-size:20px;font-weight:800;line-height:1.15}
+  .info .sub2{font-size:12.5px;color:var(--amber);font-weight:600;margin:-2px 0 6px}
+  .info p{font-size:14px;line-height:1.52;color:#d3e3f3}
+  .info .src{font-size:11px;color:var(--dim);margin-top:8px}
+  .info{flex:1}
+  .ktop{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .kcnt{font-size:12px;font-weight:700;color:var(--muted)} .kcnt b{color:var(--green);font-size:15px}
+  .info .analog{margin-top:8px;padding:8px 10px;border-radius:12px;background:rgba(95,200,74,.1);border:1px solid rgba(95,200,74,.35);font-size:13.5px;color:#d8ffc8}
+  .info .analog b{color:#bdf5a0}
+  .prog{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:12px;color:var(--muted);font-weight:600}
+  .prog .zd-meter{flex:1;height:8px}
+  .tree .row{display:flex;gap:10px;align-items:center}
+  .tree svg{width:96px;height:108px;flex:none}
+  .tree ul{list-style:none;display:grid;gap:6px;flex:1}
+  .tree li{font-size:13.5px;line-height:1.2;padding:5px 9px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--line);cursor:pointer;transition:.2s;min-height:44px;display:flex;flex-direction:column;justify-content:center}
+  .tree li:hover{border-color:var(--line-2);background:rgba(53,238,252,.08)}
+  .tree li b{font-weight:800;color:#bdf5a0}
+  .tree li span{color:#d6e4f3}
+
+  /* antrenör */
+  .story{padding:9px 13px!important}
+  .story p{font-size:13.5px;line-height:1.45;color:#d6e4f3;margin-top:7px}
+  .ringwrap{position:relative;width:120px;height:120px;margin:0 auto}
+  .ringwrap svg{width:100%;height:100%}
+  .ringwrap .trk{fill:none;stroke:rgba(255,255,255,.08);stroke-width:12}
+  .ringwrap .trk2{fill:none;stroke-width:3;transition:stroke .25s}
+  .ringwrap .arc{fill:none;stroke-width:12;stroke-linecap:round;transition:stroke .3s}
+  .ringwrap .rc{position:absolute;inset:13px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;transition:background .25s}
+  .ringwrap .rc:hover{background:rgba(255,255,255,.04)}
+  .ringwrap .rc .go{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,#3ff0a8,#16b979);color:#022a1a;box-shadow:0 0 18px rgba(47,227,155,.5),0 4px 0 rgba(0,0,0,.3)}
+  .ringwrap .rc .go svg{width:22px;height:22px;margin-left:3px}
+  .ringwrap .rc b{font-size:36px;font-weight:900;line-height:1;font-variant-numeric:tabular-nums}
+  .ringwrap .rc span{font-size:10.5px;font-weight:800;letter-spacing:.4px;margin-top:3px;max-width:78px;line-height:1.15}
+  .trsub{text-align:center;font-size:13px;color:#cfe0f2;min-height:36px;margin-top:4px;line-height:1.3}
+  .trsub .st{display:inline-block;margin-top:4px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:800}
+  .trsub .st.ok{background:rgba(47,227,155,.15);color:var(--green)}
+  .trsub .st.no{background:rgba(255,84,104,.15);color:#ff8a98}
+  .trsteps{display:flex;gap:6px;justify-content:center;margin-top:5px}
+  .trsteps span{white-space:nowrap;font-size:11px;font-weight:800;letter-spacing:.3px;padding:5px 7px;border-radius:10px;background:rgba(0,0,0,.3);border:1px solid var(--line);color:var(--muted);transition:.25s}
+  .trsteps span.on[data-k="in"]{color:#04262c;background:#35eefc;border-color:#35eefc}
+  .trsteps span.on[data-k="hold"]{color:#3a2300;background:#ffbb3d;border-color:#ffbb3d}
+  .trsteps span.on[data-k="out"]{color:#fff;background:#8f63ff;border-color:#b993ff}
+  .trrow{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
+  .trrow .zd-btn{min-height:44px}
+  .heart{width:40px;height:40px;display:grid;place-items:center}
+  .heart svg{width:36px!important;height:34px!important}
+  .heart svg{width:42px;height:40px;animation:hb 1s infinite;filter:drop-shadow(0 0 10px rgba(255,77,100,.55))}
+  @keyframes hb{0%,100%{transform:scale(1)}12%{transform:scale(1.18)}24%{transform:scale(.98)}36%{transform:scale(1.1)}}
+  .bpm b{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums}
+  .bpm small{display:block;font-size:12px;font-weight:700}
+  .uy{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted);font-weight:700;margin-top:6px}
+  .uy .zd-meter{flex:1}
+  .uy b{color:var(--text);min-width:40px;text-align:right}
+
+  /* görev */
+  .task .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .dots{display:flex;gap:5px}
+  .dots i{width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,.12);transition:.3s}
+  .dots i.cur{background:transparent;box-shadow:0 0 0 2px var(--cyan)}
+  .dots i.ok{background:var(--green);box-shadow:0 0 8px rgba(47,227,155,.6)}
+  .dots i.late{background:var(--amber)}
+  .task h3{font-size:19px;font-weight:800;line-height:1.3;margin:12px 0 6px}
+  .task .hint{font-size:13.5px;color:var(--muted);line-height:1.45}
+  .fb{margin-top:10px;padding:10px 12px;border-radius:14px;font-size:14px;line-height:1.5;display:none}
+  .fb.bad{display:block;background:rgba(255,84,104,.1);border:1px solid rgba(255,84,104,.4);color:#ffd0d6}
+  .fb.good{display:block;background:rgba(47,227,155,.1);border:1px solid rgba(47,227,155,.4);color:#c9ffe6}
+  .task .acts{display:flex;gap:8px;margin-top:12px}
+
+  /* ortam */
+  .opt{display:flex;flex-direction:column;gap:5px;margin-bottom:7px}
+  .opt .zd-seg{width:100%}
+  .opt .zd-seg button{flex:1}
+  .cnt{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .cnt div{padding:9px 10px;border-radius:14px;background:rgba(0,0,0,.28);border:1px solid var(--line)}
+  .cnt b{display:block;font-size:26px;font-weight:900;line-height:1.05;color:var(--green);font-variant-numeric:tabular-nums}
+  .cnt .bad b{color:#ff8a98}
+  .cnt span{font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.25;display:block;margin-top:2px}
+  .cnt2{display:grid;gap:5px}
+  .cnt2 div{display:flex;align-items:center;gap:8px;padding:5px 10px;border-radius:12px;background:rgba(0,0,0,.28);border:1px solid var(--line);font-size:12.5px;font-weight:600;color:#c9d8ea}
+  .cnt2 b{margin-left:auto;font-size:20px;font-weight:900;color:var(--green);font-variant-numeric:tabular-nums}
+  .cnt2 .bad b{color:#ff8a98}
+  .cnt2 i{width:10px;height:10px;border-radius:50%;flex:none}
+  .cnt2 .dg{background:var(--green);box-shadow:0 0 8px var(--green)} .cnt2 .dr{background:#ff5468;box-shadow:0 0 8px #ff5468}
+  .envmsg{font-size:13.3px;line-height:1.42;color:#d6e4f3;margin-top:8px}
+  .tipc{padding:10px 12px!important}
+  .tiphd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+  .tdots{display:flex;gap:2px}
+  .tdots button{width:22px;height:22px;display:grid;place-items:center}
+  .tdots button::after{content:"";width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.18);transition:.25s}
+  .tdots button.on::after{background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+  button.tip{width:100%;text-align:left;min-height:58px;cursor:pointer;padding:9px 11px}
+  .tip .tk{display:block;font-style:normal;font-size:10.5px;font-weight:800;letter-spacing:1.4px;color:var(--cyan);margin-bottom:2px}
+  .tip.note .tk{color:var(--green)}
+  .tip.note{background:linear-gradient(180deg,rgba(47,227,155,.14),rgba(47,227,155,.05));border-color:rgba(47,227,155,.4);color:#d6f7e6}
+  .tip.note svg{color:var(--green)} .tip.note b{color:#7ff0c0}
+  .tip{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:14px;background:rgba(0,0,0,.22);border:1px solid var(--line);font-size:13.5px;line-height:1.35;color:#d6e4f3}
+  .tip svg{width:30px;height:30px;flex:none;color:var(--cyan)}
+  .note{font-size:12.5px;line-height:1.45;color:#cfe9d6;padding:10px 12px;border-radius:14px;background:linear-gradient(180deg,rgba(47,227,155,.12),rgba(47,227,155,.05));border:1px solid rgba(47,227,155,.35)}
+  .note b{color:#7ff0c0}
+
+  /* sağ panel */
+  .st{padding:11px 11px}
+  .st-hd{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .st-tabs{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:8px 0 6px;padding:3px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--line)}
+  .st-tabs button{min-height:30px;border-radius:9px;font-size:12.5px;font-weight:700;color:var(--muted);transition:.2s}
+  .st-tabs button.on[data-t="in"]{background:linear-gradient(180deg,#bff8ff,#35eefc);color:#04262c}
+  .st-tabs button.on[data-t="out"]{background:linear-gradient(180deg,#c9b0ff,#8f63ff);color:#fff}
+  .st-list{list-style:none;display:grid;gap:3px}
+  .st-list li{display:flex;gap:8px;align-items:center;padding:4px 6px;border-radius:10px;font-size:13.3px;line-height:1.25;color:#6f8aa8;border:1px solid transparent;transition:color .3s,background .3s,border-color .3s}
+  .st-list li i{width:20px;height:20px;flex:none;border-radius:50%;display:grid;place-items:center;border:2px solid rgba(255,255,255,.14);color:transparent;transition:.3s var(--spring)}
+  .st-list li i svg{width:13px;height:13px}
+  .st-list li.on{color:#eef6ff;background:rgba(47,227,155,.07);border-color:rgba(47,227,155,.22)}
+  .st-list li.on i{background:var(--green);border-color:var(--green);color:#03291b;box-shadow:0 0 10px rgba(47,227,155,.6)}
+  .st-list.out li.on{background:rgba(168,121,255,.08);border-color:rgba(168,121,255,.25)}
+  .st-list.out li.on i{background:#a879ff;border-color:#a879ff;color:#fff;box-shadow:0 0 10px rgba(168,121,255,.6)}
+  .st-list li.pop i{animation:pop .5s var(--spring)}
+  @keyframes pop{0%{transform:scale(.3)}100%{transform:scale(1)}}
+  .spc{padding:11px 11px;display:flex;flex-direction:column;gap:6px;flex:1;min-height:0}
+  .sp-hd{display:flex;align-items:baseline;justify-content:space-between}
+  .sp-hd b{font-size:20px;font-weight:900;color:var(--cyan);font-variant-numeric:tabular-nums;text-shadow:0 0 14px rgba(53,238,252,.4)}
+  #spiro{width:100%;height:84px;flex:1 1 0;min-height:40px;max-height:170px;border-radius:12px;background:rgba(0,0,0,.3);border:1px solid var(--line)}
+  .cav{display:grid;grid-template-columns:96px 1fr 76px;gap:8px;align-items:center;font-size:12.5px;color:#c9d8ea;font-weight:600}
+  .cav .b2{height:9px;border-radius:99px;background:rgba(0,0,0,.4);overflow:hidden}
+  .cav .b2 i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,#14c3dc,#35eefc);box-shadow:0 0 10px rgba(53,238,252,.5)}
+  .cav .b2.am i{background:linear-gradient(90deg,#ffa41b,#ffd36b);box-shadow:0 0 10px rgba(255,187,61,.5)}
+  .cav em{font-style:normal;font-size:12px;font-weight:800;text-align:right;color:var(--muted)}
+  .cav em.up{color:var(--green)} .cav em.dn{color:#ff9aa8}
+  .rate{display:flex;align-items:center;gap:7px;padding:5px 10px;border-radius:12px;background:rgba(0,0,0,.25);border:1px solid var(--line);font-size:12.5px;color:#c9d8ea;font-weight:600}
+  .rate b{font-size:19px;font-weight:900;color:#fff;font-variant-numeric:tabular-nums}
+  .rate em{font-style:normal;margin-left:auto;font-size:11.5px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--amber)}
+  .rdot{width:14px;height:14px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#e9ffff,#35eefc 60%,#0a8fa3);box-shadow:0 0 10px #35eefc;flex:none}
+
+  @media (min-width:861px){.m-kesif [data-stat="s1"]{min-width:150px}}
+  /* duyarlı */
+  @media (max-width:1100px){ .sim{grid-template-columns:250px minmax(0,1fr) 270px} }
+  @media (max-width:600px){ .scene{aspect-ratio:1/1} }
+  @media (max-width:860px){
+    .zd-body{padding:2px 10px 12px}
+    .sim{grid-template-columns:minmax(0,1fr);height:auto;gap:10px}
+    .bar{order:0} .scene{order:1;aspect-ratio:820/680;height:auto} .lp{order:2} .rp{order:3}
+    .lp .holdwrap{order:-1}
+    .zd-modal{place-items:start center;padding-top:24px}
+    .mp{overflow:visible}
+    #modeSeg{display:grid;grid-template-columns:1fr 1fr;width:100%;border-radius:18px}
+    #modeSeg button{white-space:normal;line-height:1.2}
+    .bar .sp{display:none}
+    .bar{gap:8px}
+    #actSeg{flex:1}
+    #actSeg button{flex:1;padding:8px 8px}
+    .zd-stat .v{font-size:19px}
+    .zd-stat{padding:0 8px}
+    .zd-stat .l{font-size:9.5px;letter-spacing:.8px}
+    .zd-title h1{font-size:19px}
+    .scene-tag{left:8px;top:8px}
+    .ph-pill{font-size:10.5px;padding:4px 9px}
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="assets/zd.js"></script>
+<script>
+(function(){
+'use strict';
+const {$,$$,clamp,lerp} = ZD;
+const CX=350, VW=820, VH=680;
+const f1=n=>Math.round(n*10)/10;
+const DEG=Math.PI/180;
+
+/* =====================  KİTAP BİLGİLERİ  ===================== */
+const INFO={
+  burun:{name:'Burun',color:'#ff9aa8',text:'Solunum sistemi burunla başlar. Vücuda burundan giren hava, solunum sistemini dolaştıktan sonra tekrar burundan çıkar. Burnun iç yüzeyinde bulunan mukus sıvısı kuru havayı nemlendirirken kılcal damarlar havayı ısıtır. Burundaki kıllar havada bulunan toz ve mikropları tutarak havayı temizlemeye yardımcı olur.',short:'Mukus kuru havayı nemlendirir, kılcal damarlar ısıtır, kıllar toz ve mikropları tutar.'},
+  yutak:{name:'Yutak',color:'#ff7f95',text:'Burun ve ağız boşluklarının arkasında yer alan, soluk borusu ile yemek borusunu birleştiren esnek bir yapıdır. Burundan gelen hava buradan gırtlağa geçer.',short:'Burun ve ağız boşluklarının arkasında; soluk borusu ile yemek borusunu birleştirir.'},
+  girtlak:{name:'Gırtlak',color:'#cfe3ff',text:'Yutakla soluk borusu arasında bulunur. Esnek ve kıkırdak yapıdadır. Gırtlağın yapısında ses telleri bulunur. Bu teller sesin oluşmasını sağlar.',short:'Yutak ile soluk borusu arasındadır; ses telleri burada bulunur.'},
+  soluk:{name:'Soluk borusu',color:'#e8f2ff',text:'Alınan havanın akciğerlere ulaşmasını sağlayan yapıdır. Kıkırdak yapıdadır. Gırtlak ile akciğerler arasında bulunur.',short:'Gırtlak ile akciğerler arasındaki kıkırdak yapılı boru; havayı akciğerlere ulaştırır.'},
+  brons:{name:'Bronş',color:'#dfe9f5',text:'Soluk borusunun akciğere doğru iki kola ayrılmasıyla oluşur. Her iki akciğere hava taşır.',short:'Soluk borusunun iki kola ayrılmasıyla oluşur; her iki akciğere hava taşır.'},
+  bronscuk:{name:'Bronşçuk',color:'#ffd3e0',text:'Bronşların akciğerlerin içine doğru dallara ayrılmasıyla oluşan küçük hava kanallarıdır. Havanın alveollere iletilmesini sağlar.',short:'Akciğer içindeki küçük hava kanallarıdır; havayı alveollere iletir.'},
+  alveol:{name:'Alveol',color:'#ffb3c8',text:'Etrafı kılcal damarlarla çevrili hava keseleridir. Bronşçukların uçlarında bulunur. Havadaki oksijenin kana, kandaki karbon dioksidin havaya geçtiği yapılardır.',short:'Bronşçukların ucundaki, kılcal damarlarla çevrili hava keseleri; gaz alışverişi burada olur.'},
+  akciger:{name:'Akciğerler',color:'#ff9fb8',text:'Göğüs kafesinin içinde yer alan, sağ ve sol akciğer olmak üzere iki parçadan oluşan, süngerimsi yapıdaki bir organdır. Sağ akciğer, sol akciğere göre daha büyüktür.',short:'Göğüs kafesindeki süngerimsi organ; sağ akciğer soldan büyüktür.'},
+  diyafram:{name:'Diyafram',color:'#ff8a5c',text:'Göğüs boşluğu ile karın boşluğunu birbirinden ayıran kaslı yapıdır. Diyafram, kaburgalar arasındaki kaslar ile solunum sırasında kasılıp gevşeme hareketi yapar. Bu sayede akciğerlerin genişleyip daralmasına yardımcı olur. Böylece gaz giriş çıkışı daha kolay gerçekleşir.',short:'Göğüs boşluğu ile karın boşluğunu ayıran, solunuma yardımcı kas.'},
+  kaburga:{name:'Kaburgalar arası kaslar',color:'#ff9a6c',text:'Kaburgaların arasındaki kaslar, diyafram ile birlikte solunum sırasında kasılıp gevşer. Soluk alırken kaburgaların arasındaki kaslar kasılır; soluk verirken gevşer.',short:'Soluk alırken kasılır, soluk verirken gevşer.'}
+};
+const PART2INFO=p=>p.startsWith('akciger')?'akciger':p;
+const PARTNAME=p=>p==='akciger-sag'?'Sağ akciğer':p==='akciger-sol'?'Sol akciğer':INFO[PART2INFO(p)].name;
+const INH=['Diyafram kası kasılır ve düzleşir.','Kaburgaların arasındaki kaslar kasılır.','Göğüs boşluğu genişler.','Karın boşluğu daralır.','Akciğerlerin hacmi artar.','Akciğerler hava ile dolar.'];
+const EXH=['Diyafram kası gevşeyerek kubbeleşir.','Kaburgaların arasındaki kaslar gevşer.','Göğüs boşluğu daralır.','Karın boşluğu genişler.','Akciğerlerin hacmi azalır.','Akciğerlerdeki hava dışarı atılır.'];
+const TASKS=[
+  {q:'Havayı nemlendiren ve toz tutan yapıya dokun.',a:'burun',h:'Hava vücuda ilk olarak buradan girer.'},
+  {q:'Ses tellerinin bulunduğu yapıya dokun.',a:'girtlak',h:'Yutak ile soluk borusu arasındaki kıkırdak yapıya bak.'},
+  {q:'Soluk borusu ile yemek borusunu birleştiren yapıya dokun.',a:'yutak',h:'Burun ve ağız boşluklarının arkasındaki esnek yapı.'},
+  {q:'Gaz alışverişinin olduğu hava keselerine dokun.',a:'alveol',h:'Büyüteçteki üzüm salkımına benzeyen keseler.'},
+  {q:'Göğüs boşluğu ile karın boşluğunu ayıran kasa dokun.',a:'diyafram',h:'Akciğerlerin altındaki kubbe şeklinde kas.'},
+  {q:'Hangi akciğer daha büyük? Ona dokun.',a:'akciger-sag',h:'Kişiye karşıdan bakıyorsun: kişinin sağı senin solunda.'},
+  {q:'Diyaframı düzleştir: soluk al!',act:'in',h:'BASILI TUT butonuna (veya Boşluk tuşuna) basılı tut.'},
+  {q:'Kaburgalar arasındaki kasları gevşet: soluk ver!',act:'out',h:'Önce soluk al, sonra butonu bırak.'}
+];
+const RATE={rest:14,excite:24,sport:32}, ACTN={rest:'Dinlenme',excite:'Heyecan',sport:'Spor'};
+
+/* =====================  GEOMETRİ YARDIMCILARI  ===================== */
+function cm(p0,p1,p2,p3,t){const t2=t*t,t3=t2*t;return [0,1].map(j=>.5*((2*p1[j])+(-p0[j]+p2[j])*t+(2*p0[j]-5*p1[j]+4*p2[j]-p3[j])*t2+(-p0[j]+3*p1[j]-3*p2[j]+p3[j])*t3));}
+function crPath(pts,closed){
+  const n=pts.length,g=i=>closed?pts[(i+n)%n]:pts[Math.max(0,Math.min(n-1,i))];
+  let d=`M${f1(pts[0][0])} ${f1(pts[0][1])}`;const last=closed?n:n-1;
+  for(let i=0;i<last;i++){const p0=g(i-1),p1=g(i),p2=g(i+1),p3=g(i+2);
+    d+=`C${f1(p1[0]+(p2[0]-p0[0])/6)} ${f1(p1[1]+(p2[1]-p0[1])/6)} ${f1(p2[0]-(p3[0]-p1[0])/6)} ${f1(p2[1]-(p3[1]-p1[1])/6)} ${f1(p2[0])} ${f1(p2[1])}`;}
+  return closed?d+'Z':d;
+}
+function crSample(pts,per){const n=pts.length,g=i=>pts[Math.max(0,Math.min(n-1,i))],o=[];
+  for(let i=0;i<n-1;i++)for(let k=0;k<per;k++)o.push(cm(g(i-1),g(i),g(i+1),g(i+2),k/per));o.push(pts[n-1].slice());return o;}
+function yAt(poly,x){if(x<=poly[0][0])return poly[0][1];for(let i=1;i<poly.length;i++){if(x<=poly[i][0]){const a=poly[i-1],c=poly[i];return lerp(a[1],c[1],(x-a[0])/((c[0]-a[0])||1));}}return poly[poly.length-1][1];}
+function bez(p,t){const u=1-t;return [0,1].map(j=>u*u*u*p[0][j]+3*u*u*t*p[1][j]+3*u*t*t*p[2][j]+t*t*t*p[3][j]);}
+function cum(pts){const c=[0];for(let i=1;i<pts.length;i++)c.push(c[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));return c;}
+function rng(seed){return()=>{seed=(seed*16807)%2147483647;return(seed-1)/2147483646;};}
+const P=(x,y)=>`${f1(x)} ${f1(y)}`;
+
+/* =====================  SERVİER FİGÜRÜ  ===================== */
+/* resp_body / resp_lungs / resp_airways: 1140×1400 aynı tuval, birebir hizalı. Görsel koordinatı → sahne */
+const FIG={x:62.5,y:-12,s:.5};FIG.w=1140*FIG.s;FIG.h=1400*FIG.s;
+const I=(x,y)=>[FIG.x+FIG.s*x,FIG.y+FIG.s*y];
+const IP=a=>a.map(([x,y])=>I(x,y));
+const PAIRS=a=>{const o=[];for(let i=0;i<a.length;i+=2)o.push([a[i],a[i+1]]);return o;};
+const polyD=pts=>'M'+pts.map(p=>P(p[0],p[1])).join('L')+'Z';
+/* akciğer katmanı ölçek merkezi: akciğer tepeleri hizasında soluk borusu ekseni (çatalın üstü) */
+const ORG=I(575,652), KX=.04, KY=.085;
+function mapPt(x,y,side,b){return side?[ORG[0]+(x-ORG[0])*(1+KX*b),ORG[1]+(y-ORG[1])*(1+KY*b)]:[x,y];}
+
+/* akciğer sınırları (görsel koordinatı; resp_lungs alfa kanalından) */
+const LUNGI={
+  R:PAIRS([493,653,454,667,431,681,414,695,400,709,388,723,378,737,369,751,362,765,355,779,349,793,344,807,339,821,335,835,332,849,329,863,327,877,324,891,320,905,317,919,315,933,314,947,313,961,312,975,312,989,311,1003,310,1017,310,1031,310,1045,311,1059,312,1073,314,1087,317,1101,322,1115,329,1129,340,1134,359,1129,389,1115,430,1101,522,1087,530,1073,530,1059,529,1045,529,1031,529,1017,530,1003,531,989,532,975,533,961,534,947,534,933,534,919,535,905,535,891,536,877,537,863,537,849,537,835,537,821,537,807,538,793,537,779,535,765,533,751,533,737,533,723,533,709,531,695,528,681,523,667,509,653]),
+  L:PAIRS([659,656,639,670,633,684,630,698,629,712,629,726,630,740,624,754,620,768,617,782,617,796,618,810,620,824,624,838,633,852,640,866,644,880,648,894,652,908,655,922,658,936,662,950,668,964,674,978,681,992,688,1006,693,1020,696,1034,697,1048,697,1062,695,1076,693,1090,692,1104,786,1118,823,1130,840,1130,858,1118,860,1104,861,1090,862,1076,862,1062,862,1048,862,1034,861,1020,861,1006,860,992,859,978,857,964,855,950,851,936,848,922,845,908,842,894,838,880,835,866,831,852,827,838,823,824,818,810,813,796,808,782,802,768,796,754,788,740,780,726,769,712,756,698,740,684,719,670,679,656])
+};
+/* 7 px genişletilmiş sınır: akciğer + içindeki bronş ağacı bu bölgede ölçeklenir */
+const LUNGD={
+  R:PAIRS([493,646,443,666,416,686,396,706,379,726,365,746,354,766,345,786,337,806,331,826,326,846,322,866,319,886,313,906,309,926,307,946,306,966,305,986,304,1006,303,1026,303,1046,304,1066,306,1086,312,1106,320,1126,340,1141,380,1126,439,1106,530,1086,538,1066,536,1046,536,1026,537,1006,539,986,540,966,541,946,541,926,542,906,543,886,544,866,544,846,544,826,544,806,545,786,543,766,539,746,540,726,540,706,537,686,529,666,509,646]),
+  L:PAIRS([659,649,633,669,625,689,622,709,622,729,619,749,612,769,610,789,611,809,614,829,624,849,634,869,640,889,645,909,649,929,655,949,663,969,673,989,682,1009,688,1029,690,1049,689,1069,686,1089,686,1109,801,1129,823,1137,840,1137,855,1129,867,1109,868,1089,869,1069,869,1049,869,1029,868,1009,867,989,865,969,861,949,856,929,852,909,848,889,843,869,837,849,831,829,825,809,818,789,809,769,800,749,789,729,774,709,754,689,729,669,679,649])
+};
+/* hava yolu bölgeleri (görsel koordinatı): kırpma + dokunma alanı */
+const AIRI={
+  burun:[[352,300],[356,264],[372,246],[400,236],[450,236],[492,240],[505,258],[510,292],[505,322],[470,327],[400,327],[362,326]],
+  burunHit:[[333,297],[340,283],[356,262],[372,246],[400,236],[450,236],[492,240],[505,258],[510,292],[505,322],[470,328],[400,328],[362,327],[348,320]],
+  yutak:[[500,262],[540,268],[560,285],[570,300],[574,360],[575,410],[572,470],[552,470],[548,430],[535,420],[522,400],[530,370],[518,350],[505,330],[505,300]],
+  girtlak:[[512,465],[540,425],[556,404],[563,418],[561,470],[575,486],[578,546],[528,549],[506,530],[503,490]],
+  solukU:[[526,540],[608,540],[608,656],[526,656]],
+  solukL:[[528,648],[610,648],[612,824],[528,824]],
+  brons:[[540,822],[612,822],[640,850],[668,880],[672,930],[640,935],[600,885],[575,872],[550,885],[520,920],[505,900],[515,870],[538,845]]
+};
+const AIR={};for(const k in AIRI)AIR[k]=IP(AIRI[k]);
+/* sabit katmandan çıkarılan orta bölge (soluk borusu alt kısmı + ana bronşlar); LUNGD ile örtüşmez */
+const MIDI=[[520,652],[608,652],[608,789],[610,789],[611,809],[614,829],[624,849],[634,869],[640,889],[645,909],[649,929],[640,935],[600,885],[575,872],[550,885],[542,906],[543,886],[544,866],[544,846],[544,826],[544,806],[545,786],[543,766],[539,746],[540,726],[540,706],[537,686],[529,666]];
+
+/* =====================  DİYAFRAM  ===================== */
+/* soluk vermede kubbeli (akciğer tabanlarının hemen altında, ortada yükselir); soluk almada iner ve düzleşir */
+const DK0=IP([[312,1172],[314,1156],[322,1142],[340,1137],[371,1128],[400,1116],[440,1103],[480,1098],[515,1095],[545,1084],[575,1062],[608,1070],[648,1096],[690,1118],[720,1118],[760,1118],[800,1126],[836,1135],[852,1142],[856,1156],[858,1172]]);
+const DK1=IP([[314,1196],[318,1184],[322,1178],[332,1180],[352,1174],[382,1160],[424,1144],[470,1137],[520,1131],[555,1140],[590,1146],[630,1148],[665,1148],[697,1148],[730,1152],[770,1159],[800,1164],[834,1176],[850,1178],[852,1188],[853,1198]]);
+const thick=x=>6+5*(1-Math.min(1,Math.abs(x-CX)/140));
+const diaPts=b=>DK0.map((p,i)=>[lerp(p[0],DK1[i][0],b),lerp(p[1],DK1[i][1],b)]);
+const DT0=crSample(diaPts(0),10);
+let DT=DT0, DB=DT0.map(p=>[p[0],p[1]+thick(p[0])]);
+function setDia(b){const t=diaPts(b);DT=crSample(t,10);DB=crSample(t.map(p=>[p[0],p[1]+thick(p[0])]),10);return t;}
+
+/* =====================  BRONŞ AĞACI (görseldeki dallar boyunca)  ===================== */
+/* uçlar ve yollar resp_airways katmanındaki bronş/bronşçuk dallarının orta çizgisinden çıkarıldı */
+const BRI={R:[[575,848],[548,860],[525,872],[510,882]],L:[[575,848],[605,862],[640,880],[672,898]]};
+const CHI={
+  R:[[504,883,495,874,470,861,462,853,462,845,466,823,475,812,480,779,504,751,494,699,510,680,513,670],[500,888,498,908,487,930,474,943,470,958,453,976,446,1002,426,1014,402,1036,399,1074,403,1088],[504,883,462,853,463,834,467,821,475,812,480,778,469,745,470,730,461,708,456,680],[500,888,498,908,487,930,474,943,470,958,456,972,427,975,392,996,377,1010,372,1045],[500,888,498,908,487,930,474,943,470,958,456,972,427,975,392,996,378,1009,364,1009,347,993],[504,883,462,853,463,834,467,821,475,812,480,778,469,744,443,723,420,712],[500,888,498,908,487,930,474,943,470,958,453,976,444,1005,441,1050,459,1081],[504,883,461,853,452,853,431,862,417,873,412,878,407,896,400,903,356,914,333,939],[500,888,498,908,487,930,474,943,466,963,466,973,481,999,480,1017,485,1043,512,1075],[504,883,462,853,463,834,467,821,475,812,480,779,505,747,493,714],[504,883,462,853,466,818,456,798,438,776,422,763,379,769],[504,883,495,874,470,861,439,834,396,838,382,848,359,853,344,866,339,866],[500,888,498,908,487,930,474,943,466,963,466,973,485,1003,499,1009,520,1026],[500,888,498,908,487,930,474,943,470,958,453,976,446,1002,420,1019,416,1023,417,1028]],
+  L:[[682,896,705,894,721,874,721,861,710,841,708,822,690,794,690,765,680,742,678,727,648,682,648,677],[682,896,705,894,721,874,721,861,710,841,708,822,690,794,689,782,690,766,718,728,715,692],[682,896,705,894,721,874,721,861,710,841,708,822,690,794,690,765,680,742,678,727,669,721],[682,896,705,894,721,874,720,857,710,841,708,823,718,800,754,776,770,737],[682,896,705,894,721,874,721,861,710,841,708,822,688,793,656,784,632,767],[682,896,705,894,721,874,720,857,710,841,708,823,717,805,716,780,723,747],[682,896,710,894,756,942,811,951,832,937],[682,896,705,894,721,874,722,863,736,839,773,818,796,786],[682,896,705,894,713,886,721,874,718,851,705,833,674,828,656,818,638,815],[682,896,705,894,721,874,721,861,710,841,708,822,690,794,689,779,680,769],[682,896,705,894,724,872,746,871,763,891,774,896,825,889],[687,937,695,959,722,994,761,996,772,989,798,986,822,991,832,989],[687,937,695,959,721,995,717,1027,725,1054,724,1072,709,1099],[687,937,696,961,722,998,767,1047,766,1079,763,1082]]
+};
+const TIPS=[];
+['R','L'].forEach(k=>CHI[k].forEach(f=>{const ch=IP(PAIRS(f)),t=ch[ch.length-1];TIPS.push({x:t[0],y:t[1],chain:ch,side:k==='R'?-1:1});}));
+
+/* =====================  KABURGALAR  ===================== */
+/* akciğerlerin dış kenarı (görsel koordinatı) → her kaburganın yanal ucu akciğerin biraz dışında */
+const LAT={R:PAIRS([484,655,447,671,423,687,406,703,391,719,379,735,369,751,361,767,353,783,347,799,341,815,337,831,333,847,329,863,327,879,323,895,319,911,316,927,314,943,313,959,312,975,312,991,311,1007,310,1023,310,1039,311,1055,312,1071,314,1087,318,1103,323,1119]),
+  L:PAIRS([689,658,725,674,747,690,764,706,777,722,787,738,796,754,803,770,809,786,815,802,821,818,826,834,831,850,835,866,839,882,843,898,846,914,849,930,853,946,857,962,859,978,860,994,861,1010,862,1026,862,1042,862,1058,862,1074,861,1090,860,1106,855,1122])};
+function latAt(k,yv){const yi=(yv-FIG.y)/FIG.s,a=LAT[k];let x=a[a.length-1][0];
+  if(yi<=a[0][1])x=a[0][0];else for(let i=1;i<a.length;i++)if(yi<=a[i][1]){x=lerp(a[i-1][0],a[i][0],(yi-a[i-1][1])/(a[i][1]-a[i-1][1]));break;}
+  return Math.abs(x-575)*FIG.s;}
+const RIBS=[0,1,2,3,4,5,6].map(i=>{const y=I(0,688+i*54)[1],dr=16+i*4.5;return{y,dr,w:{'-1':(latAt('R',y+dr*.6)+9)/.97,'1':(latAt('L',y+dr*.6)+9)/.97}};});
+function ribPts(i,s,b){
+  const r=RIBS[i],w=r.w[s],o=[CX+s*18,r.y];
+  const pts=[[CX+s*18,r.y],[CX+s*w*.55,r.y-12],[CX+s*w*1.02,r.y+r.dr*.3],[CX+s*w*.98,r.y+r.dr]];
+  const th=-s*(3+i*.5)*b*DEG,c=Math.cos(th),sn=Math.sin(th),P0=[o[0],o[1]-5*b];
+  return pts.map(([x,y])=>{const dx=(x-o[0])*(1+.03*b),dy=y-o[1];return[P0[0]+dx*c-dy*sn,P0[1]+dx*sn+dy*c];});
+}
+
+/* =====================  HAVA YOLLARI (parçacık rotaları)  ===================== */
+const NOSE=IP([[296,318],[320,315],[347,311],[368,300],[400,288],[440,282],[480,284],[505,290],[530,305],[545,335],[548,380],[546,425],[542,465],[545,500],[555,535]]).map(([x,y])=>[x,y,0]);
+const MOUTH=IP([[316,372],[340,371],[366,371],[390,370],[410,356],[440,342],[480,336],[515,345],[535,372],[545,410],[542,465],[545,500],[555,535]]).map(([x,y])=>[x,y,0]);
+const TRUNK=[[562,572,0],[567,620,0],[571,652,0],[573,720,1],[575,790,1],[575,848,1]].map(([x,y,f])=>[...I(x,y),f]);
+const ENTRY={nose:I(347,311),mouth:I(366,371)};
+function makePath(route,tip){
+  const br=IP(BRI[tip.side<0?'R':'L'].slice(1)).map(([x,y])=>[x,y,1]);
+  const pts=(route==='nose'?NOSE:MOUTH).concat(TRUNK,br,tip.chain.map(([x,y])=>[x,y,1]));
+  const c=cum(pts);return{pts,cum:c,len:c[c.length-1],tip,entryS:c[2]};
+}
+const PATHS={nose:TIPS.map(t=>makePath('nose',t)),mouth:TIPS.map(t=>makePath('mouth',t))};
+function posAt(pa,s){
+  const c=pa.cum;let lo=0,hi=c.length-1;s=clamp(s,0,pa.len);
+  while(hi-lo>1){const m=(lo+hi)>>1;if(c[m]<=s)lo=m;else hi=m;}
+  const a=pa.pts[lo],b=pa.pts[hi],t=(s-c[lo])/((c[hi]-c[lo])||1);
+  const x=lerp(a[0],b[0],t),y=lerp(a[1],b[1],t),sd=b[2]||a[2];
+  return sd?mapPt(x,y,sd,S.b):[x,y];
+}
+
+/* =====================  DURUM  ===================== */
+const S={mode:'kesif',b:0,flow:0,holding:false,auto:false,autoT:0,act:'rest',phase:'rest',phaseB0:0,route:'nose',air:'clean',
+  trapped:0,reached:0,visited:new Set(),sel:null};
+
+/* =====================  ARAYÜZ  ===================== */
+const ui=ZD.mount({
+  kicker:'SİMÜLASYON · SOLUNUM SİSTEMİ',title:'Soluk Al, Soluk Ver',
+  crumb:['7. Sınıf Fen Bilimleri','3. Ünite','Solunum Sistemi'],
+  stats:[{id:'s1',label:'Aşama',value:'Dinlenme'},{id:'s2',label:'Hacim',value:'%0',cls:'cyan'},{id:'s3',label:'Soluk/dk',value:'14'},{id:'s4',label:'Keşif',value:'0/10',cls:'green'}],
+  onHelp(){help();},onRestart(){setMode(S.mode,true);ZD.toast('Yeniden başlatıldı','',1400);},
+  credit:true
+});
+
+const LUNGICON=`<svg viewBox="0 0 64 64" class="ic" aria-hidden="true"><defs><radialGradient id="hiL" cx=".4" cy=".35" r=".8"><stop offset="0" stop-color="#ffe0e8"/><stop offset=".45" stop-color="#ff9fb8"/><stop offset="1" stop-color="#c9466f"/></radialGradient></defs>
+<path d="M29 10v16c0 3-2 5-5 7" stroke="#e8f2ff" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M35 10v16c0 3 2 5 5 7" stroke="#e8f2ff" stroke-width="4" fill="none" stroke-linecap="round"/>
+<path d="M24 20c-8 2-15 13-16 28-.4 6 3 9 8 8l10-3c2-.6 3-2 3-4V24c0-3-2-5-5-4Z" fill="url(#hiL)"/><path d="M40 20c8 2 15 13 16 28 .4 6-3 9-8 8l-10-3c-2-.6-3-2-3-4V24c0-3 2-5 5-4Z" fill="url(#hiL)"/>
+<ellipse cx="17" cy="32" rx="3.5" ry="7" fill="#fff" opacity=".45" transform="rotate(18 17 32)"/><ellipse cx="47" cy="32" rx="3.5" ry="7" fill="#fff" opacity=".35" transform="rotate(-18 47 32)"/></svg>`;
+
+ui.body.innerHTML=`
+<div class="sim" id="sim">
+  <div class="bar">
+    <div class="zd-seg" id="modeSeg" role="tablist" aria-label="Mod seçimi">
+      <button data-m="kesif" class="on" role="tab">Serbest Keşif</button>
+      <button data-m="antrenor" role="tab">Doğru Nefes Antrenörü</button>
+      <button data-m="gorev" role="tab">Görevler</button>
+      <button data-m="ortam" role="tab">Ortam Testi</button>
+    </div>
+    <span class="sp"></span>
+    <span class="lbl-s">Etkinlik</span>
+    <div class="zd-seg" id="actSeg" aria-label="Etkinlik seçimi">
+      <button data-a="rest" class="on">Dinlenme</button><button data-a="sport">Spor</button><button data-a="excite">Heyecan</button>
+    </div>
+    <button class="tgl" id="autoTgl" aria-pressed="false" aria-label="Otomatik nefes aç/kapat"><i></i>Otomatik nefes</button>
+  </div>
+
+  <aside class="lp">
+    <div class="mp" id="mp"></div>
+    <div class="holdwrap">
+      <button class="hold" id="hold" aria-label="Basılı tut: soluk al">
+        <span class="fill" id="holdFill"></span>${LUNGICON}
+        <span class="t"><b id="holdB">BASILI TUT: SOLUK AL</b><small id="holdS">veya <kbd>Boşluk</kbd> tuşuna basılı tut</small></span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="scene pick" id="scene">
+    <svg id="svg" viewBox="0 0 ${VW} ${VH}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Solunum sistemi modeli (Servier Medical Art): burun, yutak, gırtlak, soluk borusu, bronşlar, akciğerler ve diyafram"></svg>
+    <canvas id="cv"></canvas>
+    <div class="scene-tag"><span class="ph-pill" id="phPill">DİNLENME</span></div>
+  </div>
+
+  <aside class="rp">
+    <div class="card st">
+      <div class="st-hd"><span class="ttl">Durum tablosu</span><span class="lbl-s" id="stNote">Butona basılı tut</span></div>
+      <div class="st-tabs"><button data-t="in" class="on">Soluk alma</button><button data-t="out">Soluk verme</button></div>
+      <ol class="st-list" id="stList"></ol>
+    </div>
+    <div class="card spc">
+      <div class="sp-hd"><span class="ttl">Akciğer hacmi</span><b id="volV">%0</b></div>
+      <canvas id="spiro" aria-label="Akciğer hacmi grafiği"></canvas>
+      <div class="cav"><span>Göğüs boşluğu</span><div class="b2"><i id="cavC"></i></div><em id="cavCt">—</em></div>
+      <div class="cav"><span>Karın boşluğu</span><div class="b2 am"><i id="cavA"></i></div><em id="cavAt">—</em></div>
+      <div class="rate"><span class="rdot" id="rdot"></span><span>Solunum hızı</span><b id="rateV">≈14</b><small>soluk/dk</small><em id="rateA">Dinlenme</em></div>
+    </div>
+  </aside>
+</div>`;
+
+/* =====================  SVG SAHNE  ===================== */
+const svg=$('#svg');
+const IMG='assets/img/';
+const figImg=(f,extra='')=>`<image href="${IMG}${f}" x="${FIG.x}" y="${FIG.y}" width="${FIG.w}" height="${FIG.h}" preserveAspectRatio="xMidYMid meet" ${extra}/>`;
+/* büyüteç: A = alveoli.webp (bronşçuk ucu + alveol keseleri), B = gas_pulmonary.webp (alveol-kılcal gaz alışverişi) */
+const MG={x:712,y:568,r:100};
+const MA={cx:540,cy:900,k:.215,W:955,H:1388}, MB={cx:692,cy:463,k:.225,W:1385,H:927};
+const mA=([x,y])=>[(x-MA.cx)*MA.k,(y-MA.cy)*MA.k], mB=([x,y])=>[(x-MB.cx)*MB.k,(y-MB.cy)*MB.k];
+const AIRP=[[[150,300],[205,400],[250,500],[310,545],[375,548],[430,540]],
+  [[150,300],[205,400],[250,500],[290,600],[300,690],[290,760],[255,830]],
+  [[150,300],[205,400],[250,500],[300,600],[360,700],[420,760],[500,770],[600,770],[690,780]],
+  [[150,300],[205,400],[250,500],[300,600],[360,700],[420,780],[450,880],[440,990],[400,1080],[360,1150]],
+  [[150,300],[205,400],[250,500],[300,600],[360,700],[420,780],[500,880],[545,980],[620,1070],[720,1150]]].map(p=>{const s=crSample(p.map(mA),6);return{s,c:cum(s)};});
+const VES=[[[520,927],[440,800],[370,690],[310,600],[200,545],[80,545],[0,560]],
+  [[520,927],[440,800],[360,660],[350,520],[450,410],[510,300],[480,150],[460,0]],
+  [[960,927],[905,760],[880,600],[900,470],[1050,385],[1200,315],[1385,265]],
+  [[960,927],[905,760],[860,600],[820,470],[700,385],[580,330],[500,200],[465,0]]];
+const ALV=[[590,650,70],[520,560,30],[680,800,40],[860,190,60],[760,160,40],[1040,560,40]].map(([x,y,r])=>{const p=mB([x,y]);return[p[0],p[1],r*MB.k];});
+
+svg.innerHTML=`
+<defs>
+  <radialGradient id="gPool" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#bfe9ff" stop-opacity=".16"/><stop offset=".6" stop-color="#5fc6ff" stop-opacity=".06"/><stop offset="1" stop-color="#35eefc" stop-opacity="0"/></radialGradient>
+  <linearGradient id="gFadeV" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#07111f" stop-opacity="0"/><stop offset=".55" stop-color="#07111f" stop-opacity=".72"/><stop offset="1" stop-color="#07111f" stop-opacity=".97"/></linearGradient>
+  ${[['gRibC','#fff6e6'],['gRibO','#7d6a55'],['gRibH','#ffffff']].map(([id,c])=>`<linearGradient id="${id}" gradientUnits="userSpaceOnUse" x1="${CX-70}" y1="0" x2="${CX+70}" y2="0"><stop offset="0" stop-color="${c}"/><stop offset=".3" stop-color="${c}"/><stop offset=".44" stop-color="${c}" stop-opacity=".15"/><stop offset=".5" stop-color="${c}" stop-opacity="0"/><stop offset=".56" stop-color="${c}" stop-opacity=".15"/><stop offset=".7" stop-color="${c}"/><stop offset="1" stop-color="${c}"/></linearGradient>`).join('')}
+  <clipPath id="cStatic"><path clip-rule="evenodd" d="M-100 -100H920V800H-100Z${polyD(IP(LUNGD.R))}${polyD(IP(LUNGD.L))}${polyD(IP(MIDI))}"/></clipPath>
+  <clipPath id="cLR"><path d="${polyD(IP(LUNGD.R))}"/></clipPath>
+  <clipPath id="cLL"><path d="${polyD(IP(LUNGD.L))}"/></clipPath>
+  ${['burun','yutak','girtlak','solukU','solukL','brons'].map(k=>`<clipPath id="c_${k}"><path d="${polyD(AIR[k])}"/></clipPath>`).join('')}
+  <linearGradient id="gMus" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f29a7c"/><stop offset=".5" stop-color="#d9624a"/><stop offset="1" stop-color="#a53b2a"/></linearGradient>
+  <linearGradient id="gIc" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#e2765a"/><stop offset="1" stop-color="#b44a32"/></linearGradient>
+  <linearGradient id="gBone" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fffaf0"/><stop offset="1" stop-color="#e6d8bf"/></linearGradient>
+  <linearGradient id="gAbd" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#ffbb3d" stop-opacity=".18"/><stop offset=".6" stop-color="#ff9a3d" stop-opacity=".07"/><stop offset="1" stop-color="#ffbb3d" stop-opacity="0"/></linearGradient>
+  <radialGradient id="gSmog" cx=".3" cy=".55" r=".8"><stop offset="0" stop-color="#8a7356" stop-opacity=".55"/><stop offset="1" stop-color="#5a4a3a" stop-opacity="0"/></radialGradient>
+  <radialGradient id="gSky" cx=".3" cy=".4" r=".8"><stop offset="0" stop-color="#8fe9ff" stop-opacity=".35"/><stop offset="1" stop-color="#35eefc" stop-opacity="0"/></radialGradient>
+  <linearGradient id="gHill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5fd17a"/><stop offset="1" stop-color="#1c6a3a" stop-opacity="0"/></linearGradient>
+  <radialGradient id="gLeaf" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#c9f78f"/><stop offset=".55" stop-color="#59bf45"/><stop offset="1" stop-color="#25752c"/></radialGradient>
+  <linearGradient id="gRing" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffffff"/><stop offset=".35" stop-color="#b8c8dc"/><stop offset=".6" stop-color="#5f7590"/><stop offset="1" stop-color="#dfe8f3"/></linearGradient>
+  <symbol id="arw" overflow="visible"><path d="M0 -16 L11 -2 L4.5 -2 L4.5 14 L-4.5 14 L-4.5 -2 L-11 -2Z" stroke="#04222a" stroke-width="1.5" stroke-linejoin="round"/></symbol>
+  <filter id="fSoft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5"/></filter>
+  <filter id="fHover"><feColorMatrix type="matrix" values="1.12 0 0 0 .04  0 1.12 0 0 .05  0 0 1.12 0 .07  0 0 0 1 0"/></filter>
+  <filter id="fSel" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="2.5" result="d"/><feFlood flood-color="#35eefc"/><feComposite in2="d" operator="in" result="o"/><feGaussianBlur in="o" stdDeviation="3" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="fOk" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/><feFlood flood-color="#2fe39b"/><feComposite in2="d" operator="in" result="o"/><feGaussianBlur in="o" stdDeviation="3.5" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="fBad" x="-30%" y="-30%" width="160%" height="160%"><feMorphology in="SourceAlpha" operator="dilate" radius="3" result="d"/><feFlood flood-color="#ff5468"/><feComposite in2="d" operator="in" result="o"/><feGaussianBlur in="o" stdDeviation="3.5" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="fSelT" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="1.3" result="d"/><feFlood flood-color="#35eefc"/><feComposite in2="d" operator="in" result="o"/><feGaussianBlur in="o" stdDeviation="1" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="fOkT" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="1.3" result="d"/><feFlood flood-color="#2fe39b"/><feComposite in2="d" operator="in" result="o"/><feGaussianBlur in="o" stdDeviation="1" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="fBadT" x="-10%" y="-10%" width="120%" height="120%"><feMorphology in="SourceAlpha" operator="dilate" radius="1.3" result="d"/><feFlood flood-color="#ff5468"/><feComposite in2="d" operator="in" result="o"/><feGaussianBlur in="o" stdDeviation="1" result="g"/><feMerge><feMergeNode in="g"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <clipPath id="magClip"><circle r="${MG.r}"/></clipPath>
+</defs>
+
+<!-- ortam -->
+<g id="env" opacity="0" pointer-events="none">
+  <g id="envClean">
+    <ellipse cx="90" cy="120" rx="150" ry="130" fill="url(#gSky)"/>
+    <circle cx="44" cy="52" r="20" fill="#fff3b0" opacity=".55" filter="url(#fSoft)"/><circle cx="44" cy="52" r="12" fill="#fff8d6" opacity=".8"/>
+    <path d="M0 236 C40 214 90 208 140 222 C170 230 200 232 236 226 L236 270 L0 270Z" fill="url(#gHill)" opacity=".75"/>
+    <g transform="translate(58 214)"><rect x="-3" y="0" width="6" height="22" rx="2" fill="#7a4e2c"/><circle cx="0" cy="-8" r="15" fill="url(#gLeaf)"/><circle cx="-9" cy="2" r="10" fill="url(#gLeaf)"/><circle cx="9" cy="1" r="10" fill="url(#gLeaf)"/></g>
+    <g transform="translate(150 222) scale(.8)"><rect x="-3" y="0" width="6" height="22" rx="2" fill="#7a4e2c"/><circle cx="0" cy="-8" r="15" fill="url(#gLeaf)"/><circle cx="-9" cy="2" r="10" fill="url(#gLeaf)"/><circle cx="9" cy="1" r="10" fill="url(#gLeaf)"/></g>
+  </g>
+  <g id="envDirty" opacity="0">
+    <ellipse cx="100" cy="150" rx="170" ry="140" fill="url(#gSmog)"/>
+    <g fill="#22303f" stroke="#3b4c60" stroke-width="1"><rect x="18" y="196" width="86" height="56" rx="3"/><rect x="34" y="138" width="12" height="60"/><rect x="66" y="152" width="10" height="46"/><path d="M104 252 V214 L124 226 V214 L144 226 V252Z"/></g>
+    <g fill="#ffcf6b" opacity=".55"><rect x="28" y="210" width="8" height="8"/><rect x="46" y="210" width="8" height="8"/><rect x="64" y="210" width="8" height="8"/><rect x="82" y="226" width="8" height="8"/></g>
+    <g class="smoke" fill="#7a7068"><circle cx="40" cy="128" r="10" opacity=".6"/><circle cx="50" cy="110" r="14" opacity=".45"/><circle cx="66" cy="92" r="18" opacity=".32"/><circle cx="72" cy="140" r="8" opacity=".55"/><circle cx="84" cy="122" r="12" opacity=".4"/></g>
+    <g transform="translate(194 240) scale(.8)"><path d="M-30 6 C-28 -4 -20 -10 -8 -10 L10 -10 C18 -10 24 -4 28 2 L32 4 L32 12 L-32 12Z" fill="#2a3646" stroke="#4a5d76"/><circle cx="-18" cy="12" r="6" fill="#111a24" stroke="#4a5d76"/><circle cx="18" cy="12" r="6" fill="#111a24" stroke="#4a5d76"/><circle cx="-40" cy="8" r="7" fill="#6d6560" opacity=".5"/><circle cx="-52" cy="4" r="10" fill="#6d6560" opacity=".35"/></g>
+  </g>
+</g>
+
+<!-- Servier figürü: gövde/baş (en altta) + sabit hava yolu katmanı -->
+<ellipse cx="${CX}" cy="330" rx="320" ry="350" fill="url(#gPool)" pointer-events="none"/>
+<g id="figBase" pointer-events="none">
+  ${figImg('resp_body.webp')}
+  ${figImg('resp_airways.webp','clip-path="url(#cStatic)"')}
+</g>
+
+<!-- boşluklar -->
+<path id="chestFill" fill="#35eefc" opacity=".05" pointer-events="none"/>
+<path id="abdFill" fill="url(#gAbd)" pointer-events="none"/>
+<rect x="${CX-170}" y="606" width="340" height="80" fill="url(#gFadeV)" pointer-events="none"/>
+
+<!-- akciğer katmanı (soluk alırken ölçeklenir) -->
+<g id="lungs">
+  <g class="part" data-part="akciger-sag">${figImg('resp_lungs.webp','clip-path="url(#cLR)" pointer-events="none"')}<path d="${polyD(IP(LUNGI.R))}" fill="transparent"/></g>
+  <g class="part" data-part="akciger-sol">${figImg('resp_lungs.webp','clip-path="url(#cLL)" pointer-events="none"')}<path d="${polyD(IP(LUNGI.L))}" fill="transparent"/></g>
+  <g class="part" data-part="soluk">${figImg('resp_airways.webp','clip-path="url(#c_solukL)" pointer-events="none"')}<path d="${polyD(AIR.solukL.map((p,i)=>i<2?[p[0],ORG[1]]:p))}" fill="transparent"/></g>
+  <g class="part" data-part="brons">${figImg('resp_airways.webp','clip-path="url(#c_brons)" pointer-events="none"')}
+    <path d="M${IP(BRI.R).map(p=>P(p[0],p[1])).join('L')}M${IP(BRI.L).map(p=>P(p[0],p[1])).join('L')}" stroke="transparent" stroke-width="15" stroke-linecap="round" fill="none" pointer-events="stroke"/></g>
+  <g class="part" data-part="bronscuk" id="bcG">${figImg('resp_airways.webp','clip-path="url(#cLR)" pointer-events="none"')}${figImg('resp_airways.webp','clip-path="url(#cLL)" pointer-events="none"')}
+    <path d="${TIPS.map(t=>'M'+t.chain.map(p=>P(p[0],p[1])).join('L')).join('')}" stroke="transparent" stroke-width="9" stroke-linecap="round" stroke-linejoin="round" fill="none" pointer-events="stroke"/></g>
+  <g class="part" data-part="alveol" id="tipsG"><path d="${TIPS.map(t=>`M${P(t.x,t.y)}l.1 0`).join('')}" stroke="transparent" stroke-width="14" stroke-linecap="round" fill="none" pointer-events="stroke"/></g>
+</g>
+
+<!-- diyafram -->
+<g class="part" data-part="diyafram">
+  <path id="dia" fill="url(#gMus)" fill-opacity=".9" stroke="#ffd9c8" stroke-opacity=".8" stroke-width="1"/>
+  <path id="diaHot" fill="#ff6a3d" opacity="0"/>
+  <path id="diaFib" stroke="#ffe6d8" stroke-opacity=".4" stroke-width=".9" fill="none"/>
+  <path id="diaTen" stroke="#fff3ea" stroke-opacity=".5" stroke-width="5" fill="none" stroke-linecap="round"/>
+  <path id="diaRim" stroke="#fff" stroke-opacity=".6" stroke-width="1.2" fill="none"/>
+  <path id="diaHit" stroke="transparent" stroke-width="14" fill="none" pointer-events="stroke"/>
+</g>
+
+<!-- göğüs kafesi: ince, yarı saydam kaburgalar + kaburgalar arası kaslar -->
+<g id="cage" pointer-events="none">
+  <g class="part" data-part="kaburga"><path id="icL" fill="url(#gIc)"/><path id="icR" fill="url(#gIc)"/>
+  <path id="icF" stroke="#ffd2bf" stroke-width=".9" fill="none" stroke-opacity=".5"/></g>
+  <path id="ribO" stroke="url(#gRibO)" stroke-opacity=".26" stroke-width="5.2" fill="none" stroke-linecap="round"/>
+  <path id="ribC" stroke="url(#gRibC)" stroke-opacity=".6" stroke-width="3.4" fill="none" stroke-linecap="round"/>
+  <path id="ribH" stroke="url(#gRibH)" stroke-opacity=".5" stroke-width=".9" fill="none" stroke-linecap="round" transform="translate(0 -1)"/>
+</g>
+<path id="chestLine" fill="none" stroke="#35eefc" stroke-opacity=".6" stroke-width="1.5" stroke-dasharray="5 5" pointer-events="none"/>
+<g class="part" data-part="kaburga"><path id="icHit" stroke="transparent" stroke-width="16" fill="none" pointer-events="stroke"/></g>
+
+<!-- üst hava yolları (görselin kendisi; seçim/parlama için ayrık kırpılmış katman) -->
+<g class="part" data-part="soluk">${figImg('resp_airways.webp','clip-path="url(#c_solukU)" pointer-events="none"')}<path d="${polyD(AIR.solukU)}" fill="transparent"/></g>
+<g class="part" data-part="girtlak">${figImg('resp_airways.webp','clip-path="url(#c_girtlak)" pointer-events="none"')}<path d="${polyD(AIR.girtlak)}" fill="transparent"/></g>
+<g class="part" data-part="yutak">${figImg('resp_airways.webp','clip-path="url(#c_yutak)" pointer-events="none"')}<path d="${polyD(AIR.yutak)}" fill="transparent"/></g>
+<g class="part" data-part="burun">${figImg('resp_airways.webp','clip-path="url(#c_burun)" pointer-events="none"')}<path d="${polyD(AIR.burunHit)}" fill="transparent"/></g>
+<ellipse id="mouthOpen" cx="${f1(I(366,371)[0])}" cy="${f1(I(366,371)[1])}" rx="4.5" ry="3.2" fill="#1a0610" stroke="#ff7a8a" stroke-width="1" opacity="0" pointer-events="none"/>
+
+<!-- hareket okları -->
+<g id="arrows" pointer-events="none" opacity="0">
+  <use href="#arw" id="aD1"/><use href="#arw" id="aD2"/><use href="#arw" id="aRL"/><use href="#arw" id="aRR"/>
+</g>
+<!-- karın boşluğu -->
+<g id="abdLbl" pointer-events="none">
+  <path id="abdArr" stroke="#ffbb3d" stroke-width="2" fill="none" stroke-opacity=".9"/>
+  <path id="abdHd" fill="#ffbb3d" opacity=".95"/>
+  <rect id="abdR" rx="11" height="26" fill="rgba(40,26,4,.85)" stroke="#ffbb3d" stroke-opacity=".7"/>
+  <text id="abdT" text-anchor="middle" font-size="14" font-weight="800" fill="#ffd98a" letter-spacing=".5">Karın boşluğu</text>
+</g>
+<g id="labels"></g>
+<!-- büyüteç bağlantısı -->
+<g id="lens" pointer-events="none">
+  <path id="lensLn" stroke="#35eefc" stroke-width="1.6" stroke-dasharray="4 4" fill="none" stroke-opacity=".85"/>
+  <circle id="lensMk" r="10" fill="rgba(53,238,252,.14)" stroke="#35eefc" stroke-width="2"/>
+</g>
+<g class="part" data-part="alveol" id="mag" transform="translate(${MG.x} ${MG.y})">
+  <circle r="${MG.r+12}" fill="#35eefc" opacity=".12" filter="url(#fSoft)"/>
+  <g clip-path="url(#magClip)">
+    <circle r="${MG.r}" fill="#2a1424"/>
+    <g id="magA"><g id="magImgA"><image href="${IMG}alveoli.webp" x="${f1(-MA.cx*MA.k)}" y="${f1(-MA.cy*MA.k)}" width="${f1(MA.W*MA.k)}" height="${f1(MA.H*MA.k)}"/></g></g>
+    <g id="magB" opacity="0"><image href="${IMG}gas_pulmonary.webp" x="${f1(-MB.cx*MB.k)}" y="${f1(-MB.cy*MB.k)}" width="${f1(MB.W*MB.k)}" height="${f1(MB.H*MB.k)}"/></g>
+    <g font-size="11" font-weight="800" paint-order="stroke" stroke="#12081a" stroke-width="3" stroke-linejoin="round">
+  <g id="magTA"><text class="malv" x="${f1(mA([700,700])[0])}" y="${f1(mA([700,700])[1])}" fill="#ffe2ea" font-size="12.5" text-anchor="middle">Alveol</text>
+    <text x="${f1(mA([330,640])[0])}" y="${f1(mA([330,640])[1])}" fill="#ffe9d8" text-anchor="middle">Bronşçuk</text></g>
+  <g id="magTB" opacity="0"><text class="malv" x="${f1(mB([850,235])[0])}" y="${f1(mB([850,235])[1])}" fill="#ffe2ea" font-size="12.5" text-anchor="middle">Alveol</text>
+    <text x="${f1(mB([700,330])[0])}" y="${f1(mB([700,330])[1])}" fill="#e3e6ff" text-anchor="middle">Kılcal damar</text>
+    <text x="${f1(mB([600,800])[0])}" y="${f1(mB([600,800])[1])}" fill="#b9c4ff" font-size="10.5" text-anchor="middle">O₂ az</text>
+    <text x="${f1(mB([520,235])[0])}" y="${f1(mB([520,235])[1])}" fill="#ffb3bf" font-size="10.5" text-anchor="middle">O₂ çok</text></g>
+</g>
+  </g>
+  <circle r="${MG.r}" fill="none" stroke="#071423" stroke-width="13"/>
+  <circle r="${MG.r}" fill="none" stroke="url(#gRing)" stroke-width="8"/>
+  <circle r="${MG.r+6}" fill="none" stroke="#35eefc" stroke-opacity=".45" stroke-width="1.5"/>
+  <path d="M${P(-MG.r*.78,-MG.r*.36)}A${MG.r*.86} ${MG.r*.86} 0 0 1 ${P(-MG.r*.2,-MG.r*.84)}" stroke="#fff" stroke-opacity=".45" stroke-width="4" fill="none" stroke-linecap="round"/>
+  <circle r="${MG.r}" fill="transparent" pointer-events="all"/>
+  <g transform="translate(0 ${-MG.r-14})"><rect id="magChipR" x="-74" y="-13" width="148" height="26" rx="13" fill="rgba(7,20,37,.9)" stroke="#35eefc" stroke-opacity=".7"/><text id="magChip" text-anchor="middle" y="5" font-size="12.5" font-weight="800" letter-spacing="1.2" fill="#35eefc">ALVEOL · BÜYÜTEÇ</text></g>
+</g>
+`;
+/* --- dinamik eleman referansları --- */
+const E={};
+['chestFill','abdFill','lungs','bcG','icHit','tipsG','dia','diaHot','diaFib','diaTen','diaRim','diaHit','icL','icR','icF','ribO','ribC','ribH','chestLine',
+ 'arrows','aD1','aD2','aRL','aRR','abdArr','abdHd','abdR','abdT','lensLn','lensMk','mouthOpen','env','envClean','envDirty','magChip','magChipR','magA','magB','magImgA'].forEach(id=>E[id]=svg.querySelector('#'+id));
+E.magTA=svg.querySelector('#magTA');E.magTB=svg.querySelector('#magTB');
+const NS='http://www.w3.org/2000/svg';
+const mk=(tag,attrs,parent)=>{const e=document.createElementNS(NS,tag);for(const k in attrs)e.setAttribute(k,attrs[k]);parent&&parent.appendChild(e);return e;};
+/* büyüteç işaretçisi: sol akciğerin alt-dış bölgesindeki bronşçuk ucu */
+const LT0=I(832,989);
+const lensTip=TIPS.filter(t=>t.side>0).reduce((a,t)=>Math.hypot(t.x-LT0[0],t.y-LT0[1])<Math.hypot(a.x-LT0[0],a.y-LT0[1])?t:a);
+/* bronşçuk etiketi için hedef: sol akciğerde yatay bir dal */
+const bcPt=I(774,896);
+
+/* =====================  ETİKETLER  ===================== */
+const LABELS=[
+  {p:'burun',t:['Burun'],x:132,y:104,a:'end',tg:()=>I(432,282)},
+  {p:'kaburga',t:['Kaburgalar arası','kaslar'],x:132,y:262,a:'end',tg:()=>icTarget,sub:'kab'},
+  {p:'akciger-sag',t:['Sağ akciğer'],x:132,y:372,a:'end',tg:()=>mapPt(...I(384,872),-1,S.b)},
+  {p:null,t:['Göğüs boşluğu'],x:132,y:448,a:'end',tg:()=>chestPt},
+  {p:'diyafram',t:['Diyafram'],x:132,y:534,a:'end',tg:()=>{const x=I(392,0)[0];return[x,yAt(DT,x)+thick(x)*.5];},sub:'dia'},
+  {p:'yutak',t:['Yutak'],x:468,y:116,a:'start',tg:()=>I(553,382)},
+  {p:'girtlak',t:['Gırtlak','(ses telleri)'],x:468,y:200,a:'start',tg:()=>I(545,492)},
+  {p:'soluk',t:['Soluk borusu'],x:578,y:268,a:'start',tg:()=>I(572,610)},
+  {p:'brons',t:['Bronş'],x:578,y:318,a:'start',tg:()=>mapPt(...I(628,876),1,S.b)},
+  {p:'bronscuk',t:['Bronşçuk'],x:578,y:368,a:'start',tg:()=>mapPt(bcPt[0],bcPt[1],1,S.b)},
+  {p:'akciger-sol',t:['Sol akciğer'],x:578,y:418,a:'start',tg:()=>mapPt(...I(808,1062),1,S.b)}
+];
+let icTarget=[CX-110,352],chestPt=[CX-150,452];
+const LG=$('#labels',svg);
+LABELS.forEach(L=>{
+  const g=mk('g',{class:'lbl'+(L.p?' part':' info')},LG);if(L.p)g.dataset.part=L.p;
+  L.ld=mk('path',{class:'ld'},g);L.dot=mk('circle',{class:'ldot',r:3.6},g);L.rect=mk('rect',{rx:10},g);
+  L.text=mk('text',{x:L.x,'text-anchor':L.a},g);
+  L.g=g;L.subTxt='';renderLabelText(L);
+});
+function renderLabelText(L){
+  const lines=L.t.slice();const n=lines.length+(L.subTxt?1:0);
+  L.text.innerHTML='';const y0=L.y+5-(n-1)*8.5;
+  lines.forEach((t,i)=>{const ts=mk('tspan',{x:L.x,y:y0+i*17},L.text);ts.textContent=t;if(i>0&&L.p==='girtlak'){ts.setAttribute('class','sub');ts.setAttribute('fill','#bfe9f5');}});
+  if(L.subTxt){const ts=mk('tspan',{x:L.x,y:y0+lines.length*17,class:'sub',fill:L.subCol||'#35eefc'},L.text);ts.textContent=L.subTxt;}
+  measureLabel(L);
+}
+function measureLabel(L){try{const bb=L.text.getBBox();L.bb=bb;L.rect.setAttribute('x',bb.x-10);L.rect.setAttribute('y',bb.y-6);L.rect.setAttribute('width',bb.width+20);L.rect.setAttribute('height',bb.height+12);}catch(e){}}
+function updLabels(){
+  LABELS.forEach(L=>{const [tx,ty]=L.tg();const bb=L.bb;if(!bb)return;
+    const ex=L.a==='end'?bb.x+bb.width+10:bb.x-10,ey=L.y;
+    L.ld.setAttribute('d',`M${P(ex,ey)}L${P(tx,ty)}`);L.dot.setAttribute('cx',f1(tx));L.dot.setAttribute('cy',f1(ty));});
+}
+function setLabelSub(key,txt,col){LABELS.forEach(L=>{if(L.sub===key&&(L.subTxt!==txt||L.subCol!==col)){L.subTxt=txt;L.subCol=col;renderLabelText(L);}});}
+
+/* =====================  ANATOMİ GÜNCELLEME  ===================== */
+let lastDrawB=-1,ribLat=[CX-160,CX+160];
+const ABDW={L:IP([[318,1345],[326,1290],[320,1240]]),R:IP([[852,1240],[846,1290],[852,1345]])};
+function drawAnatomy(b){
+  const dp=setDia(b);
+  /* diyafram */
+  const top=dp,bot=dp.map(p=>[p[0],p[1]+thick(p[0])]);
+  E.dia.setAttribute('d',crPath(top,false)+crPath(bot.slice().reverse(),false).replace('M','L')+'Z');
+  E.diaHot.setAttribute('d',E.dia.getAttribute('d'));E.diaHot.setAttribute('opacity',f1(b*.32*10)/10);
+  E.diaRim.setAttribute('d',crPath(top.map(p=>[p[0],p[1]+1]),false));
+  E.diaHit.setAttribute('d',crPath(top.map(p=>[p[0],p[1]+thick(p[0])*.5]),false));
+  let fb='';for(let i=4;i<DT.length-4;i+=5){const [x,y]=DT[i],t=thick(x),sl=(x-CX)*.05;fb+=`M${P(x,y+1.2)}L${P(x+sl,y+t-1.2)}`;}
+  E.diaFib.setAttribute('d',fb);
+  E.diaTen.setAttribute('d',crPath(DT.filter(p=>Math.abs(p[0]-CX)<40).filter((p,i)=>i%3===0).map(p=>[p[0],p[1]+thick(p[0])*.5]),false));
+  /* akciğerler: Servier akciğer katmanı (+ içindeki bronş ağacı) üst-orta noktadan ölçeklenir */
+  const sx=1+KX*b,sy=1+KY*b;
+  E.lungs.setAttribute('transform',`matrix(${sx.toFixed(4)} 0 0 ${sy.toFixed(4)} ${(ORG[0]*(1-sx)).toFixed(2)} ${(ORG[1]*(1-sy)).toFixed(2)})`);
+  /* kaburgalar + kaslar */
+  const RB={};let rs='';
+  [-1,1].forEach(s=>{RB[s]=[];for(let i=0;i<7;i++){const p=ribPts(i,s,b);RB[s].push(p);rs+=`M${P(p[0][0],p[0][1])}C${P(p[1][0],p[1][1])} ${P(p[2][0],p[2][1])} ${P(p[3][0],p[3][1])}`;}});
+  ['ribO','ribC','ribH'].forEach(id=>E[id].setAttribute('d',rs));
+  let fib='';
+  [-1,1].forEach(s=>{let d='';for(let i=0;i<6;i++){const A=RB[s][i],B=RB[s][i+1],ta=[],tb=[];
+    for(let k=0;k<=6;k++){const t=.34+k*.11;const a=bez(A,t),c=bez(B,t);ta.push([a[0],a[1]+3]);tb.push([c[0],c[1]-3]);}
+    d+='M'+ta.map(p=>P(p[0],p[1])).join('L')+'L'+tb.reverse().map(p=>P(p[0],p[1])).join('L')+'Z';tb.reverse();
+    for(let k=0;k<6;k++)fib+=`M${P(ta[k][0],ta[k][1])}L${P(tb[k+1][0],tb[k+1][1])}`;}
+    E[s<0?'icL':'icR'].setAttribute('d',d);});
+  E.icF.setAttribute('d',fib);
+  const ico=f1((.1+.32*b)*100)/100;E.icF.setAttribute('stroke-opacity',f1((.22+.45*b)*100)/100);E.icL.setAttribute('opacity',ico);E.icR.setAttribute('opacity',ico);
+  icTarget=bez(RB[-1][0],.78).map((v,j)=>v+(j?12:0));
+  ribLat=[Math.min(...RB[-1].map(p=>Math.min(p[2][0],p[3][0]))),Math.max(...RB[1].map(p=>Math.max(p[2][0],p[3][0])))];
+  /* göğüs boşluğu sınırı */
+  const xl=DT[0][0],xr=DT[DT.length-1][0];
+  const cp=[[xl,DT[0][1]]];for(let i=6;i>=0;i--){const p=RB[-1][i][3];cp.push([p[0]-4,p[1]]);}
+  cp.push([CX-56,ORG[1]-8],[CX+56,ORG[1]-8]);for(let i=0;i<7;i++){const p=RB[1][i][3];cp.push([p[0]+4,p[1]]);}cp.push([xr,DT[DT.length-1][1]]);
+  E.chestLine.setAttribute('d',crPath(cp,false));E.icHit.setAttribute('d',crPath(cp.slice(0,5).map(q=>[q[0]-6,q[1]]),false)+crPath(cp.slice(12).map(q=>[q[0]+6,q[1]]),false));
+  const dtIn=DT.filter(p=>p[0]>=xl&&p[0]<=xr);
+  E.chestFill.setAttribute('d',crPath(cp,false)+'L'+dtIn.slice().reverse().map(p=>P(p[0],p[1])).join('L')+'Z');
+  E.chestFill.setAttribute('opacity',f1((.03+.07*b)*100)/100);
+  chestPt=[cp[4][0],cp[4][1]];
+  /* karın boşluğu: diyaframın altı (diyafram inince daralır) */
+  E.abdFill.setAttribute('d','M'+DB.map(p=>P(p[0],p[1])).join('L')+'L'+ABDW.R.map(p=>P(p[0],p[1])).join('L')+'L'+ABDW.L.map(p=>P(p[0],p[1])).join('L')+'Z');
+  const ay=yAt(DB,CX)+5,ab=648,am=(ay+ab)/2+4;
+  E.abdArr.setAttribute('d',`M${P(CX,ay+8)}L${P(CX,am-18)}M${P(CX,am+12)}L${P(CX,ab-8)}`);
+  E.abdHd.setAttribute('d',`M${P(CX,ay)}l-6 9h12zM${P(CX,ab)}l-6 -9h12z`);
+  E.abdT.setAttribute('x',CX);E.abdT.setAttribute('y',f1(am+1));
+  E.abdR.setAttribute('x',CX-62);E.abdR.setAttribute('width',124);E.abdR.setAttribute('y',f1(am-17));
+  /* büyüteç işaretçisi */
+  const lt=mapPt(lensTip.x,lensTip.y,1,b);E.lensMk.setAttribute('cx',f1(lt[0]));E.lensMk.setAttribute('cy',f1(lt[1]));
+  const dx=lt[0]-MG.x,dy=lt[1]-MG.y,dl=Math.hypot(dx,dy);
+  E.lensLn.setAttribute('d',`M${P(lt[0]-dx/dl*10,lt[1]-dy/dl*10)}L${P(MG.x+dx/dl*(MG.r+6),MG.y+dy/dl*(MG.r+6))}`);
+  /* alveol keseleri soluk alırken hafifçe şişer */
+  E.magImgA.setAttribute('transform',`scale(${(1+.06*b).toFixed(3)})`);
+  updLabels();
+}
+function drawArrows(){
+  const fl=S.flow,a=clamp(Math.abs(fl)*1.3-.08,0,.95);E.arrows.setAttribute('opacity',a.toFixed(2));
+  if(a<=0)return;const inh=fl>0,col=inh?'#7ff6ff':'#c9b0ff';
+  const set=(el,x,y,rot)=>{el.setAttribute('transform',`translate(${f1(x)} ${f1(y)}) rotate(${rot})`);el.setAttribute('fill',col);};
+  const bob=Math.sin(performance.now()/180)*3;
+  const x1=CX-62,x2=CX+66;
+  set(E.aD1,x1,yAt(DB,x1)+26+bob*(inh?1:-1),inh?180:0);set(E.aD2,x2,yAt(DB,x2)+26+bob*(inh?1:-1),inh?180:0);
+  set(E.aRL,ribLat[0]-24,I(0,880)[1],inh?-38:142);set(E.aRR,ribLat[1]+24,I(0,880)[1],inh?38:-142);
+}
+
+/* =====================  KANVAS: PARÇACIKLAR  ===================== */
+const cv=$('#cv'),cx=cv.getContext('2d'),scene=$('#scene');
+let VS=1,VOX=0,VOY=0,DPR=1,CW=0,CH=0,VB=[0,0,VW,VH],MOB=false;
+function resize(){
+  const r=scene.getBoundingClientRect();DPR=Math.min(2,devicePixelRatio||1);CW=r.width;CH=r.height;
+  cv.width=Math.round(r.width*DPR);cv.height=Math.round(r.height*DPR);
+  const mob=innerWidth<=600;if(mob!==MOB){MOB=mob;VB=mob?[148,0,672,680]:[0,0,VW,VH];svg.setAttribute('viewBox',VB.join(' '));scene.classList.toggle('mob',mob);}
+  VS=Math.min(r.width/VB[2],r.height/VB[3]);VOX=(r.width-VB[2]*VS)/2-VB[0]*VS;VOY=(r.height-VB[3]*VS)/2-VB[1]*VS;
+  const sp=$('#spiro'),sr=sp.getBoundingClientRect();sp.width=Math.round(sr.width*DPR);sp.height=Math.round(sr.height*DPR);
+}
+function sprite(core,glow,rim){const c=document.createElement('canvas');c.width=c.height=48;const g=c.getContext('2d');const gr=g.createRadialGradient(24,24,0,24,24,24);
+  gr.addColorStop(0,glow);gr.addColorStop(.62,glow.replace(/[\d.]+\)$/,'0.12)'));gr.addColorStop(1,'rgba(0,0,0,0)');g.fillStyle=gr;g.fillRect(0,0,48,48);
+  g.fillStyle=rim||'rgba(3,16,30,.7)';g.beginPath();g.arc(24,24,10.5,0,7);g.fill();
+  const cg=g.createRadialGradient(20,20,1,24,24,9);cg.addColorStop(0,'#fff');cg.addColorStop(.35,core);cg.addColorStop(1,core);g.fillStyle=cg;g.beginPath();g.arc(24,24,8.6,0,7);g.fill();
+  g.fillStyle='rgba(255,255,255,.85)';g.beginPath();g.arc(20.5,20.5,2.4,0,7);g.fill();return c;}
+const SPR={air:sprite('#7ff6ff','rgba(53,238,252,.55)'),o2:sprite('#a9d8ff','rgba(120,180,255,.6)'),co2:sprite('#b48cff','rgba(168,121,255,.6)'),
+  dust:sprite('#c9a87c','rgba(201,168,124,.4)','rgba(40,26,10,.75)'),soot:sprite('#8b8392','rgba(120,112,128,.4)','rgba(15,10,20,.8)')};
+const parts=[];let accIn=0,accOut=0,magBoost=0;
+function pRoute(){return S.mode==='ortam'?S.route:'nose';}
+function spawnAir(kind,fromEnd){const list=PATHS[pRoute()];const pa=list[(Math.random()*list.length)|0];
+  parts.push({pa,s:fromEnd?pa.len*(.84+Math.random()*.16):Math.random()*10,kind,r:Math.random(),life:1,free:false,lab:Math.random()<.09});}
+/* toz (yüzün önündeki havada) */
+const dust=[],stuck=[],dep=[];
+const DZ={x0:118,x1:222,y0:70,y1:215};
+function spawnDust(){dust.push({x:DZ.x0+8+Math.random()*(DZ.x1-DZ.x0-16),y:DZ.y0+16+Math.random()*120,vx:(Math.random()-.5)*10,vy:(Math.random()-.5)*10,st:'air',r:2.4+Math.random()*1.8,soot:Math.random()<.45});}
+/* büyüteç: kılcal damar yolları, alveol hava yolları */
+const CAPSM=VES.map(v=>{const s=crSample(v.map(mB),6);return{s,c:cum(s)};});
+const CAPPTS=[];CAPSM.forEach(c=>c.s.forEach(p=>{if(Math.hypot(p[0],p[1])<MG.r-8)CAPPTS.push(p);}));
+const cells=Array.from({length:24},(_,i)=>({c:i%4,s:Math.random()}));
+const gas=[],airM=[];let gasAcc=0,co2Acc=0,airAcc=0;
+const MV={v:0,t:0,f:0};
+function setMagView(v){MV.v=v;MV.t=0;if(S.mode!=='gorev'){E.magChip.textContent=v?'GAZ ALIŞVERİŞİ':'ALVEOL · BÜYÜTEÇ';}}
+function nearCap(x,y){let best=null,bd=1e9;for(const p of CAPPTS){const d=Math.hypot(p[0]-x,p[1]-y);if(d<bd&&d>4){bd=d;best=p;}}return best;}
+function spawnGas(kind){
+  const a=ALV[(Math.random()*ALV.length)|0],ang=Math.random()*6.28,rr=Math.random()*a[2]*.55;const ip=[a[0]+Math.cos(ang)*rr,a[1]+Math.sin(ang)*rr];
+  const cp=nearCap(ip[0]+(Math.random()-.5)*14,ip[1]+(Math.random()-.5)*14);if(!cp)return;
+  if(kind==='o2')gas.push({kind,x0:ip[0],y0:ip[1],x1:cp[0],y1:cp[1],t:0,dur:1.5+Math.random()*.6});
+  else gas.push({kind,x0:cp[0],y0:cp[1],x1:ip[0],y1:ip[1],t:0,dur:1.5+Math.random()*.6});
+}
+function lerpCol(a,b,t){return `rgb(${a.map((v,i)=>Math.round(lerp(v,b[i],t))).join(',')})`;}
+const DEOX=[70,96,255],OXY=[235,40,60];
+function onPath(ps,s){const L=ps.c[ps.c.length-1];s=clamp(s,0,L);let k=1;while(k<ps.c.length-1&&ps.c[k]<s)k++;
+  const t=(s-ps.c[k-1])/((ps.c[k]-ps.c[k-1])||1);return[lerp(ps.s[k-1][0],ps.s[k][0],t),lerp(ps.s[k-1][1],ps.s[k][1],t),Math.atan2(ps.s[k][1]-ps.s[k-1][1],ps.s[k][0]-ps.s[k-1][0])];}
+
+function stepParticles(dt){
+  const fl=S.flow,v=clamp(fl,-2.6,2.6)*600;
+  if(fl>.05){accIn+=fl*40*dt;while(accIn>=1&&parts.length<280){accIn--;spawnAir(Math.random()<.35?'o2':'air',false);}}
+  else accIn=0;
+  if(fl<-.05){accOut+=-fl*36*dt;while(accOut>=1&&parts.length<280){accOut--;spawnAir(Math.random()<.58?'co2':'air',true);}}
+  else accOut=0;
+  for(let i=parts.length-1;i>=0;i--){const p=parts[i];
+    if(p.free){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vx*=.985;p.life-=dt*.75;}
+    else{const vv=p.kind==='co2'?(v>0?v*.12:v):(v<0?v*.12:v);p.s+=vv*dt*(.8+.4*p.r);
+      if(p.s>=p.pa.len){p.s=p.pa.len;p.life-=dt*3.5;if(!p.abs&&p.kind!=='co2'){p.abs=1;magBoost=Math.min(3,magBoost+.12);}}
+      else if(p.s<=0){p.free=true;const q=posAt(p.pa,0);p.x=q[0];p.y=q[1];p.vx=-60-Math.random()*50;p.vy=(Math.random()-.5)*40;}
+      if(Math.abs(fl)<.04)p.life-=dt*.3;}
+    if(p.life<=0)parts.splice(i,1);}
+  /* toz */
+  if(S.mode==='ortam'&&S.air==='dirty'){while(dust.filter(d=>d.st==='air').length<32)spawnDust();}
+  const E0=ENTRY[S.route];
+  for(let i=dust.length-1;i>=0;i--){const d=dust[i];
+    if(d.st==='air'){
+      const dx=E0[0]-d.x,dy=E0[1]-d.y,dd=Math.hypot(dx,dy),pull=S.mode==='ortam'&&fl>.06&&dd<40+110*Math.min(1,fl);
+      if(!pull){d.vx+=(Math.random()-.5)*30*dt;d.vy+=(Math.random()-.5)*30*dt;d.vx*=.98;d.vy*=.98;d.x+=d.vx*dt;d.y+=d.vy*dt;
+        if(d.x<DZ.x0||d.x>DZ.x1)d.vx*=-1;if(d.y<DZ.y0||d.y>DZ.y1)d.vy*=-1;d.x=clamp(d.x,DZ.x0,DZ.x1);d.y=clamp(d.y,DZ.y0,DZ.y1);}
+      if(pull){const k=Math.min(1,dt*(1.2+fl*3)*(90/(dd+20)));d.x+=dx*k;d.y+=dy*k;
+        if(dd<7){const list=PATHS[S.route];d.pa=list[(Math.random()*list.length)|0];d.s=d.pa.entryS;d.st='in';d.route=S.route;
+          d.trap=S.route==='nose'?Math.random()<.84:Math.random()<.14;d.trapAt=d.s+(S.route==='nose'?6+Math.random()*70:10+Math.random()*100);}}
+      if(S.air!=='dirty'||S.mode!=='ortam'){d.life=(d.life??1)-dt*1.5;if(d.life<=0)dust.splice(i,1);}
+    }else{
+      d.s+=(v<0?v*.1:v)*dt*.92;const q=posAt(d.pa,d.s);d.x=q[0];d.y=q[1];
+      if(d.trap&&d.s>=d.trapAt){stuck.push({x:d.x+(Math.random()-.5)*5,y:d.y+(Math.random()-.5)*5,r:d.r,soot:d.soot});if(stuck.length>110)stuck.shift();S.trapped++;dust.splice(i,1);ortamStats();}
+      else if(d.s>=d.pa.len-1){const t=d.pa.tip;dep.push({x:t.x+(Math.random()-.5)*10,y:t.y+(Math.random()-.5)*10,side:t.side,r:d.r*.9,soot:d.soot});if(dep.length>160)dep.shift();S.reached++;dust.splice(i,1);ortamStats();}
+      else if(d.s<d.pa.entryS-2){d.st='air';}
+    }}
+  /* büyüteç: görünüm değişimi (alveol keseleri ↔ gaz alışverişi) */
+  MV.t+=dt;if(MV.t>8.5)setMagView(1-MV.v);
+  const f0=MV.f;MV.f+=(MV.v-MV.f)*Math.min(1,dt*3.2);if(Math.abs(MV.f-MV.v)<.002)MV.f=MV.v;
+  if(MV.f!==f0||!E.magB.dataset.k){E.magB.dataset.k=1;const fb=MV.f.toFixed(3),fa=(1-MV.f).toFixed(3);E.magB.setAttribute('opacity',fb);E.magTB.setAttribute('opacity',fb);E.magA.setAttribute('opacity',fa);E.magTA.setAttribute('opacity',fa);}
+  /* gaz alışverişi */
+  magBoost=Math.max(0,magBoost-dt*.5);
+  gasAcc+=dt*(.9+1.8*S.b+magBoost);co2Acc+=dt*(.9+1.2*S.b+magBoost*.5);
+  while(gasAcc>=1){gasAcc--;if(gas.length<26)spawnGas('o2');}
+  while(co2Acc>=1){co2Acc--;if(gas.length<26)spawnGas('co2');}
+  for(let i=gas.length-1;i>=0;i--){const g=gas[i];g.t+=dt/g.dur;if(g.t>=1.25)gas.splice(i,1);}
+  cells.forEach(c=>{c.s+=dt*.12;if(c.s>1)c.s-=1;});
+  /* bronşçuktan alveol keselerine hava */
+  if(Math.abs(fl)>.05){airAcc+=Math.abs(fl)*26*dt;while(airAcc>=1&&airM.length<60){airAcc--;const k=(Math.random()*AIRP.length)|0,L=AIRP[k].c[AIRP[k].c.length-1];airM.push({k,s:fl>0?Math.random()*6:L-Math.random()*6,r:Math.random(),life:1});}}
+  else airAcc=0;
+  for(let i=airM.length-1;i>=0;i--){const a=airM[i],L=AIRP[a.k].c[AIRP[a.k].c.length-1];a.s+=clamp(fl,-2.6,2.6)*70*dt*(.8+.4*a.r);
+    if(a.s>=L){a.s=L;a.life-=dt*2.2;}else if(a.s<=0){a.s=0;a.life-=dt*4;}
+    if(Math.abs(fl)<.04)a.life-=dt*.6;
+    if(a.life<=0)airM.splice(i,1);}
+}
+function drawParticles(){
+  cx.setTransform(1,0,0,1,0,0);cx.clearRect(0,0,cv.width,cv.height);
+  cx.setTransform(DPR*VS,0,0,DPR*VS,DPR*VOX,DPR*VOY);
+  /* birikmiş kirleticiler */
+  for(const d of dep){const [x,y]=mapPt(d.x,d.y,d.side,S.b);cx.globalAlpha=.85;cx.drawImage(d.soot?SPR.soot:SPR.dust,x-d.r*2.6,y-d.r*2.6,d.r*5.2,d.r*5.2);}
+  for(const d of stuck){cx.globalAlpha=.9;cx.fillStyle='rgba(214,224,140,.28)';cx.beginPath();cx.arc(d.x,d.y,d.r*1.9,0,7);cx.fill();cx.drawImage(d.soot?SPR.soot:SPR.dust,d.x-d.r*2.4,d.y-d.r*2.4,d.r*4.8,d.r*4.8);}
+  for(const d of dust){cx.globalAlpha=d.life==null?1:clamp(d.life,0,1);cx.drawImage(d.soot?SPR.soot:SPR.dust,d.x-d.r*2.6,d.y-d.r*2.6,d.r*5.2,d.r*5.2);
+    cx.strokeStyle='rgba(255,220,180,.35)';cx.lineWidth=.6;cx.beginPath();cx.arc(d.x,d.y,d.r*.95,0,7);cx.stroke();}
+  /* hava parçacıkları */
+  cx.font='800 11px Lexend,system-ui,sans-serif';cx.textAlign='center';
+  for(const p of parts){let x,y;if(p.free){x=p.x;y=p.y;}else{[x,y]=posAt(p.pa,p.s);}
+    const a=clamp(p.life,0,1);cx.globalAlpha=a;const sz=p.kind==='air'?12:14;
+    cx.drawImage(SPR[p.kind],x-sz/2,y-sz/2,sz,sz);
+    if(p.lab&&p.kind!=='air'){cx.globalAlpha=a*.95;cx.fillStyle=p.kind==='co2'?'#e3d4ff':'#d7f1ff';cx.strokeStyle='rgba(3,12,24,.85)';cx.lineWidth=3;cx.strokeText(p.kind==='co2'?'CO₂':'O₂',x+9,y-7);cx.fillText(p.kind==='co2'?'CO₂':'O₂',x+9,y-7);}}
+  /* büyüteç */
+  cx.save();cx.globalAlpha=1;cx.beginPath();cx.arc(MG.x,MG.y,MG.r-4,0,7);cx.clip();cx.translate(MG.x,MG.y);
+  const fA=1-MV.f,fB=MV.f;
+  if(fA>.02){const sc=1+.06*S.b;
+    for(const a of airM){const ps=AIRP[a.k],L=ps.c[ps.c.length-1];const [x,y]=onPath(ps,a.s);const e=Math.min(1,a.s/12,(L-a.s)/10+.35);
+      cx.globalAlpha=fA*clamp(a.life,0,1)*clamp(e,0,1);cx.drawImage(SPR.air,x*sc-5,y*sc-5,10,10);}}
+  if(fB>.02){
+    for(const c of cells){const [x,y,ang]=onPath(CAPSM[c.c],c.s*CAPSM[c.c].c[CAPSM[c.c].c.length-1]);
+      cx.globalAlpha=fB;cx.fillStyle=lerpCol(DEOX,OXY,clamp(.5-y/150,0,1));cx.beginPath();cx.ellipse(x,y,4.2,3,ang,0,7);cx.fill();
+      cx.strokeStyle='rgba(20,0,10,.45)';cx.lineWidth=.8;cx.stroke();cx.fillStyle='rgba(0,0,0,.22)';cx.beginPath();cx.arc(x,y,1.2,0,7);cx.fill();}
+    cx.font='800 10px Lexend,system-ui,sans-serif';
+    for(const g of gas){const t=clamp(g.t,0,1),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;const x=lerp(g.x0,g.x1,e),y=lerp(g.y0,g.y1,e);
+      const al=g.t<.15?g.t/.15:g.t>1?clamp(1-(g.t-1)/.25,0,1):1;cx.globalAlpha=al*fB;
+      const o=g.kind==='o2';cx.drawImage(o?SPR.o2:SPR.co2,x-8,y-8,16,16);
+      cx.fillStyle=o?'#ffffff':'#ead9ff';cx.strokeStyle='rgba(10,5,20,.85)';cx.lineWidth=2.6;cx.strokeText(o?'O₂':'CO₂',x,y-7);cx.fillText(o?'O₂':'CO₂',x,y-7);}}
+  cx.restore();cx.globalAlpha=1;
+}
+
+/* =====================  SPİROMETRE  ===================== */
+const spBuf=[];let spAcc=0;
+function drawSpiro(dt){
+  spAcc+=dt;if(spAcc>=1/30){spAcc=0;spBuf.push({b:S.b,d:S.flow});if(spBuf.length>360)spBuf.shift();}
+  const c=$('#spiro'),g=c.getContext('2d'),w=c.width,h=c.height;g.clearRect(0,0,w,h);
+  g.strokeStyle='rgba(140,200,255,.1)';g.lineWidth=1;
+  for(let i=1;i<4;i++){const y=h*i/4;g.beginPath();g.moveTo(0,y);g.lineTo(w,y);g.stroke();}
+  for(let i=1;i<12;i++){const x=w*i/12;g.beginPath();g.moveTo(x,0);g.lineTo(x,h);g.stroke();}
+  if(spBuf.length<2)return;const pad=6*DPR,X=i=>w-(spBuf.length-1-i)*(w/359),Y=b=>h-pad-b*(h-2*pad);
+  const gr=g.createLinearGradient(0,0,0,h);gr.addColorStop(0,'rgba(53,238,252,.32)');gr.addColorStop(1,'rgba(53,238,252,0)');
+  g.beginPath();g.moveTo(X(0),h);spBuf.forEach((p,i)=>g.lineTo(X(i),Y(p.b)));g.lineTo(X(spBuf.length-1),h);g.closePath();g.fillStyle=gr;g.fill();
+  g.lineWidth=2.4*DPR;g.lineCap='round';
+  for(let i=1;i<spBuf.length;i++){const p=spBuf[i];g.strokeStyle=p.d>.03?'#35eefc':p.d<-.03?'#b993ff':'#8fa8c4';g.beginPath();g.moveTo(X(i-1),Y(spBuf[i-1].b));g.lineTo(X(i),Y(p.b));g.stroke();}
+  const l=spBuf[spBuf.length-1];g.fillStyle='#fff';g.shadowColor='#35eefc';g.shadowBlur=10*DPR;g.beginPath();g.arc(X(spBuf.length-1)-3*DPR,Y(l.b),4*DPR,0,7);g.fill();g.shadowBlur=0;
+}
+
+/* =====================  DURUM TABLOSU  ===================== */
+const stList=$('#stList');let stShown='in',stLit=0,stTarget=0,stLast=0,stManual=false;
+function renderSt(){stList.className='st-list '+stShown;stList.innerHTML=(stShown==='in'?INH:EXH).map((t,i)=>`<li class="${i<stLit?'on':''}"><i>${ZD.I.check}</i><span>${t}</span></li>`).join('');
+  $$('.st-tabs button').forEach(b=>b.classList.toggle('on',b.dataset.t===stShown));}
+$$('.st-tabs button').forEach(b=>b.onclick=()=>{ZD.sfx('click');stShown=b.dataset.t;stLit=6;stTarget=6;stManual=true;renderSt();});
+const TH=[0,.1,.24,.4,.56,.74];
+function stUpdate(now){
+  const ph=S.phase;let want=stShown;
+  if(ph==='in'||ph==='hold')want='in';else if(ph==='out')want='out';
+  if(want!==stShown&&(ph!=='rest')){stShown=want;stLit=0;stManual=false;renderSt();}
+  if(!stManual){let p=null;
+    if(ph==='in')p=(S.b-S.phaseB0)/Math.max(.05,1-S.phaseB0);else if(ph==='hold')p=1;else if(ph==='out')p=(S.phaseB0-S.b)/Math.max(.05,S.phaseB0);
+    if(p!=null)stTarget=TH.filter(t=>p>=t).length;}
+  if(stLit<stTarget&&now-stLast>140){stLit++;stLast=now;const li=stList.children[stLit-1];if(li){li.classList.add('on','pop');}}
+}
+
+/* =====================  GİRİŞ (BASILI TUT)  ===================== */
+const holdBtn=$('#hold');
+function press(){if(S.holding)return;S.holding=true;holdBtn.classList.add('on');holdBtn.classList.remove('ring');ZD.hideHand();
+  ZD.sfx('breathIn',S.mode==='antrenor'?4:1.6);}
+function release(){if(!S.holding)return;S.holding=false;holdBtn.classList.remove('on');if(S.b>.12)ZD.sfx('breathOut',S.mode==='antrenor'?5.5:2);}
+holdBtn.addEventListener('pointerdown',e=>{e.preventDefault();try{holdBtn.setPointerCapture(e.pointerId);}catch(_){}press();});
+['pointerup','pointercancel','lostpointercapture'].forEach(ev=>holdBtn.addEventListener(ev,release));
+holdBtn.addEventListener('contextmenu',e=>e.preventDefault());
+holdBtn.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.repeat){e.preventDefault();press();}});
+holdBtn.addEventListener('keyup',e=>{if(e.key==='Enter'){e.preventDefault();release();}});
+window.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();if(!e.repeat){if(document.activeElement&&document.activeElement!==document.body)document.activeElement.blur();press();}}},true);
+window.addEventListener('keyup',e=>{if(e.code==='Space'){e.preventDefault();release();}},true);
+window.addEventListener('blur',release);
+
+/* üst çubuk */
+$$('#modeSeg button').forEach(b=>b.onclick=()=>{if(b.dataset.m===S.mode)return;ZD.sfx('click');setMode(b.dataset.m);});
+$$('#actSeg button').forEach(b=>b.onclick=()=>{ZD.sfx('click');S.act=b.dataset.a;$$('#actSeg button').forEach(x=>x.classList.toggle('on',x===b));updRate();
+  ZD.toast(S.act==='rest'?'Dinlenmede soluk alıp verme hızı düşüktür.':`${ACTN[S.act]}: hücrelerin oksijen ihtiyacı artar, soluk alıp verme hızı da artar.`,'',2600);
+  if(!S.auto)setAuto(true);});
+const autoTgl=$('#autoTgl');autoTgl.onclick=()=>{ZD.sfx('click');setAuto(!S.auto);};
+function setAuto(v){S.auto=v;S.autoT=0;autoTgl.classList.toggle('on',v);autoTgl.setAttribute('aria-pressed',v);}
+function updRate(){$('#rateV').textContent='≈'+RATE[S.act];$('#rateA').textContent=ACTN[S.act];if(S.mode==='kesif')ui.stat('s3',RATE[S.act],true);
+  $('#rdot').style.animation=`hb ${(60/RATE[S.act]).toFixed(2)}s infinite`;}
+
+/* sahne tıklama */
+svg.addEventListener('click',e=>{const g=e.target.closest('[data-part]');if(!g)return;if(g.id==='mag')setMagView(1-MV.v);onPart(g.dataset.part);});
+function hl(part,cls='sel',ms){$$('.part',svg).forEach(el=>el.classList.remove(cls));if(!part)return;
+  $$(`[data-part="${part}"]`,svg).forEach(el=>el.classList.add(cls));if(ms)setTimeout(()=>$$(`[data-part="${part}"]`,svg).forEach(el=>el.classList.remove(cls)),ms);}
+
+/* =====================  MODLAR  ===================== */
+const mp=$('#mp');let timer=null;
+function setStats(arr){arr.forEach(([l,v,c],i)=>{const el=$(`[data-stat="s${i+1}"] .l`);if(el)el.textContent=l;ui.stat('s'+(i+1),v);ui.statClass('s'+(i+1),c||'');});}
+function stopTimer(){if(timer){timer.stop();timer=null;}}
+
+function setMode(m,restart){
+  S.mode=m;document.body.className='m-'+m;stopTimer();TR.run=false;ZD.hideHand();hl(null);hl(null,'okf');release();
+  $$('#modeSeg button').forEach(b=>{b.classList.toggle('on',b.dataset.m===m);b.setAttribute('aria-selected',b.dataset.m===m);});
+  scene.classList.toggle('nolabels',m==='gorev');
+  scene.classList.toggle('pick',m!=='antrenor');
+  E.magChip.textContent=m==='gorev'?'BÜYÜTEÇ':MV.v?'GAZ ALIŞVERİŞİ':'ALVEOL · BÜYÜTEÇ';$$('.malv',svg).forEach(t=>t.style.display=m==='gorev'?'none':'');
+  $('#actSeg').classList.toggle('dis',m==='antrenor');autoTgl.classList.toggle('dis',m==='antrenor');
+  E.env.setAttribute('opacity',m==='ortam'?1:0);
+  setAuto(m==='ortam');
+  if(m!=='ortam'){S.route='nose';updMouth();}
+  if(m==='kesif')renderKesif();else if(m==='antrenor')renderTrainer();else if(m==='gorev')renderTasks();else renderOrtam(restart);
+  requestAnimationFrame(()=>{resize();});
+}
+
+/* ---------- Serbest Keşif ---------- */
+const TREEART=`<svg viewBox="0 0 104 116" aria-hidden="true"><defs><linearGradient id="gTrunk" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#6b4127"/><stop offset=".45" stop-color="#b07a4f"/><stop offset="1" stop-color="#5a3420"/></linearGradient>
+<radialGradient id="gLf" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#d8ff9e"/><stop offset=".5" stop-color="#5fc84a"/><stop offset="1" stop-color="#22722b"/></radialGradient></defs>
+<ellipse cx="52" cy="112" rx="30" ry="4" fill="#000" opacity=".35"/>
+<path d="M45 112 C48 98 48 86 46 74 L58 74 C56 86 56 98 59 112Z" fill="url(#gTrunk)"/>
+<g stroke="url(#gTrunk)" stroke-linecap="round" fill="none"><path d="M49 78 C42 66 34 58 24 52" stroke-width="5"/><path d="M55 78 C62 66 70 58 80 52" stroke-width="5"/><path d="M52 76 C52 62 52 50 52 38" stroke-width="5"/>
+<path d="M33 60 C30 52 30 46 32 40" stroke-width="3"/><path d="M71 60 C74 52 74 46 72 40" stroke-width="3"/></g>
+<g>${[[22,46,13],[34,32,14],[52,24,16],[70,32,14],[82,46,13],[52,46,11],[30,52,9],[74,52,9]].map(([x,y,r])=>`<circle cx="${x}" cy="${y}" r="${r}" fill="url(#gLf)"/><circle cx="${x-r*.35}" cy="${y-r*.4}" r="${r*.28}" fill="#fff" opacity=".35"/>`).join('')}</g>
+<g font-family="Lexend,system-ui" font-size="8" font-weight="800" fill="#fff" stroke="#0b1a2d" stroke-width="2.4" paint-order="stroke" text-anchor="middle"><text x="52" y="98">gövde</text><text x="86" y="66">dal</text><text x="52" y="12">yaprak</text></g></svg>`;
+const ANALOGY={soluk:'Ağaç benzetmesinde <b>gövde</b>: soluk borusu.',brons:'Ağaç benzetmesinde <b>dallar</b>: bronşlar.',alveol:'Ağaç benzetmesinde <b>yapraklar</b>: alveoller.'};
+function kHead(){return `<div class="ktop"><span class="zd-chip">YAPI KARTI</span><span class="kcnt">Keşif <b>${S.visited.size}</b>/10</span></div>`;}
+function treeBlock(){return `<div class="tree"><div class="ttl" style="margin:12px 0 8px">Ağaç benzetmesi</div><div class="row">${TREEART}<ul>
+        <li data-go="soluk"><b>Gövde</b><span>= Soluk borusu</span></li>
+        <li data-go="brons"><b>Dallar</b><span>= Bronşlar</span></li>
+        <li data-go="alveol"><b>Yapraklar</b><span>= Alveoller</span></li></ul></div></div>`;}
+function bindTree(){$$('.tree li',mp).forEach(li=>li.onclick=()=>onPart(li.dataset.go));const tb=$('#treeBtn');if(tb)tb.onclick=()=>{ZD.sfx('click');hl(null);renderKesifCard();};}
+function renderKesifCard(){
+  const card=$('#infoCard');if(!card)return;
+  card.innerHTML=`${kHead()}<div class="hd"><span class="sw" style="color:#35eefc;background:#35eefc"></span><h3>Bir yapıya dokun</h3></div>
+      <p>Sahnedeki yapılara ya da etiketlerine dokun; ders kitabındaki tanımı burada açılır. Butona basılı tutarak soluk al, bırakarak soluk ver.</p>${treeBlock()}`;
+  bindTree();
+}
+function renderKesif(){
+  setStats([['Aşama','Dinlenme'],['Hacim','%0','cyan'],['Soluk/dk',RATE[S.act]],['Keşif',S.visited.size+'/10','green']]);
+  mp.innerHTML=`<div class="card info zd-info" id="infoCard"></div>`;renderKesifCard();
+}
+function showInfo(part){
+  const k=PART2INFO(part),I=INFO[k],card=$('#infoCard');if(!card)return;
+  const sub=part==='akciger-sag'?'Sağ akciğer · ekranda solda görünür (kişiye karşıdan bakıyorsun)':part==='akciger-sol'?'Sol akciğer · kalbe yer açan girintisi vardır':'';
+  card.innerHTML=`${kHead()}<div class="hd"><span class="sw" style="color:${I.color};background:${I.color}"></span><h3>${part.startsWith('akciger')?PARTNAME(part):I.name}</h3></div>
+    ${sub?`<div class="sub2">${sub}</div>`:''}<p>${I.text}</p>${ANALOGY[k]?`<p class="analog">${ANALOGY[k]}</p>`:''}
+    <div class="src">Kaynak: Fen Bilimleri 7 · Solunum Sistemi</div>
+    <button class="zd-btn sm ghost" id="treeBtn" style="margin-top:10px">${ZD.I.arrowL}Ağaç benzetmesi</button>`;
+  card.classList.remove('zd-fade-in');void card.offsetWidth;card.classList.add('zd-fade-in');bindTree();
+}
+
+/* ---------- Antrenör ---------- */
+const TR={run:false,cyc:0,pi:-1,pt:0,m:[0,0,0],tot:[0,0,0],bpm:118,bpmT:118,time:0,last:''};
+const TRP=[{k:'in',d:4,lbl:'BURUNDAN AL',sub:'Basılı tut · karnını şişir',col:'#35eefc'},{k:'hold',d:3.5,lbl:'TUT',sub:'Basılı tutmaya devam et (3-4 sn)',col:'#ffbb3d'},{k:'out',d:6,lbl:'YAVAŞÇA VER',sub:'Bırak · karnını yavaşça içe çek',col:'#b993ff'}];
+const PREP={k:'prep',d:3,lbl:'HAZIRLAN',sub:'Butonu bırak ve rahatla',col:'#8fa8c4'};
+const HEART=`<svg viewBox="0 0 48 44" aria-hidden="true"><defs><radialGradient id="gHi" cx=".35" cy=".3" r=".8"><stop offset="0" stop-color="#ff9aa8"/><stop offset=".5" stop-color="#ff4d64"/><stop offset="1" stop-color="#a3122e"/></radialGradient></defs><path d="M24 42C10 32 2 23 2 13 2 6 7.5 1.5 13.5 1.5 18 1.5 21.6 4 24 7.6 26.4 4 30 1.5 34.5 1.5 40.5 1.5 46 6 46 13 46 23 38 32 24 42Z" fill="url(#gHi)"/><ellipse cx="14" cy="11" rx="6" ry="4" fill="#fff" opacity=".4"/></svg>`;
+function renderTrainer(){
+  Object.assign(TR,{run:false,cyc:0,pi:-1,pt:0,m:[0,0,0],tot:[0,0,0],bpm:118,bpmT:118,time:0});
+  setStats([['Döngü','0/3'],['Uyum','%0','cyan'],['Nabız','118'],['Süre','0:00']]);
+  mp.innerHTML=`<div class="card story"><span class="zd-chip amber">DEFNE'NİN SAHNE HEYECANI</span>
+      <p>Sıra Defne'de: kalbi hızlı atıyor. Doğru nefesle onu sakinleştir!</p></div>
+    <div class="card" style="padding:10px 13px">
+      <div class="ringwrap"><svg viewBox="0 0 160 160"><circle cx="80" cy="80" r="66" class="trk"/><circle cx="80" cy="80" r="74" class="trk2" id="trOk" stroke="rgba(255,255,255,.06)"/>
+        <circle id="trArc" cx="80" cy="80" r="66" class="arc" stroke="#35eefc" transform="rotate(-90 80 80)" stroke-dasharray="414.7" stroke-dashoffset="414.7"/></svg>
+        <button class="rc" id="trStart" aria-label="Antrenmanı başlat"><i class="go">${ZD.I.play}</i><span id="trLbl" style="color:#3ff0a8">BAŞLAT</span></button></div>
+      <div class="trsub" id="trSub">3 döngü: burundan al → tut → yavaşça ver</div>
+      <div class="trsteps"><span data-k="in">AL · 4 sn</span><span data-k="hold">TUT · 3-4 sn</span><span data-k="out">VER · 6 sn</span></div>
+      <div class="uy"><span>Uyum</span><div class="zd-meter"><i id="trMeter"></i></div><b id="trUy">%0</b></div>
+    </div>
+    <div class="card trrow" style="padding:8px 12px"><div class="heart" id="trHeart">${HEART}</div>
+      <div class="bpm"><b id="trBpm">118</b> <span style="font-size:12px;color:var(--muted);font-weight:700">atım/dk</span><small id="trCalm" style="color:#ff8a98">Heyecan: yüksek</small></div></div>`;
+  $('#trStart').onclick=()=>{ZD.sfx('click');if(TR.run){TR.run=false;stopTimer();renderTrainer();ZD.toast('Antrenman durduruldu','',1400);return;}startTrainer();};
+  heartAnim();
+}
+function startTrainer(){
+  Object.assign(TR,{run:true,cyc:0,pi:-1,pt:0,m:[0,0,0],tot:[0,0,0],bpm:118,bpmT:118,time:0,last:''});
+  $('#trStart').innerHTML='<b id="trSec">3</b><span id="trLbl" style="color:#8fa8c4">HAZIRLAN</span>';$('#trStart').setAttribute('aria-label','Antrenmanı durdur');
+  stopTimer();timer=new ZD.Timer(t=>{TR.time=t;ui.stat('s4',ZD.Timer.fmt(t));});timer.start();
+  ZD.pointAt(holdBtn,{ms:2600});
+}
+function trPhase(){return TR.pi<0?PREP:TRP[TR.pi];}
+function heartAnim(){const h=$('#trHeart svg');if(h)h.style.animationDuration=(60/TR.bpm).toFixed(2)+'s';}
+function trTick(dt){
+  if(S.mode!=='antrenor')return;
+  if(TR.run){
+    TR.pt+=dt;const ph=trPhase();
+    let ok=null;if(ph.k!=='prep'){const want=ph.k!=='out';ok=S.holding===want;TR.tot[TR.cyc]+=dt;if(ok)TR.m[TR.cyc]+=dt;}
+    if(TR.pt>=ph.d){TR.pt=0;
+      if(TR.pi<0)TR.pi=0;else{TR.pi++;if(TR.pi>2){const sc=TR.tot[TR.cyc]?TR.m[TR.cyc]/TR.tot[TR.cyc]:0;TR.bpmT=Math.max(76,TR.bpmT-(4+12*sc));
+          ZD.toast(`${TR.cyc+1}. döngü bitti · uyum %${Math.round(sc*100)}`,sc>=.7?'good':'',1800);ZD.sfx(sc>=.7?'good':'tap');TR.cyc++;TR.pi=0;
+          ui.stat('s1',TR.cyc+'/3',true);if(TR.cyc>=3){finishTrainer();return;}}}
+      ZD.sfx('pop');}
+    const P2=trPhase(),C=414.7;
+    $('#trArc').setAttribute('stroke-dashoffset',(C*(1-TR.pt/P2.d)).toFixed(1));$('#trArc').setAttribute('stroke',P2.col);
+    $('#trSec').textContent=Math.max(1,Math.ceil(P2.d-TR.pt));$('#trLbl').textContent=P2.lbl;$('#trLbl').style.color=P2.col;
+    const key=P2.k+(ok===null?'':ok?'1':'0');
+    if(key!==TR.last){TR.last=key;$('#trSub').innerHTML=P2.sub+(ok===null?'':`<br><span class="st ${ok?'ok':'no'}">${ok?'Harika, doğru!':(P2.k==='out'?'Butonu bırak!':'Basılı tut!')}</span>`);
+      $$('.trsteps span').forEach(s=>s.classList.toggle('on',s.dataset.k===P2.k));
+      $('#trOk').setAttribute('stroke',ok===null?'rgba(255,255,255,.06)':ok?'rgba(47,227,155,.55)':'rgba(255,84,104,.55)');}
+    const mm=TR.m.reduce((a,b)=>a+b,0),tt=TR.tot.reduce((a,b)=>a+b,0),uy=tt?mm/tt:0;
+    $('#trMeter').style.width=(uy*100).toFixed(0)+'%';$('#trUy').textContent='%'+Math.round(uy*100);ui.stat('s2','%'+Math.round(uy*100));
+  }
+  const pb=Math.round(TR.bpm);TR.bpm+=(TR.bpmT-TR.bpm)*Math.min(1,dt*.5);
+  if(Math.round(TR.bpm)!==pb){const b=Math.round(TR.bpm);$('#trBpm')&&($('#trBpm').textContent=b);ui.stat('s3',b);heartAnim();
+    const c=$('#trCalm');if(c){c.textContent=b>104?'Heyecan: yüksek':b>90?'Heyecan: azalıyor':'Sakin ve hazır';c.style.color=b>104?'#ff8a98':b>90?'#ffbb3d':'#2fe39b';}}
+}
+function finishTrainer(){
+  TR.run=false;stopTimer();if(MOB)window.scrollTo({top:0,behavior:'smooth'});
+  const sc=TR.m.map((m,i)=>TR.tot[i]?m/TR.tot[i]:0),avg=sc.reduce((a,b)=>a+b,0)/3,good=sc.filter(s=>s>=.7).length;
+  TR.bpmT=Math.round(TR.bpmT);
+  setTimeout(()=>ZD.result({title:avg>=.8?'Harika! Defne sakinleşti':avg>=.55?'Güzel! Defne rahatlıyor':'Biraz daha pratik',correct:good,total:3,score:Math.round(avg*100),time:TR.time,
+    text:`Ortalama uyum: %${Math.round(avg*100)} · Nabız 118 → ${TR.bpmT} atım/dk.<br>Doğru nefes: göğüs yerine diyaframı hareket ettir; burundan alırken karnını şişir, 3-4 sn tut, verirken karnını yavaşça içe çek. Nefes vermeyi almaktan daha yavaş yap.`,
+    onReplay:()=>{renderTrainer();startTrainer();}}),500);
+  const b=$('#trStart');if(b){b.innerHTML=`<i class="go">${ZD.I.restart}</i><span style="color:#3ff0a8">TEKRAR</span>`;b.setAttribute('aria-label','Antrenmanı yeniden başlat');}
+}
+
+/* ---------- Görevler ---------- */
+const G={i:0,score:0,streak:0,first:0,tries:0,hint:false,armed:false,busy:false,res:[]};
+function renderTasks(){
+  Object.assign(G,{i:0,score:0,streak:0,first:0,tries:0,hint:false,armed:false,busy:false,res:[]});
+  setStats([['Görev','1/8'],['Puan','0','cyan'],['Süre','0:00'],['Seri','0','green']]);
+  mp.innerHTML=`<div class="card task" id="taskCard"><div class="top"><span class="zd-chip">GÖREV <b id="tkN">1</b>/8</span><span class="dots" id="tkDots">${TASKS.map(()=>'<i></i>').join('')}</span></div>
+    <h3 id="tkQ"></h3><p class="hint" id="tkH"></p><div class="fb" id="tkFb"></div>
+    <div class="acts"><button class="zd-btn sm ghost" id="tkHint">${ZD.I.bulb}İpucu</button></div></div>
+    <div class="card" style="padding:12px 14px"><div class="ttl" style="margin-bottom:6px">Puanlama</div><p style="font-size:13.5px;color:#cfe0f2;line-height:1.5">İlk denemede doğru: <b style="color:var(--green)">100</b> + seri bonusu. İpucu ya da yanlıştan sonra: <b style="color:var(--amber)">40</b>.</p></div>`;
+  $('#tkHint').onclick=()=>{ZD.sfx('click');G.hint=true;const T=TASKS[G.i];if(!T)return;
+    if(T.act)ZD.pointAt(holdBtn,{ms:2400});else{const el=T.a==='alveol'?$('#mag',svg):svg.querySelector(`[data-part="${T.a}"]:not(.lbl)`);ZD.pointAt(el,{ms:2400,fy:T.a==='diyafram'?.3:.5});}
+    $('#tkH').textContent='İpucu: '+T.h;};
+  stopTimer();timer=new ZD.Timer(t=>{ui.stat('s3',ZD.Timer.fmt(t));});timer.start();
+  showTask();
+}
+function showTask(){const T=TASKS[G.i];G.tries=0;G.hint=false;G.armed=false;G.busy=false;
+  $('#tkN').textContent=G.i+1;$('#tkQ').textContent=T.q;$('#tkH').textContent=T.act?T.h:'Sahnedeki doğru yapıya dokun.';$('#tkFb').className='fb';
+  $$('#tkDots i').forEach((d,i)=>{d.className=i<G.i?(G.res[i]?'ok':'late'):i===G.i?'cur':'';});ui.stat('s1',(G.i+1)+'/8',true);}
+function taskCorrect(part){
+  if(G.busy)return;G.busy=true;const clean=G.tries===0&&!G.hint;const pts=clean?100+Math.min(G.streak,5)*20:40;
+  if(clean){G.first++;G.streak++;}else G.streak=0;G.score+=pts;G.res[G.i]=clean;
+  ui.stat('s2',G.score,true);ui.stat('s4',G.streak,true);ZD.sfx('good');
+  const T=TASKS[G.i];const msg=T.act?(T.act==='in'?'Diyafram kasıldı ve düzleşti; akciğerler havayla doldu!':'Kaburgalar arasındaki kaslar gevşedi, hava dışarı atıldı!'):`${PARTNAME(part)}: ${INFO[PART2INFO(part)].short}`;
+  ZD.toast(`Doğru! +${pts}`,'good',1500);$('#tkFb').className='fb good';$('#tkFb').textContent=msg;
+  if(part){hl(part,'okf',1200);}
+  const card=$('#taskCard');card.classList.remove('zd-glow-good');void card.offsetWidth;card.classList.add('zd-glow-good');
+  setTimeout(()=>{if(S.mode!=='gorev'||!$('#tkN'))return;G.i++;if(G.i>=TASKS.length)finishTasks();else showTask();},1500);
+}
+function taskWrong(part){
+  G.tries++;G.streak=0;ui.stat('s4',0,true);ZD.sfx('bad');const T=TASKS[G.i];
+  let why=`Bu ${PARTNAME(part).toLocaleLowerCase('tr')}: ${INFO[PART2INFO(part)].short}`;
+  if(T.a==='akciger-sag'&&part==='akciger-sol')why='Bu sol akciğer. Sağ akciğer, sol akciğere göre daha büyüktür. Kişiye karşıdan baktığın için onun sağ akciğeri ekranın solunda.';
+  else if(T.a==='akciger-sag')why+=' Bu görevde akciğerlerden birine dokunmalısın.';
+  $('#tkFb').className='fb bad';$('#tkFb').textContent=why;ZD.toast('Tekrar dene!','bad',1400);
+  hl(part,'badf',700);const card=$('#taskCard');card.classList.remove('zd-shake');void card.offsetWidth;card.classList.add('zd-shake');
+}
+function taskTick(){
+  if(S.mode!=='gorev'||G.busy||G.i>=TASKS.length)return;const T=TASKS[G.i];if(!T.act)return;
+  if(T.act==='in'&&S.holding&&S.b>=.85)taskCorrect(null);
+  if(T.act==='out'){if(S.b>=.6)G.armed=true;if(G.armed&&!S.holding&&S.b<=.15)taskCorrect(null);}
+}
+function finishTasks(){if(MOB)window.scrollTo({top:0,behavior:'smooth'});const t=timer?timer.t:0;stopTimer();$$('#tkDots i').forEach((d,i)=>d.className=G.res[i]?'ok':'late');
+  ZD.result({title:G.first>=7?'Solunum ustası!':G.first>=5?'Çok iyi!':'Görevler tamamlandı',correct:G.first,total:8,score:G.score,time:t,
+    text:'Burun → yutak → gırtlak → soluk borusu → bronş → bronşçuk → alveol. Soluk alırken diyafram kasılıp düzleşir; soluk verirken gevşeyip kubbeleşir.',onReplay:()=>renderTasks()});}
+
+/* ---------- Ortam Testi ---------- */
+const ICO={
+  win:`<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="5" width="16" height="22" rx="2"/><path d="M13 5v22M5 16h16"/><path d="M24 11c3 0 4 2 4 3M24 17h5M24 22c3 0 4-2 4-3"/></svg>`,
+  mask:`<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12c4-2 14-2 18 0v6c0 5-4 8-9 8s-9-3-9-8Z"/><path d="M7 14H3c0 4 2 6 5 6M25 14h4c0 4-2 6-5 6M11 17h10M12 21h8"/></svg>`,
+  tree:`<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="12" r="8"/><path d="M16 20v9M12 29h8M16 16l-3-3M16 18l4-4"/></svg>`,
+  leaf:`<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 26C6 13 14 6 27 5c0 13-7 21-19 21Z"/><path d="M6 26 18 14"/></svg>`,
+  nosmoke:`<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="16" cy="16" r="13"/><rect x="7" y="15" width="18" height="5" rx="1"/><path d="M21 15v5M7 25 25 7"/></svg>`
+};
+const TIPS_H=[{ic:'win',tx:'Uzun süre kalınan kapalı mekânları belirli aralıklarla havalandır.'},{ic:'mask',tx:'Kirli ve tozlu ortamlardan uzak dur; tozlu ortamlarda maske kullan.'},
+  {ic:'tree',tx:'Açık ve temiz havada yürüyüş ya da egzersiz yap: akciğerler ve solunum kasları güçlenir.'},{ic:'nosmoke',tx:'Tütün ürünlerinden uzak dur: sadece solunum değil dolaşım sistemine de zarar verir.'},
+  {ic:'leaf',note:1,tx:'<b>Yeşilay</b> 5 Mart 1920\'de <i>Hilâl-i Ahdar</i> adıyla kuruldu. Sigarayı bırakmak isteyenler <b>ALO 171</b> Sigara Bırakma Danışma Hattı\'nı arayabilir.'}];
+function renderOrtam(restart){
+  if(restart){S.trapped=0;S.reached=0;dust.length=0;stuck.length=0;dep.length=0;}
+  setStats([['Hava',S.air==='clean'?'Temiz':'Kirli',S.air==='clean'?'green':''],['Yol',S.route==='nose'?'Burun':'Ağız'],['Tutulan',S.trapped,'green'],['Ulaşan',S.reached,'']]);
+  mp.innerHTML=`<div class="card env">
+      <div class="opt"><div class="zd-seg" id="airSeg" aria-label="Hava seçimi"><button data-v="clean">Temiz hava</button><button data-v="dirty">Kirli hava</button></div></div>
+      <div class="opt"><div class="zd-seg" id="routeSeg" aria-label="Nefes yolu seçimi"><button data-v="nose">Burundan</button><button data-v="mouth">Ağızdan</button></div></div>
+      <div class="cnt2"><div><i class="dg"></i><span>Burunda / ağızda tutulan</span><b id="cTrap">${S.trapped}</b></div><div class="bad"><i class="dr"></i><span>Akciğere ulaşan kirletici</span><b id="cReach">${S.reached}</b></div></div>
+      <p class="envmsg" id="envMsg"></p></div>
+    <button class="tip card" id="tipBox" aria-label="Sağlık önerisi: sonrakini göster"></button>`;
+  const segSync=()=>{$$('#airSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.air));$$('#routeSeg button').forEach(b=>b.classList.toggle('on',b.dataset.v===S.route));};
+  $$('#airSeg button').forEach(b=>b.onclick=()=>{ZD.sfx('click');S.air=b.dataset.v;segSync();envUpd();});
+  $$('#routeSeg button').forEach(b=>b.onclick=()=>{ZD.sfx('click');S.route=b.dataset.v;segSync();envUpd();updMouth();});
+  segSync();envUpd();updMouth();
+  $('#tipBox').onclick=()=>{ZD.sfx('click');showTip(tipI+1);};showTip(0);
+}
+let tipI=0,tipT=0;
+function showTip(i){tipI=(i+TIPS_H.length)%TIPS_H.length;const t=TIPS_H[tipI],bx=$('#tipBox');if(!bx)return;bx.className='tip'+(t.note?' note':'');
+  bx.innerHTML=`${ICO[t.ic]}<span><em class="tk">SAĞLIK ÖNERİSİ · ${tipI+1}/${TIPS_H.length}</em>${t.tx}</span>`;bx.classList.remove('zd-fade-in');void bx.offsetWidth;bx.classList.add('zd-fade-in');
+  tipT=0;}
+
+function updMouth(){E.mouthOpen.setAttribute('opacity',S.mode==='ortam'&&S.route==='mouth'?1:0);}
+function envUpd(){
+  E.envDirty.setAttribute('opacity',S.air==='dirty'?1:0);E.envClean.setAttribute('opacity',S.air==='dirty'?0:1);
+  const m=$('#envMsg');if(m)m.innerHTML=S.air==='clean'?'Temiz havada toz ve is çok azdır. <b>Kirli hava</b> (trafik, fabrika) seçip farkı gözle.':
+    S.route==='nose'?'Burundaki <b>kıllar</b> ve <b>mukus</b> tozun çoğunu tutar; hava nemlenir ve ısınır.':
+    'Ağızda kıllar ve mukus yok: kirleticiler akciğerlere <b>daha çok</b> ulaşır. Burundan nefes al!';
+  ortamStats();
+}
+function ortamStats(){if(S.mode!=='ortam')return;setStats([['Hava',S.air==='clean'?'Temiz':'Kirli',S.air==='clean'?'green':''],['Yol',S.route==='nose'?'Burun':'Ağız'],['Tutulan',S.trapped,'green'],['Ulaşan',S.reached,S.reached?'':'']]);
+  const a=$('#cTrap'),b=$('#cReach');if(a)a.textContent=S.trapped;if(b)b.textContent=S.reached;}
+
+/* ---------- parça tıklama ---------- */
+function onPart(part){
+  if(S.mode==='gorev'){const T=TASKS[G.i];if(!T||G.busy)return;
+    if(T.act){ZD.toast('Bu görevde butonu kullan: '+T.h,'',2200);return;}
+    if(part===T.a)taskCorrect(part);else taskWrong(part);return;}
+  ZD.sfx('tap');hl(part);
+  const k=PART2INFO(part);
+  if(!S.visited.has(part==='akciger-sol'?'akciger':k)){S.visited.add(part==='akciger-sol'?'akciger':k);
+    if(S.mode==='kesif'){ui.stat('s4',S.visited.size+'/10',true);if(S.visited.size===10){setTimeout(()=>{ZD.sfx('win');ZD.confetti();ZD.toast('Tebrikler! Solunum sisteminin tüm yapılarını keşfettin.','good',3000);},400);}}}
+  if(S.mode==='kesif'){showInfo(part);if(MOB)ZD.toast(`<b>${PARTNAME(part)}</b> · ${INFO[k].short}`,'',2600);}
+  else ZD.toast(`<b>${PARTNAME(part)}</b> · ${INFO[k].short}`,'',2800);
+}
+
+/* =====================  YARDIM / GİRİŞ  ===================== */
+const HELP={
+  kesif:{t:'Serbest Keşif',s:['Yapılara veya etiketlerine dokun: kitaptaki tanımı soldaki kartta açılır.','<strong>BASILI TUT: SOLUK AL</strong> butonuna (ya da Boşluk tuşuna) basılı tut; diyaframın düzleştiğini, kaburgaların açıldığını izle. Bırakınca soluk verirsin.','Etkinlik seçerek (Dinlenme / Spor / Heyecan) otomatik nefesin hızını değiştir.']},
+  antrenor:{t:'Doğru Nefes Antrenörü',s:['Halka sayaç seni yönlendirir: <strong>Burundan al</strong> (4 sn) → <strong>Tut</strong> (3-4 sn) → <strong>Yavaşça ver</strong> (6 sn).','Al ve Tut boyunca butonu basılı tut, Ver aşamasında bırak.','Uyumun arttıkça Defne\'nin kalp atışı sakinleşir. 3 döngü sonunda sonucunu gör.']},
+  gorev:{t:'Görevler',s:['Soldaki görevi oku ve sahnedeki doğru yapıya dokun. Etiketler bu modda gizlidir.','Bazı görevlerde butonla soluk alıp vermen gerekir.','İlk denemede doğru: 100 puan + seri bonusu. Yanlışta kitaptan kısa açıklama görürsün.']},
+  ortam:{t:'Ortam Testi',s:['Temiz ya da kirli havayı ve burundan ya da ağızdan nefesi seç.','Soluk alırken toz ve is parçacıklarının nereye gittiğini izle: burundaki kıllar ve mukus çoğunu tutar.','Sayaçları karşılaştır ve sağlık önerilerini oku.']}
+};
+function help(){const h=HELP[S.mode];ZD.modal({html:`<span class="zd-chip">NASIL KULLANILIR?</span><h2>${h.t}</h2><ul class="zd-howto">${h.s.map((s,i)=>`<li><b>${i+1}</b><span>${s}</span></li>`).join('')}</ul>`,
+  actions:[{label:ZD.I.check+'Anladım',onClick:()=>{if(S.mode==='antrenor'&&!TR.run)ZD.pointAt($('#trStart'),{ms:2500});else ZD.pointAt(holdBtn,{ms:2500});}}],dismiss:true});}
+
+/* =====================  ANA DÖNGÜ  ===================== */
+let lastT=performance.now(),prevB=0;
+function loop(now){
+  const rdt=Math.min(.5,Math.max(0,(now-lastT)/1000)),dt=Math.min(.1,rdt);lastT=now;
+  /* hedef */
+  let target=0,tau;const tr=S.mode==='antrenor';
+  if(S.holding)target=1;
+  else if(S.auto&&!tr){const T=60/RATE[S.act];S.autoT=(S.autoT+dt)%T;target=S.autoT<T*.42?1:0;}
+  if(S.auto&&!S.holding&&!tr)tau=(60/RATE[S.act])*.12;else tau=target>S.b?(tr?1.25:.7):(tr?1.9:.95);
+  prevB=S.b;S.b+=(target-S.b)*(1-Math.exp(-dt/tau));
+  const fl=(S.b-prevB)/Math.max(dt,1e-4);S.flow=lerp(S.flow,fl,.35);
+  /* aşama */
+  let ph;if(target===1)ph=S.b>.965?'hold':'in';else ph=S.b>.03?'out':'rest';
+  if(ph!==S.phase){S.phase=ph;if(ph==='in'||ph==='out')S.phaseB0=prevB;phaseChanged();}
+  if(Math.abs(S.b-lastDrawB)>.0006){drawAnatomy(S.b);lastDrawB=S.b;}
+  drawArrows();
+  stepParticles(dt);drawParticles();drawSpiro(dt);stUpdate(now);
+  trTick(rdt);taskTick();
+  if(S.mode==='ortam'){tipT+=rdt;if(tipT>6)showTip(tipI+1);}
+  /* gösterge */
+  $('#holdFill').style.width=(S.b*100).toFixed(1)+'%';
+  const vol=Math.round(S.b*100);$('#volV').textContent='%'+vol;if(S.mode==='kesif')ui.stat('s2','%'+vol);
+  $('#cavC').style.width=(48+52*S.b).toFixed(1)+'%';$('#cavA').style.width=(100-42*S.b).toFixed(1)+'%';
+  requestAnimationFrame(loop);
+}
+function phaseChanged(){
+  const ph=S.phase,pill=$('#phPill');
+  const N={in:'SOLUK ALMA',out:'SOLUK VERME',hold:'NEFES TUTULUYOR',rest:'DİNLENME'};
+  pill.textContent=N[ph];pill.className='ph-pill '+(ph==='rest'?'':'p-'+ph);
+  if(S.mode==='kesif')ui.stat('s1',{in:'Soluk al',out:'Soluk ver',hold:'Tut',rest:'Dinlenme'}[ph]);
+  $('#stNote').textContent={in:'Şimdi',out:'Şimdi',hold:'Akciğerler dolu',rest:S.holding?'':'Butona basılı tut'}[ph];
+  const ct=$('#cavCt'),at=$('#cavAt');
+  if(ph==='in'){ct.textContent='Genişler ▲';ct.className='up';at.textContent='Daralır ▼';at.className='dn';}
+  else if(ph==='out'){ct.textContent='Daralır ▼';ct.className='dn';at.textContent='Genişler ▲';at.className='up';}
+  else if(ph==='hold'){ct.textContent='En geniş';ct.className='';at.textContent='En dar';at.className='';}
+  else{ct.textContent='—';ct.className='';at.textContent='—';at.className='';}
+  setLabelSub('dia',ph==='in'?'kasılır · düzleşir':ph==='hold'?'kasılı · düz':ph==='out'?'gevşer · kubbeleşir':'gevşek · kubbeli',ph==='in'||ph==='hold'?'#7ff6ff':ph==='out'?'#c9b0ff':'#8fa8c4');
+  setLabelSub('kab',ph==='in'||ph==='hold'?'kasılır':ph==='out'?'gevşer':'gevşek',ph==='in'||ph==='hold'?'#7ff6ff':ph==='out'?'#c9b0ff':'#8fa8c4');
+  const hb=$('#holdB'),hs=$('#holdS');
+  if(S.holding){hb.textContent=ph==='hold'?'NEFES TUTULUYOR':'SOLUK ALINIYOR…';hs.textContent='Bırakınca soluk verilir';}
+  else if(ph==='out'){hb.textContent='SOLUK VERİLİYOR…';hs.innerHTML='Tekrar basılı tut: soluk al';}
+  else{hb.textContent='BASILI TUT: SOLUK AL';hs.innerHTML='veya <kbd>Boşluk</kbd> tuşuna basılı tut';}
+}
+
+/* =====================  BAŞLAT  ===================== */
+renderSt();updRate();setMode('kesif');drawAnatomy(0);lastDrawB=0;phaseChanged();
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{LABELS.forEach(measureLabel);updLabels();});
+new ResizeObserver(resize).observe(scene);resize();
+requestAnimationFrame(loop);
+holdBtn.classList.add('ring');
+ZD.intro({kicker:'SİMÜLASYON · SOLUNUM SİSTEMİ',title:'Soluk Al, Soluk Ver',
+  art:`<div style="width:84px;height:84px;margin:0 auto 6px;filter:drop-shadow(0 0 18px rgba(255,159,184,.45))">${LUNGICON.replace('class="ic"','style="width:84px;height:84px"').replace(/hiL/g,'hiL2')}</div>`,
+  text:'Diyafram, kaburgalar ve akciğerler soluk alıp verirken nasıl hareket ediyor? Canlı modelde keşfet!',
+  steps:['<strong>BASILI TUT: SOLUK AL</strong> butonuna (veya Boşluk tuşuna) basılı tut: diyafram kasılıp düzleşir, akciğerler havayla dolar. Bırakınca soluk verirsin.',
+    'Sağdaki <strong>Durum tablosu</strong> o anda olanları sırayla işaretler; büyüteçte alveollerdeki O₂ ve CO₂ alışverişini izle.',
+    'Üstten mod seç: Serbest Keşif, Doğru Nefes Antrenörü, Görevler ve Ortam Testi.'],
+  start:'Başla',onStart:()=>{setTimeout(()=>ZD.pointAt(holdBtn,{ms:3000}),350);}});
+})();
+</script>
+</body>
+</html>
